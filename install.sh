@@ -49,9 +49,9 @@ fi
 
 # Create wrapper script in bin directory
 WRAPPER_PATH="${BIN_DIR}/${APP_NAME}"
-cat > "${WRAPPER_PATH}" << 'EOF'
+cat > "${WRAPPER_PATH}" <<EOF
 #!/bin/bash
-exec java -jar "${HOME}/.local/kinfra/kinfra.jar" "$@"
+exec java -Dkinfra.version="${VERSION#v}" -jar "\${HOME}/.local/kinfra/kinfra.jar" "\$@"
 EOF
 
 # Make wrapper executable

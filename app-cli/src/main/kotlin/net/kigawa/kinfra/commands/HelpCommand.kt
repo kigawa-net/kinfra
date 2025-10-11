@@ -1,17 +1,13 @@
 package net.kigawa.kinfra.commands
 
 import net.kigawa.kinfra.model.Command
+import net.kigawa.kinfra.util.AnsiColors
 
 class HelpCommand(private val commands: Map<String, Command>) : Command {
-    companion object {
-        const val RESET = "\u001B[0m"
-        const val BLUE = "\u001B[34m"
-    }
-
     override fun execute(args: Array<String>): Int {
-        println("${BLUE}Usage:${RESET} java -jar app.jar [command] [options]")
+        println("${AnsiColors.BLUE}Usage:${AnsiColors.RESET} java -jar app.jar [command] [options]")
         println()
-        println("${BLUE}Commands:${RESET}")
+        println("${AnsiColors.BLUE}Commands:${AnsiColors.RESET}")
 
         commands.forEach { (name, command) ->
             val padding = " ".repeat(maxOf(0, 10 - name.length))
@@ -19,14 +15,14 @@ class HelpCommand(private val commands: Map<String, Command>) : Command {
         }
 
         println()
-        println("${BLUE}Environment:${RESET}")
+        println("${AnsiColors.BLUE}Environment:${AnsiColors.RESET}")
         println("  prod       - Production environment (automatically selected)")
         println()
-        println("${BLUE}Options:${RESET}")
+        println("${AnsiColors.BLUE}Options:${AnsiColors.RESET}")
         println("  -auto-approve  - Skip interactive approval (for apply/destroy)")
         println("  -var-file      - Specify a variable file")
         println()
-        println("${BLUE}Examples:${RESET}")
+        println("${AnsiColors.BLUE}Examples:${AnsiColors.RESET}")
         println("  java -jar app.jar init")
         println("  java -jar app.jar plan")
         println("  java -jar app.jar apply")

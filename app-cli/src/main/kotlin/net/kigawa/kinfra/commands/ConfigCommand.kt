@@ -6,21 +6,13 @@ import net.kigawa.kinfra.infrastructure.terraform.TerraformVarsManager
 import net.kigawa.kinfra.model.Command
 import net.kigawa.kinfra.model.HostConfig
 import net.kigawa.kinfra.model.HostsConfig
+import net.kigawa.kinfra.util.AnsiColors
 
 class ConfigCommand(
     private val configRepository: ConfigRepository,
     private val logger: Logger,
     private val terraformVarsManager: TerraformVarsManager
 ) : Command {
-
-    companion object {
-        const val RESET = "\u001B[0m"
-        const val RED = "\u001B[31m"
-        const val GREEN = "\u001B[32m"
-        const val YELLOW = "\u001B[33m"
-        const val BLUE = "\u001B[34m"
-        const val CYAN = "\u001B[36m"
-    }
 
     override fun execute(args: Array<String>): Int {
         logger.info("Executing config command with args: ${args.joinToString(" ")}")
@@ -34,7 +26,7 @@ class ConfigCommand(
             "list" -> listHosts()
             "enable" -> {
                 if (args.size < 2) {
-                    println("${RED}Error:${RESET} Host name is required")
+                    println("${AnsiColors.RED}Error:${AnsiColors.RESET} Host name is required")
                     println("Usage: config enable <host-name>")
                     return 1
                 }
@@ -42,14 +34,14 @@ class ConfigCommand(
             }
             "disable" -> {
                 if (args.size < 2) {
-                    println("${RED}Error:${RESET} Host name is required")
+                    println("${AnsiColors.RED}Error:${AnsiColors.RESET} Host name is required")
                     println("Usage: config disable <host-name>")
                     return 1
                 }
                 disableHost(args[1])
             }
             else -> {
-                println("${RED}Error:${RESET} Unknown subcommand: ${args[0]}")
+                println("${AnsiColors.RED}Error:${AnsiColors.RESET} Unknown subcommand: ${args[0]}")
                 printUsage()
                 1
             }
@@ -65,12 +57,12 @@ class ConfigCommand(
     }
 
     private fun printUsage() {
-        println("${BLUE}Usage:${RESET}")
+        println("${AnsiColors.BLUE}Usage:${AnsiColors.RESET}")
         println("  config list                  - List all hosts and their status")
         println("  config enable <host-name>    - Enable a host")
         println("  config disable <host-name>   - Disable a host")
         println()
-        println("${BLUE}Available hosts:${RESET}")
+        println("${AnsiColors.BLUE}Available hosts:${AnsiColors.RESET}")
         HostsConfig.DEFAULT_HOSTS.keys.forEach { host ->
             println("  - $host")
         }
@@ -80,8 +72,8 @@ class ConfigCommand(
         val config = configRepository.loadHostsConfig()
         val configPath = configRepository.getConfigFilePath()
 
-        println("${BLUE}Host Configuration${RESET}")
-        println("${CYAN}Config file: $configPath${RESET}")
+        println("${AnsiColors.BLUE}Host Configuration${AnsiColors.RESET}")
+        println("${AnsiColors.CYAN}Config file: $configPath${AnsiColors.RESET}")
         println()
 
         val hosts = mutableListOf<HostConfig>()
@@ -92,7 +84,7 @@ class ConfigCommand(
         }
 
         hosts.forEach { host ->
-            val status = if (host.enabled) "${GREEN}enabled${RESET}" else "${YELLOW}disabled${RESET}"
+            val status = if (host.enabled) "${AnsiColors.GREEN}enabled${AnsiColors.RESET}" else "${AnsiColors.YELLOW}disabled${AnsiColors.RESET}"
             println("  ${host.name.padEnd(15)} [$status]  ${host.description}")
         }
 
@@ -101,9 +93,9 @@ class ConfigCommand(
 
     private fun enableHost(hostName: String): Int {
         if (!HostsConfig.DEFAULT_HOSTS.containsKey(hostName)) {
-            println("${RED}Error:${RESET} Unknown host: $hostName")
+            println("${AnsiColors.RED}Error:${AnsiColors.RESET} Unknown host: $hostName")
             println()
-            println("${BLUE}Available hosts:${RESET}")
+            println("${AnsiColors.BLUE}Available hosts:${AnsiColors.RESET}")
             HostsConfig.DEFAULT_HOSTS.keys.forEach { host ->
                 println("  - $host")
             }
@@ -122,18 +114,18 @@ class ConfigCommand(
         val varsPath = terraformVarsManager.getVarsFilePath()
         logger.info("Updated Terraform vars file: $varsPath")
 
-        println("${GREEN}✓${RESET} Host ${CYAN}$hostName${RESET} has been ${GREEN}enabled${RESET}")
-        println("${CYAN}Updated Terraform vars: $varsPath${RESET}")
-        println("${BLUE}Note:${RESET} Run 'init' and 'apply' to apply changes to Terraform infrastructure")
+        println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Host ${AnsiColors.CYAN}$hostName${AnsiColors.RESET} has been ${AnsiColors.GREEN}enabled${AnsiColors.RESET}")
+        println("${AnsiColors.CYAN}Updated Terraform vars: $varsPath${AnsiColors.RESET}")
+        println("${AnsiColors.BLUE}Note:${AnsiColors.RESET} Run 'init' and 'apply' to apply changes to Terraform infrastructure")
 
         return 0
     }
 
     private fun disableHost(hostName: String): Int {
         if (!HostsConfig.DEFAULT_HOSTS.containsKey(hostName)) {
-            println("${RED}Error:${RESET} Unknown host: $hostName")
+            println("${AnsiColors.RED}Error:${AnsiColors.RESET} Unknown host: $hostName")
             println()
-            println("${BLUE}Available hosts:${RESET}")
+            println("${AnsiColors.BLUE}Available hosts:${AnsiColors.RESET}")
             HostsConfig.DEFAULT_HOSTS.keys.forEach { host ->
                 println("  - $host")
             }
@@ -152,9 +144,9 @@ class ConfigCommand(
         val varsPath = terraformVarsManager.getVarsFilePath()
         logger.info("Updated Terraform vars file: $varsPath")
 
-        println("${GREEN}✓${RESET} Host ${CYAN}$hostName${RESET} has been ${YELLOW}disabled${RESET}")
-        println("${CYAN}Updated Terraform vars: $varsPath${RESET}")
-        println("${BLUE}Note:${RESET} Run 'init' and 'apply' to apply changes to Terraform infrastructure")
+        println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Host ${AnsiColors.CYAN}$hostName${AnsiColors.RESET} has been ${AnsiColors.YELLOW}disabled${AnsiColors.RESET}")
+        println("${AnsiColors.CYAN}Updated Terraform vars: $varsPath${AnsiColors.RESET}")
+        println("${AnsiColors.BLUE}Note:${AnsiColors.RESET} Run 'init' and 'apply' to apply changes to Terraform infrastructure")
 
         return 0
     }

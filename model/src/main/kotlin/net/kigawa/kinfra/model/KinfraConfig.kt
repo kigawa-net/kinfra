@@ -6,7 +6,8 @@ import kotlinx.serialization.Serializable
 data class KinfraConfig(
     val project: ProjectInfo = ProjectInfo(),
     val terraform: TerraformSettings = TerraformSettings(),
-    val bitwarden: BitwardenSettings = BitwardenSettings()
+    val bitwarden: BitwardenSettings = BitwardenSettings(),
+    val update: UpdateSettings = UpdateSettings()
 )
 
 @Serializable
@@ -26,4 +27,11 @@ data class TerraformSettings(
 data class BitwardenSettings(
     val projectId: String = "",
     val useSecretManager: Boolean = true
+)
+
+@Serializable
+data class UpdateSettings(
+    val autoUpdate: Boolean = true,
+    val checkInterval: Long = 86400000, // 24 hours in milliseconds
+    val githubRepo: String = "kigawa-net/kinfra"
 )

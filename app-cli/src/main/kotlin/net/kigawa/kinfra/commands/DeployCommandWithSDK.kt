@@ -6,6 +6,7 @@ import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenSecretManagerReposito
 import net.kigawa.kinfra.infrastructure.config.EnvFileLoader
 import net.kigawa.kinfra.infrastructure.logging.Logger
 import net.kigawa.kinfra.model.R2BackendConfig
+import net.kigawa.kinfra.util.AnsiColors
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.io.File
@@ -36,16 +37,16 @@ class DeployCommandWithSDK(
         val environment = environmentValidator.validate(environmentName)
         if (environment == null) {
             logger.error("Invalid environment: $environmentName")
-            println("${RED}Error:${RESET} Only 'prod' environment is allowed.")
-            println("${BLUE}Available environment:${RESET} prod")
+            println("${AnsiColors.RED}Error:${AnsiColors.RESET} Only 'prod' environment is allowed.")
+            println("${AnsiColors.BLUE}Available environment:${AnsiColors.RESET} prod")
             return 1
         }
 
         if (isAutoSelected) {
-            println("${BLUE}Using environment:${RESET} ${environment.name} (automatically selected)")
+            println("${AnsiColors.BLUE}Using environment:${AnsiColors.RESET} ${environment.name} (automatically selected)")
         }
 
-        println("${BLUE}Starting full deployment pipeline for environment: ${environment.name}${RESET}")
+        println("${AnsiColors.BLUE}Starting full deployment pipeline for environment: ${environment.name}${AnsiColors.RESET}")
         println()
 
         // Step 0: Setup R2 backend if needed
@@ -57,7 +58,7 @@ class DeployCommandWithSDK(
 
         // Step 1: Initialize
         logger.info("Step 1: Initializing Terraform")
-        println("${BLUE}Step 1/3: Initializing Terraform${RESET}")
+        println("${AnsiColors.BLUE}Step 1/3: Initializing Terraform${AnsiColors.RESET}")
         val initResult = terraformService.init(environment)
         if (initResult.isFailure) {
             logger.error("Terraform init failed with exit code: ${initResult.exitCode}")
@@ -69,7 +70,7 @@ class DeployCommandWithSDK(
 
         // Step 2: Plan
         logger.info("Step 2: Creating execution plan")
-        println("${BLUE}Step 2/3: Creating execution plan${RESET}")
+        println("${AnsiColors.BLUE}Step 2/3: Creating execution plan${AnsiColors.RESET}")
         val planResult = terraformService.plan(environment, additionalArgs)
         if (planResult.isFailure) {
             logger.error("Terraform plan failed with exit code: ${planResult.exitCode}")
@@ -81,7 +82,7 @@ class DeployCommandWithSDK(
 
         // Step 3: Apply
         logger.info("Step 3: Applying changes")
-        println("${BLUE}Step 3/3: Applying changes${RESET}")
+        println("${AnsiColors.BLUE}Step 3/3: Applying changes${AnsiColors.RESET}")
         val applyArgsWithAutoApprove = if (additionalArgs.contains("-auto-approve")) {
             additionalArgs
         } else {
@@ -92,7 +93,7 @@ class DeployCommandWithSDK(
         if (applyResult.isSuccess) {
             logger.info("Deployment completed successfully")
             println()
-            println("${GREEN}✅ Deployment completed successfully!${RESET}")
+            println("${AnsiColors.GREEN}✅ Deployment completed successfully!${AnsiColors.RESET}")
         } else {
             logger.error("Terraform apply failed with exit code: ${applyResult.exitCode}")
         }
@@ -113,20 +114,20 @@ class DeployCommandWithSDK(
             val content = backendFile.readText()
             if (!content.contains("<account-id>") && !content.contains("your-r2-")) {
                 logger.info("Backend configuration already exists and is valid")
-                println("${GREEN}✓${RESET} Backend configuration already exists")
+                println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Backend configuration already exists")
                 return true
             }
         }
 
         logger.warn("Backend configuration not found or contains placeholders")
-        println("${YELLOW}Backend configuration not found or contains placeholders${RESET}")
-        println("${BLUE}Fetching credentials from Bitwarden Secret Manager...${RESET}")
+        println("${AnsiColors.YELLOW}Backend configuration not found or contains placeholders${AnsiColors.RESET}")
+        println("${AnsiColors.BLUE}Fetching credentials from Bitwarden Secret Manager...${AnsiColors.RESET}")
 
         // プロジェクトIDを.envまたは環境変数から取得
         val projectId = EnvFileLoader.get("BW_PROJECT")
         if (projectId != null) {
             logger.info("Using project ID from .env: $projectId")
-            println("${BLUE}Using project ID from .env: ${projectId}${RESET}")
+            println("${AnsiColors.BLUE}Using project ID from .env: ${projectId}${AnsiColors.RESET}")
         }
 
         // シークレットを取得
@@ -135,11 +136,11 @@ class DeployCommandWithSDK(
             secretManagerRepository.listSecrets()
         } catch (e: Exception) {
             logger.error("Failed to fetch secrets from Bitwarden", e)
-            println("${RED}Error:${RESET} Failed to fetch secrets: ${e.message}")
+            println("${AnsiColors.RED}Error:${AnsiColors.RESET} Failed to fetch secrets: ${e.message}")
             println()
-            println("${BLUE}Make sure BWS_ACCESS_TOKEN environment variable is set${RESET}")
+            println("${AnsiColors.BLUE}Make sure BWS_ACCESS_TOKEN environment variable is set${AnsiColors.RESET}")
             if (projectId != null) {
-                println("${BLUE}Using BW_PROJECT from .env: ${projectId}${RESET}")
+                println("${AnsiColors.BLUE}Using BW_PROJECT from .env: ${projectId}${AnsiColors.RESET}")
             }
             return false
         }
@@ -154,15 +155,15 @@ class DeployCommandWithSDK(
 
         if (accessKeySecret == null || secretKeySecret == null || accountSecret == null) {
             logger.error("Required R2 secrets not found in Secret Manager")
-            println("${RED}Error:${RESET} Required secrets not found in Secret Manager.")
+            println("${AnsiColors.RED}Error:${AnsiColors.RESET} Required secrets not found in Secret Manager.")
             println()
-            println("${YELLOW}Required secret keys and formats:${RESET}")
+            println("${AnsiColors.YELLOW}Required secret keys and formats:${AnsiColors.RESET}")
             println("  - r2-access: R2 Access Key ID (32-char hex, e.g. f187f7a87ac5ab2d425bfd783e11146f)")
             println("  - r2-secret: R2 Secret Access Key (64-char hex)")
             println("  - r2-account: R2 Account ID (32-char hex, e.g. e9f30fd43ef4cc3d46050e34dad5c811)")
             println("  - r2-bucket: Bucket name (optional, e.g. kigawa-infra-state, NOT a URL)")
             println()
-            println("${BLUE}Available secrets:${RESET}")
+            println("${AnsiColors.BLUE}Available secrets:${AnsiColors.RESET}")
             secrets.forEach { println("  - ${it.key}") }
             return false
         }
@@ -175,8 +176,8 @@ class DeployCommandWithSDK(
         logger.info("Successfully retrieved R2 credentials from Secret Manager")
         logger.debug("R2 config - Bucket: $bucketName, Account: ${accountId.take(10)}...")
 
-        println("${GREEN}✓${RESET} Credentials retrieved from Secret Manager")
-        println("${BLUE}Debug - Secret values:${RESET}")
+        println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Credentials retrieved from Secret Manager")
+        println("${AnsiColors.BLUE}Debug - Secret values:${AnsiColors.RESET}")
         println("  r2-access (Access Key ID): ${accessKey.take(10)}...")
         println("  r2-secret (Secret Key): ${secretKey.take(10)}...")
         println("  r2-account (Account ID): ${accountId.take(10)}...")
@@ -198,7 +199,7 @@ class DeployCommandWithSDK(
         backendFile.setWritable(true, true)
 
         logger.info("Backend configuration file created: ${backendFile.absolutePath}")
-        println("${GREEN}✓${RESET} Backend configuration created successfully")
+        println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Backend configuration created successfully")
         println()
 
         return true

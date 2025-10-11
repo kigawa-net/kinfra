@@ -26,6 +26,10 @@ import net.kigawa.kinfra.infrastructure.validator.EnvironmentValidatorImpl
 import net.kigawa.kinfra.infrastructure.logging.Logger
 import net.kigawa.kinfra.infrastructure.logging.FileLogger
 import net.kigawa.kinfra.infrastructure.logging.LogLevel
+import net.kigawa.kinfra.infrastructure.update.VersionChecker
+import net.kigawa.kinfra.infrastructure.update.VersionCheckerImpl
+import net.kigawa.kinfra.infrastructure.update.AutoUpdater
+import net.kigawa.kinfra.infrastructure.update.AutoUpdaterImpl
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
@@ -49,6 +53,8 @@ val appModule = module {
     single<BitwardenRepository> { BitwardenRepositoryImpl(get()) }
     single<ConfigRepository> { ConfigRepositoryImpl() }
     single<TerraformVarsManager> { TerraformVarsManagerImpl(get()) }
+    single<VersionChecker> { VersionCheckerImpl(get()) }
+    single<AutoUpdater> { AutoUpdaterImpl(get()) }
 
     // Bitwarden Secret Manager (環境変数または .bws_token ファイルから BWS_ACCESS_TOKEN を取得)
     val bwsAccessToken = System.getenv("BWS_ACCESS_TOKEN")?.also {
@@ -87,6 +93,7 @@ val appModule = module {
     single<Command>(named(CommandType.LOGIN.commandName)) { LoginCommand(get(), get()) }
     single<Command>(named(CommandType.SETUP_R2.commandName)) { SetupR2Command(get()) }
     single<Command>(named(CommandType.CONFIG.commandName)) { ConfigCommand(get(), get(), get()) }
+    single<Command>(named(CommandType.HELLO.commandName)) { HelloCommand(get(), get(), get(), get()) }
 
     // SDK-based commands (only if BWS_ACCESS_TOKEN is available)
     if (hasBwsToken) {
