@@ -11,7 +11,8 @@ plugins {
 }
 
 rootProject.name = "kinfra"
-include("app")
+include("app-cli")
+include("app-web")
 include("model")
 include("action")
 include("infrastructure")

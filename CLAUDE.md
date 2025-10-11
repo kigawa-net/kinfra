@@ -4,7 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## プロジェクト概要
 
-kinfraは、Bitwarden Secret Manager統合を備えたKotlinベースのTerraformラッパーCLIです。複数の環境（dev/staging/prod）における一般的なTerraform操作を簡素化し、シークレットを安全に管理します。
+kinfraは、Bitwarden Secret Manager統合を備えたKotlinベースのTerraformラッパーです。複数の環境（dev/staging/prod）における一般的なTerraform操作を簡素化し、シークレットを安全に管理します。
+
+プロジェクトは2つのアプリケーション形式を提供：
+1. **CLI アプリケーション** (`app-cli`) - コマンドラインインターフェース
+2. **Web アプリケーション** (`app-web`) - Ktor を使用した REST API
 
 ## ビルドシステム
 
@@ -21,14 +25,14 @@ kinfraは、Bitwarden Secret Manager統合を備えたKotlinベースのTerrafor
 # テスト実行
 ./gradlew test
 
-# Shadow JAR作成（全依存関係を含むuber-jar）
-./gradlew shadowJar
+# CLIアプリケーション実行
+./gradlew :app-cli:run --args="<command> <environment>"
 
-# アプリケーション実行（開発モード）
-./gradlew run --args="<command> <environment>"
+# Webアプリケーション実行
+./gradlew :app-web:run
 
-# Shadow JARを使用して実行
-./gradlew runShadow --args="<command> <environment>"
+# Shadow JAR作成（Webアプリケーション用）
+./gradlew :app-web:shadowJar
 
 # ビルド成果物のクリーンアップ
 ./gradlew clean
@@ -44,7 +48,8 @@ kinfraは、Bitwarden Secret Manager統合を備えたKotlinベースのTerrafor
 ./gradlew :model:test
 ./gradlew :action:test
 ./gradlew :infrastructure:test
-./gradlew :app:test
+./gradlew :app-cli:test
+./gradlew :app-web:test
 
 # 単一のテストクラス実行
 ./gradlew test --tests "net.kigawa.kinfra.SpecificTestClass"
@@ -54,7 +59,7 @@ kinfraは、Bitwarden Secret Manager統合を備えたKotlinベースのTerrafor
 
 ### マルチモジュール構成
 
-プロジェクトは4つのGradleモジュールに分かれたレイヤードアーキテクチャを採用：
+プロジェクトは6つのGradleモジュールに分かれたレイヤードアーキテクチャを採用：
 
 1. **model** - ドメインモデルとインターフェース（依存なし）
    - データクラス: `Environment`, `Command`, `TerraformConfig`, `CommandResult`など
@@ -76,20 +81,32 @@ kinfraは、Bitwarden Secret Manager統合を備えたKotlinベースのTerrafor
    - `TerraformVarsManager` - Terraform変数ファイル管理
    - `Logger` - ファイルベースのログシステム
 
-4. **app** - プレゼンテーション層（すべてに依存）
+4. **app-cli** - CLIアプリケーション層（すべてに依存）
    - エントリーポイント: `App.kt`
    - `TerraformRunner` - コマンドルーティングと実行
    - `commands/`パッケージ内のコマンド実装
    - `di/AppModule.kt`でのKoinによる依存性注入設定
 
+5. **app-web** - Webアプリケーション層（model、action、infrastructureに依存）
+   - エントリーポイント: `Application.kt`
+   - Ktor サーバー設定
+   - REST API エンドポイント（`/terraform/*`）
+   - `di/WebModule.kt`でのKoinによる依存性注入設定
+   - プラグイン: ルーティング、シリアライゼーション、CORS、監視、ステータスページ
+
 ### 依存性注入
 
-プロジェクトはKoinを使用しています。すべてのモジュールバインディングは`app/src/main/kotlin/net/kigawa/kinfra/di/AppModule.kt`で設定されています。
+プロジェクトはKoinを使用しています：
 
-重要な点：
+**CLIアプリケーション** (`app-cli/src/main/kotlin/net/kigawa/kinfra/di/AppModule.kt`):
 - SDKベースのコマンド（`deploy-sdk`, `setup-r2-sdk`）は`BWS_ACCESS_TOKEN`が利用可能な場合のみ条件付きで登録される
 - コマンドは`CommandType.commandName`を使用して名前付きシングルトンとして登録される
 - `deploy`と`setup-r2`コマンドは`TerraformRunner.kt:43-52`で自動的にSDK版にリダイレクトされる
+
+**Webアプリケーション** (`app-web/src/main/kotlin/net/kigawa/kinfra/di/WebModule.kt`):
+- Infrastructure層の実装をすべて提供
+- `BWS_ACCESS_TOKEN`が利用可能な場合、Bitwarden Secret Manager統合を有効化
+- Ktor の Koin プラグインを使用してDIコンテナを管理
 
 ### コマンドシステム
 
@@ -131,7 +148,15 @@ kinfraは、Bitwarden Secret Manager統合を備えたKotlinベースのTerrafor
 ## モジュール依存関係
 
 ```
-app
+app-cli
+├── model
+├── action
+│   └── model
+└── infrastructure
+    ├── model
+    └── action
+
+app-web
 ├── model
 ├── action
 │   └── model
@@ -143,6 +168,49 @@ buildSrc（規約プラグイン）
 ├── kinfra-common.gradle.kts - 全モジュール共通設定
 └── kinfra-root.gradle.kts - ルートプロジェクト設定
 ```
+
+## Web API
+
+Webアプリケーションは以下のエンドポイントを提供：
+
+### エンドポイント
+
+- `GET /` - APIステータス
+- `GET /health` - ヘルスチェック
+- `GET /terraform/environments` - 利用可能な環境のリスト
+- `POST /terraform/init` - Terraform初期化
+- `POST /terraform/plan` - Terraform実行計画
+- `POST /terraform/apply` - Terraformリソース作成
+- `POST /terraform/destroy` - Terraformリソース削除
+- `POST /terraform/validate` - Terraform設定検証
+- `POST /terraform/format` - Terraformコードフォーマット
+
+### リクエスト形式
+
+```json
+{
+  "environment": "prod",
+  "command": "apply"
+}
+```
+
+### レスポンス形式
+
+```json
+{
+  "success": true,
+  "message": "Apply successful",
+  "output": "...",
+  "exitCode": 0
+}
+```
+
+### サーバー設定
+
+- デフォルトポート: 8080
+- ホスト: 0.0.0.0
+- CORS: 有効（全オリジン許可）
+- ログ: Call logging 有効
 
 ## テスト
 
