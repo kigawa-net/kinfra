@@ -39,6 +39,6 @@ application {
 
 ktor {
     fatJar {
-        archiveFileName.set("kinfra-web.jar")
+        archiveFileName.set("kinfra-web-${project.version}.jar")
     }
 }

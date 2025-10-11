@@ -20,7 +20,7 @@ application {
 }
 
 tasks.shadowJar {
-    archiveBaseName.set("kinfra")
+    archiveBaseName.set("kinfra-cli")
     archiveClassifier.set("")
     archiveVersion.set(project.version.toString())
 }
