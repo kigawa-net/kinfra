@@ -63,6 +63,7 @@ class HelloCommand(
             MenuItem("Select environment (current: ${currentEnvironment.name})") { selectEnvironment() },
             MenuItem("Run Terraform init") { terraformInit() },
             MenuItem("Run Terraform plan") { terraformPlan() },
+            MenuItem("Run Terraform init + plan") { terraformInitAndPlan() },
             MenuItem("Run Terraform apply") { terraformApply() }
         )
     }
@@ -163,6 +164,49 @@ class HelloCommand(
             println()
             println("${AnsiColors.RED}✗ Terraform plan failed${AnsiColors.RESET}")
             result.message?.let { println("${AnsiColors.RED}Error: $it${AnsiColors.RESET}") }
+        }
+    }
+
+    private fun terraformInitAndPlan() {
+        logger.info("Running terraform init + plan for environment: ${currentEnvironment.name}")
+        println("${AnsiColors.BLUE}${AnsiColors.BOLD}Running Terraform Init + Plan${AnsiColors.RESET}")
+        println("${AnsiColors.CYAN}Environment: ${currentEnvironment.name}${AnsiColors.RESET}")
+        println()
+
+        print("${AnsiColors.GREEN}Do you want to continue? (yes/no):${AnsiColors.RESET} ")
+        val confirmation = readLine()?.trim()?.lowercase() ?: ""
+
+        if (confirmation != "yes" && confirmation != "y") {
+            println("${AnsiColors.YELLOW}Init + Plan cancelled.${AnsiColors.RESET}")
+            return
+        }
+
+        println()
+        println("${AnsiColors.BLUE}Step 1/2: Initializing Terraform...${AnsiColors.RESET}")
+
+        val initResult = terraformService.init(currentEnvironment, quiet = false)
+
+        if (!initResult.isSuccess) {
+            println()
+            println("${AnsiColors.RED}✗ Terraform init failed${AnsiColors.RESET}")
+            initResult.message?.let { println("${AnsiColors.RED}Error: $it${AnsiColors.RESET}") }
+            return
+        }
+
+        println()
+        println("${AnsiColors.GREEN}✓ Terraform init completed successfully${AnsiColors.RESET}")
+        println()
+        println("${AnsiColors.BLUE}Step 2/2: Planning Terraform changes...${AnsiColors.RESET}")
+
+        val planResult = terraformService.plan(currentEnvironment, quiet = false)
+
+        if (planResult.isSuccess) {
+            println()
+            println("${AnsiColors.GREEN}✓ Terraform init + plan completed successfully${AnsiColors.RESET}")
+        } else {
+            println()
+            println("${AnsiColors.RED}✗ Terraform plan failed${AnsiColors.RESET}")
+            planResult.message?.let { println("${AnsiColors.RED}Error: $it${AnsiColors.RESET}") }
         }
     }
 
