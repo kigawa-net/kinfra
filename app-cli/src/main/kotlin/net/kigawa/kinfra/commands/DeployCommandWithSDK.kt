@@ -72,6 +72,18 @@ class DeployCommandWithSDK(
             logger.info("Deployment completed successfully")
             println()
             println("${AnsiColors.GREEN}✅ Deployment completed successfully!${AnsiColors.RESET}")
+
+            // Auto git push after successful deployment
+            println()
+            println("${AnsiColors.BLUE}Pushing to remote repository...${AnsiColors.RESET}")
+            val pushResult = gitPush()
+            if (pushResult) {
+                logger.info("Successfully pushed to remote repository")
+                println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Successfully pushed to remote repository")
+            } else {
+                logger.warn("Failed to push to remote repository")
+                println("${AnsiColors.YELLOW}⚠${AnsiColors.RESET} Failed to push to remote repository (non-fatal)")
+            }
         } else {
             logger.error("Terraform apply failed with exit code: ${applyResult.exitCode}")
         }
@@ -181,5 +193,30 @@ class DeployCommandWithSDK(
         println()
 
         return true
+    }
+
+    private fun gitPush(): Boolean {
+        return try {
+            logger.debug("Executing git push")
+            val process = ProcessBuilder("git", "push")
+                .redirectOutput(ProcessBuilder.Redirect.PIPE)
+                .redirectError(ProcessBuilder.Redirect.PIPE)
+                .start()
+
+            val exitCode = process.waitFor()
+            if (exitCode != 0) {
+                val error = process.errorStream.bufferedReader().readText()
+                logger.warn("Git push failed with exit code $exitCode: $error")
+                println("${AnsiColors.YELLOW}Git push failed: $error${AnsiColors.RESET}")
+                false
+            } else {
+                logger.debug("Git push completed successfully")
+                true
+            }
+        } catch (e: Exception) {
+            logger.error("Git push error", e)
+            println("${AnsiColors.YELLOW}Git push error: ${e.message}${AnsiColors.RESET}")
+            false
+        }
     }
 }
