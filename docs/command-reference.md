@@ -5,10 +5,8 @@ kinfra CLIの全コマンドリファレンス。
 ## 基本構文
 
 ```bash
-kinfra <command> [environment] [options]
+kinfra <command> [options]
 ```
-
-- **environment**: `dev`, `staging`, `prod` (デフォルト: `prod`)
 
 ---
 
@@ -23,8 +21,6 @@ kinfra help
 kinfra --help
 ```
 
-**環境指定**: 不要
-
 ---
 
 ### hello
@@ -38,10 +34,7 @@ kinfra hello
 **機能**:
 - バージョン情報表示
 - アップデートチェック
-- 環境選択（dev/staging/prod）
 - Terraformコマンド実行（init/plan/apply）
-
-**環境指定**: 不要（対話型で選択）
 
 ---
 
@@ -50,20 +43,12 @@ kinfra hello
 プロジェクトにログインし、`kinfra.yaml`を作成。
 
 ```bash
-kinfra login [env]
-```
-
-**例**:
-```bash
-kinfra login dev
-kinfra login prod
+kinfra login
 ```
 
 **動作**:
 - Terraformディレクトリを検索
 - `kinfra.yaml`を生成してプロジェクトルートに保存
-
-**環境指定**: 任意（デフォルト: prod）
 
 ---
 
@@ -72,21 +57,12 @@ kinfra login prod
 現在の設定を表示。
 
 ```bash
-kinfra config [env]
-```
-
-**例**:
-```bash
 kinfra config
-kinfra config dev
 ```
 
 **表示内容**:
 - プロジェクト設定
-- 環境設定
 - ホスト設定
-
-**環境指定**: 任意（デフォルト: prod）
 
 ---
 
@@ -97,14 +73,7 @@ kinfra config dev
 Terraformを初期化。
 
 ```bash
-kinfra init [env]
-```
-
-**例**:
-```bash
-kinfra init dev
-kinfra init staging
-kinfra init  # prodで実行
+kinfra init
 ```
 
 **実行内容**: `terraform init`
@@ -116,12 +85,7 @@ kinfra init  # prodで実行
 実行計画を作成。
 
 ```bash
-kinfra plan [env]
-```
-
-**例**:
-```bash
-kinfra plan dev
+kinfra plan
 ```
 
 **実行内容**: `terraform plan`
@@ -133,12 +97,7 @@ kinfra plan dev
 変更を適用。
 
 ```bash
-kinfra apply [env]
-```
-
-**例**:
-```bash
-kinfra apply staging
+kinfra apply
 ```
 
 **実行内容**: `terraform apply -auto-approve`
@@ -152,12 +111,7 @@ kinfra apply staging
 リソースを削除。
 
 ```bash
-kinfra destroy [env]
-```
-
-**例**:
-```bash
-kinfra destroy dev
+kinfra destroy
 ```
 
 **実行内容**: `terraform destroy -auto-approve`
@@ -168,15 +122,10 @@ kinfra destroy dev
 
 ### deploy
 
-initとapplyを連続実行。
+init + plan + applyを連続実行。
 
 ```bash
-kinfra deploy [env]
-```
-
-**例**:
-```bash
-kinfra deploy prod
+kinfra deploy
 ```
 
 **SDKモード**:
@@ -195,8 +144,6 @@ kinfra validate
 
 **実行内容**: `terraform validate`
 
-**環境指定**: 不要
-
 ---
 
 ### fmt
@@ -209,8 +156,6 @@ kinfra fmt
 
 **実行内容**: `terraform fmt`
 
-**環境指定**: 不要
-
 ---
 
 ## Bitwardenコマンド
@@ -220,12 +165,7 @@ kinfra fmt
 Cloudflare R2のTerraform Backendを設定（CLIベース）。
 
 ```bash
-kinfra setup-r2 [env]
-```
-
-**例**:
-```bash
-kinfra setup-r2 dev
+kinfra setup-r2
 ```
 
 **前提条件**:
@@ -336,16 +276,16 @@ environments:
 
 ```bash
 # プロジェクトにログイン
-kinfra login dev
+kinfra login
 
 # 初期化
-kinfra init dev
+kinfra init
 
 # 計画確認
-kinfra plan dev
+kinfra plan
 
 # 適用
-kinfra apply dev
+kinfra apply
 ```
 
 ### SDKモードでのデプロイ
@@ -355,7 +295,7 @@ kinfra apply dev
 export BWS_ACCESS_TOKEN="your-token"
 
 # デプロイ（自動的にSDKモードで実行）
-kinfra deploy prod
+kinfra deploy
 ```
 
 ### 設定確認

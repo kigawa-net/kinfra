@@ -1,10 +1,10 @@
 # kinfra
 
-Kotlinベースの Terraform ラッパー。Bitwarden Secret Manager 統合により、複数環境でのシークレット管理を安全に実行します。
+Kotlinベースの Terraform ラッパー。Bitwarden Secret Manager 統合により、シークレットを安全に管理します。
 
 ## 特徴
 
-- 複数環境（dev/staging/prod）のTerraform操作を簡素化
+- Terraform操作を簡素化
 - Bitwarden Secret Managerとの統合によるシークレット管理
 - CLI と Web API の2つのインターフェース
 - モジュラーアーキテクチャによる保守性の高い設計
@@ -51,19 +51,19 @@ source ~/.bashrc  # または source ~/.zshrc
 kinfra --help
 
 # Terraform初期化
-kinfra init prod
+kinfra init
 
 # プラン実行
-kinfra plan prod
+kinfra plan
 
 # 適用
-kinfra apply prod
+kinfra apply
 
-# デプロイ（init + apply）
-kinfra deploy prod
+# デプロイ（init + plan + apply）
+kinfra deploy
 
 # リソース削除
-kinfra destroy prod
+kinfra destroy
 ```
 
 ### Web API
@@ -109,7 +109,7 @@ APIエンドポイント:
 ./gradlew test
 
 # CLIアプリケーション実行
-./gradlew :app-cli:run --args="<command> <environment>"
+./gradlew :app-cli:run --args="<command>"
 
 # Shadow JAR作成
 ./gradlew :app-cli:shadowJar

@@ -71,29 +71,6 @@ APIの稼働状態を確認します。
 
 ---
 
-### 環境一覧
-
-#### GET /terraform/environments
-
-利用可能な環境の一覧を取得します。
-
-**レスポンス**
-
-```json
-["dev", "staging", "prod"]
-```
-
-**ステータスコード**
-- `200 OK`: 環境一覧の取得に成功
-
-**使用例**
-
-```bash
-curl http://localhost:8080/terraform/environments
-```
-
----
-
 ### Terraform Init
 
 #### POST /terraform/init
@@ -104,14 +81,12 @@ Terraform の初期化を実行します。
 
 ```json
 {
-  "environment": "dev",
   "command": "init"
 }
 ```
 
 | フィールド | 型 | 必須 | 説明 |
 |-----------|-----|------|------|
-| environment | string | Yes | 環境名 (dev, staging, prod) |
 | command | string | Yes | コマンド名 ("init") |
 
 **レスポンス**
@@ -141,7 +116,7 @@ Terraform の初期化を実行します。
 ```bash
 curl -X POST http://localhost:8080/terraform/init \
   -H "Content-Type: application/json" \
-  -d '{"environment": "dev", "command": "init"}'
+  -d '{"command": "init"}'
 ```
 
 ---
@@ -156,14 +131,12 @@ Terraform の実行計画を作成します。
 
 ```json
 {
-  "environment": "prod",
   "command": "plan"
 }
 ```
 
 | フィールド | 型 | 必須 | 説明 |
 |-----------|-----|------|------|
-| environment | string | Yes | 環境名 (dev, staging, prod) |
 | command | string | Yes | コマンド名 ("plan") |
 
 **レスポンス**
@@ -186,7 +159,7 @@ Terraform の実行計画を作成します。
 ```bash
 curl -X POST http://localhost:8080/terraform/plan \
   -H "Content-Type: application/json" \
-  -d '{"environment": "prod", "command": "plan"}'
+  -d '{"command": "plan"}'
 ```
 
 ---
@@ -201,14 +174,12 @@ Terraform の変更を適用します。
 
 ```json
 {
-  "environment": "staging",
   "command": "apply"
 }
 ```
 
 | フィールド | 型 | 必須 | 説明 |
 |-----------|-----|------|------|
-| environment | string | Yes | 環境名 (dev, staging, prod) |
 | command | string | Yes | コマンド名 ("apply") |
 
 **レスポンス**
@@ -231,7 +202,7 @@ Terraform の変更を適用します。
 ```bash
 curl -X POST http://localhost:8080/terraform/apply \
   -H "Content-Type: application/json" \
-  -d '{"environment": "staging", "command": "apply"}'
+  -d '{"command": "apply"}'
 ```
 
 **注意**: このコマンドは `-auto-approve` フラグで実行されるため、確認なしで変更が適用されます。
@@ -248,14 +219,12 @@ Terraform で管理されているリソースを削除します。
 
 ```json
 {
-  "environment": "dev",
   "command": "destroy"
 }
 ```
 
 | フィールド | 型 | 必須 | 説明 |
 |-----------|-----|------|------|
-| environment | string | Yes | 環境名 (dev, staging, prod) |
 | command | string | Yes | コマンド名 ("destroy") |
 
 **レスポンス**
@@ -278,7 +247,7 @@ Terraform で管理されているリソースを削除します。
 ```bash
 curl -X POST http://localhost:8080/terraform/destroy \
   -H "Content-Type: application/json" \
-  -d '{"environment": "dev", "command": "destroy"}'
+  -d '{"command": "destroy"}'
 ```
 
 **警告**: このコマンドはリソースを完全に削除します。本番環境では慎重に使用してください。
@@ -295,7 +264,6 @@ Terraform 設定ファイルの構文を検証します。
 
 ```json
 {
-  "environment": "dev",
   "command": "validate"
 }
 ```
@@ -320,7 +288,7 @@ Terraform 設定ファイルの構文を検証します。
 ```bash
 curl -X POST http://localhost:8080/terraform/validate \
   -H "Content-Type: application/json" \
-  -d '{"environment": "dev", "command": "validate"}'
+  -d '{"command": "validate"}'
 ```
 
 ---
@@ -335,7 +303,6 @@ Terraform 設定ファイルを標準形式にフォーマットします。
 
 ```json
 {
-  "environment": "dev",
   "command": "format"
 }
 ```
@@ -360,7 +327,7 @@ Terraform 設定ファイルを標準形式にフォーマットします。
 ```bash
 curl -X POST http://localhost:8080/terraform/format \
   -H "Content-Type: application/json" \
-  -d '{"environment": "dev", "command": "format"}'
+  -d '{"command": "format"}'
 ```
 
 ---
@@ -430,7 +397,6 @@ APIはCORS (Cross-Origin Resource Sharing) をサポートしています。
 
 ```kotlin
 data class TerraformRequest(
-    val environment: String,
     val command: String
 )
 ```
@@ -474,7 +440,7 @@ base_url = "http://localhost:8080"
 # Terraform Init
 response = requests.post(
     f"{base_url}/terraform/init",
-    json={"environment": "dev", "command": "init"},
+    json={"command": "init"},
     headers={"Content-Type": "application/json"}
 )
 
@@ -495,7 +461,6 @@ async function runTerraformInit() {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      environment: 'dev',
       command: 'init'
     })
   });
@@ -515,25 +480,24 @@ runTerraformInit();
 
 # 変数設定
 API_URL="http://localhost:8080"
-ENV="prod"
 
 # Init
 echo "Running init..."
 curl -X POST "$API_URL/terraform/init" \
   -H "Content-Type: application/json" \
-  -d "{\"environment\": \"$ENV\", \"command\": \"init\"}"
+  -d '{"command": "init"}'
 
 # Plan
 echo "Running plan..."
 curl -X POST "$API_URL/terraform/plan" \
   -H "Content-Type: application/json" \
-  -d "{\"environment\": \"$ENV\", \"command\": \"plan\"}"
+  -d '{"command": "plan"}'
 
 # Apply
 echo "Running apply..."
 curl -X POST "$API_URL/terraform/apply" \
   -H "Content-Type: application/json" \
-  -d "{\"environment\": \"$ENV\", \"command\": \"apply\"}"
+  -d '{"command": "apply"}'
 ```
 
 ---
@@ -559,12 +523,12 @@ export PORT=8081
 # 正しい形式
 curl -X POST http://localhost:8080/terraform/init \
   -H "Content-Type: application/json" \
-  -d '{"environment": "dev", "command": "init"}'
+  -d '{"command": "init"}'
 
 # 間違った形式（シングルクォート）
 curl -X POST http://localhost:8080/terraform/init \
   -H "Content-Type: application/json" \
-  -d "{'environment': 'dev', 'command': 'init'}"  # NG
+  -d "{'command': 'init'}"  # NG
 ```
 
 ### タイムアウト
