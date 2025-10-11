@@ -249,6 +249,7 @@ jobs:
 
       - name: Auto-merge Pull Request
         if: github.event.inputs.create_pr == 'true' && github.event.inputs.auto_merge == 'true'
+        id: auto_merge
         uses: actions/github-script@v7
         with:
           script: |
@@ -292,11 +293,81 @@ jobs:
                 .addRaw(`- **PR**: [#${pr.number}](${pr.html_url})`)
                 .addRaw(`- **Status**: ✅ Merged successfully`)
                 .addRaw('')
-                .addRaw('The release workflow will now automatically create a GitHub release with built JARs.')
+                .addRaw('Building release and creating GitHub release...')
                 .write();
+
+              core.setOutput('merged', 'true');
+              core.setOutput('pr_number', pr.number);
             } catch (error) {
               core.setFailed(`Failed to merge PR: ${error.message}`);
             }
+
+      - name: Wait for merge to complete
+        if: github.event.inputs.create_pr == 'true' && github.event.inputs.auto_merge == 'true' && steps.auto_merge.outputs.merged == 'true'
+        run: sleep 10
+
+      - name: Checkout main branch
+        if: github.event.inputs.create_pr == 'true' && github.event.inputs.auto_merge == 'true' && steps.auto_merge.outputs.merged == 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        if: github.event.inputs.create_pr == 'true' && github.event.inputs.auto_merge == 'true' && steps.auto_merge.outputs.merged == 'true'
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        if: github.event.inputs.create_pr == 'true' && github.event.inputs.auto_merge == 'true' && steps.auto_merge.outputs.merged == 'true'
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Make gradlew executable
+        if: github.event.inputs.create_pr == 'true' && github.event.inputs.auto_merge == 'true' && steps.auto_merge.outputs.merged == 'true'
+        run: chmod +x gradlew
+
+      - name: Run tests
+        if: github.event.inputs.create_pr == 'true' && github.event.inputs.auto_merge == 'true' && steps.auto_merge.outputs.merged == 'true'
+        run: ./gradlew test
+        env:
+          VERSION: ${{ steps.calculate_version.outputs.VERSION }}
+
+      - name: Build CLI Shadow JAR
+        if: github.event.inputs.create_pr == 'true' && github.event.inputs.auto_merge == 'true' && steps.auto_merge.outputs.merged == 'true'
+        run: ./gradlew :app-cli:shadowJar
+        env:
+          VERSION: ${{ steps.calculate_version.outputs.VERSION }}
+
+      - name: Build Web Shadow JAR
+        if: github.event.inputs.create_pr == 'true' && github.event.inputs.auto_merge == 'true' && steps.auto_merge.outputs.merged == 'true'
+        run: ./gradlew :app-web:shadowJar
+        env:
+          VERSION: ${{ steps.calculate_version.outputs.VERSION }}
+
+      - name: Create GitHub Release
+        if: github.event.inputs.create_pr == 'true' && github.event.inputs.auto_merge == 'true' && steps.auto_merge.outputs.merged == 'true'
+        run: |
+          VERSION="${{ steps.calculate_version.outputs.VERSION }}"
+
+          # Check if release already exists
+          if gh release view "v$VERSION" >/dev/null 2>&1; then
+            echo "Release v$VERSION already exists, skipping..."
+            exit 0
+          fi
+
+          gh release create "v$VERSION" \
+            --title "Release v$VERSION" \
+            --generate-notes \
+            --draft=false \
+            --prerelease=false \
+            app-cli/build/libs/kinfra-cli-*.jar \
+            app-web/build/libs/kinfra-web-*.jar
+
+          echo "✅ Created release: v$VERSION"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Summary
         if: github.event.inputs.create_pr == 'false'
