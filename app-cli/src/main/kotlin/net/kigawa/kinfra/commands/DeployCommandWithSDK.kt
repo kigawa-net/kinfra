@@ -1,9 +1,9 @@
 package net.kigawa.kinfra.commands
 
-import net.kigawa.kinfra.action.EnvironmentValidator
 import net.kigawa.kinfra.action.TerraformService
 import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenSecretManagerRepository
 import net.kigawa.kinfra.infrastructure.config.EnvFileLoader
+import net.kigawa.kinfra.model.Command
 import net.kigawa.kinfra.infrastructure.logging.Logger
 import net.kigawa.kinfra.model.R2BackendConfig
 import net.kigawa.kinfra.util.AnsiColors
@@ -16,42 +16,20 @@ import java.io.File
  */
 class DeployCommandWithSDK(
     private val terraformService: TerraformService,
-    private val environmentValidator: EnvironmentValidator,
     private val secretManagerRepository: BitwardenSecretManagerRepository
-) : EnvironmentCommand(), KoinComponent {
+) : Command, KoinComponent {
     private val logger: Logger by inject()
     override fun execute(args: Array<String>): Int {
         logger.info("DeployCommandWithSDK started with args: ${args.joinToString(" ")}")
 
-        if (args.isEmpty()) {
-            logger.error("No environment specified")
-            return 1
-        }
+        val additionalArgs = args.filter { it != "--auto-selected" }.toTypedArray()
 
-        val environmentName = args[0]
-        val isAutoSelected = args.contains("--auto-selected")
-        val additionalArgs = args.drop(1).filter { it != "--auto-selected" }.toTypedArray()
-
-        logger.info("Environment: $environmentName, Auto-selected: $isAutoSelected")
-
-        val environment = environmentValidator.validate(environmentName)
-        if (environment == null) {
-            logger.error("Invalid environment: $environmentName")
-            println("${AnsiColors.RED}Error:${AnsiColors.RESET} Only 'prod' environment is allowed.")
-            println("${AnsiColors.BLUE}Available environment:${AnsiColors.RESET} prod")
-            return 1
-        }
-
-        if (isAutoSelected) {
-            println("${AnsiColors.BLUE}Using environment:${AnsiColors.RESET} ${environment.name} (automatically selected)")
-        }
-
-        println("${AnsiColors.BLUE}Starting full deployment pipeline for environment: ${environment.name}${AnsiColors.RESET}")
+        println("${AnsiColors.BLUE}Starting full deployment pipeline${AnsiColors.RESET}")
         println()
 
         // Step 0: Setup R2 backend if needed
         logger.info("Step 0: Checking R2 backend configuration")
-        if (!setupR2BackendIfNeeded(environment.name)) {
+        if (!setupR2BackendIfNeeded()) {
             logger.error("Failed to setup R2 backend")
             return 1
         }
@@ -59,7 +37,7 @@ class DeployCommandWithSDK(
         // Step 1: Initialize
         logger.info("Step 1: Initializing Terraform")
         println("${AnsiColors.BLUE}Step 1/3: Initializing Terraform${AnsiColors.RESET}")
-        val initResult = terraformService.init(environment)
+        val initResult = terraformService.init()
         if (initResult.isFailure) {
             logger.error("Terraform init failed with exit code: ${initResult.exitCode}")
             return initResult.exitCode
@@ -71,7 +49,7 @@ class DeployCommandWithSDK(
         // Step 2: Plan
         logger.info("Step 2: Creating execution plan")
         println("${AnsiColors.BLUE}Step 2/3: Creating execution plan${AnsiColors.RESET}")
-        val planResult = terraformService.plan(environment, additionalArgs)
+        val planResult = terraformService.plan(additionalArgs)
         if (planResult.isFailure) {
             logger.error("Terraform plan failed with exit code: ${planResult.exitCode}")
             return planResult.exitCode
@@ -88,7 +66,7 @@ class DeployCommandWithSDK(
         } else {
             additionalArgs + "-auto-approve"
         }
-        val applyResult = terraformService.apply(environment, additionalArgs = applyArgsWithAutoApprove)
+        val applyResult = terraformService.apply(additionalArgs = applyArgsWithAutoApprove)
 
         if (applyResult.isSuccess) {
             logger.info("Deployment completed successfully")
@@ -105,9 +83,9 @@ class DeployCommandWithSDK(
         return "Full deployment pipeline using Secret Manager SDK (init → plan → apply)"
     }
 
-    private fun setupR2BackendIfNeeded(environmentName: String): Boolean {
-        logger.debug("Checking R2 backend configuration for environment: $environmentName")
-        val backendFile = File("environments/$environmentName/backend.tfvars")
+    private fun setupR2BackendIfNeeded(): Boolean {
+        logger.debug("Checking R2 backend configuration")
+        val backendFile = File("backend.tfvars")
 
         // Check if backend.tfvars already exists and is valid
         if (backendFile.exists()) {
@@ -186,7 +164,7 @@ class DeployCommandWithSDK(
         // Create backend config
         val config = R2BackendConfig(
             bucket = bucketName,
-            key = "$environmentName/terraform.tfstate",
+            key = "terraform.tfstate",
             endpoint = "https://$accountId.r2.cloudflarestorage.com",
             accessKey = accessKey,
             secretKey = secretKey

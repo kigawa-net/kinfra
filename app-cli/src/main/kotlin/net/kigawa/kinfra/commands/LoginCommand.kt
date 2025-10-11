@@ -213,9 +213,7 @@ class LoginCommand(
         return 1
     }
 
-    override fun requiresEnvironment(): Boolean = false
-
     override fun getDescription(): String {
-        return "Setup project and login to Bitwarden vault (usage: login [github-repo])"
+        return "Login to Bitwarden and store session token"
     }
 }

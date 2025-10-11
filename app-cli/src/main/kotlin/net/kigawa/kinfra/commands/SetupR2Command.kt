@@ -154,9 +154,7 @@ class SetupR2Command(
         return 0
     }
 
-    override fun requiresEnvironment(): Boolean = false
-
     override fun getDescription(): String {
-        return "Setup Cloudflare R2 backend using Bitwarden credentials"
+        return "Setup Cloudflare R2 backend configuration using Bitwarden CLI"
     }
 }

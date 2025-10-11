@@ -132,9 +132,8 @@ class SetupR2CommandWithSDK(
         return 0
     }
 
-    override fun requiresEnvironment(): Boolean = false
 
     override fun getDescription(): String {
-        return "Setup Cloudflare R2 backend using Bitwarden Secret Manager SDK"
+        return "Setup Cloudflare R2 backend configuration using Bitwarden Secret Manager SDK"
     }
 }

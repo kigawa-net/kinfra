@@ -7,12 +7,10 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
 import net.kigawa.kinfra.action.TerraformService
-import net.kigawa.kinfra.model.Environment
 import org.koin.ktor.ext.inject
 
 @Serializable
 data class TerraformRequest(
-    val environment: String,
     val command: String
 )
 
@@ -28,17 +26,9 @@ fun Route.terraformRoutes() {
     val terraformService by inject<TerraformService>()
 
     route("/terraform") {
-        get("/environments") {
-            val environments = listOf("dev", "staging", "prod")
-            call.respond(environments)
-        }
-
         post("/init") {
-            val request = call.receive<TerraformRequest>()
-            val env = Environment(request.environment)
-
             try {
-                val result = terraformService.init(env)
+                val result = terraformService.init()
                 call.respond(
                     TerraformResponse(
                         success = result.exitCode == 0,
@@ -59,11 +49,8 @@ fun Route.terraformRoutes() {
         }
 
         post("/plan") {
-            val request = call.receive<TerraformRequest>()
-            val env = Environment(request.environment)
-
             try {
-                val result = terraformService.plan(env)
+                val result = terraformService.plan()
                 call.respond(
                     TerraformResponse(
                         success = result.exitCode == 0,
@@ -84,11 +71,8 @@ fun Route.terraformRoutes() {
         }
 
         post("/apply") {
-            val request = call.receive<TerraformRequest>()
-            val env = Environment(request.environment)
-
             try {
-                val result = terraformService.apply(env)
+                val result = terraformService.apply()
                 call.respond(
                     TerraformResponse(
                         success = result.exitCode == 0,
@@ -109,11 +93,8 @@ fun Route.terraformRoutes() {
         }
 
         post("/destroy") {
-            val request = call.receive<TerraformRequest>()
-            val env = Environment(request.environment)
-
             try {
-                val result = terraformService.destroy(env)
+                val result = terraformService.destroy()
                 call.respond(
                     TerraformResponse(
                         success = result.exitCode == 0,

@@ -52,9 +52,6 @@ class ConfigCommand(
         return "Manage host configuration (enable/disable hosts)"
     }
 
-    override fun requiresEnvironment(): Boolean {
-        return false
-    }
 
     private fun printUsage() {
         println("${AnsiColors.BLUE}Usage:${AnsiColors.RESET}")

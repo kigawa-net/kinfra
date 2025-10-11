@@ -39,7 +39,4 @@ class HelpCommand(private val commands: Map<String, Command>) : Command {
         return "Show this help message"
     }
 
-    override fun requiresEnvironment(): Boolean {
-        return false
-    }
 }

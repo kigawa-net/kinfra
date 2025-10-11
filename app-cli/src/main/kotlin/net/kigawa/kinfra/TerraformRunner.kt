@@ -92,17 +92,7 @@ class TerraformRunner : KoinComponent {
             exitProcess(1)
         }
 
-        val commandArgs = if (command.requiresEnvironment()) {
-            if (args.size < 2) {
-                // Automatically use 'prod' environment if not specified
-                logger.info("Auto-selecting 'prod' environment")
-                arrayOf("prod", "--auto-selected")
-            } else {
-                args.drop(1).toTypedArray()
-            }
-        } else {
-            args.drop(1).toTypedArray()
-        }
+        val commandArgs = args.drop(1).toTypedArray()
 
         logger.info("Executing command: $commandName with args: ${commandArgs.joinToString(" ")}")
         val exitCode = command.execute(commandArgs)

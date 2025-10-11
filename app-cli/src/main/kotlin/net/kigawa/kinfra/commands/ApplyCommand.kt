@@ -1,42 +1,23 @@
 package net.kigawa.kinfra.commands
 
-import net.kigawa.kinfra.action.EnvironmentValidator
 import net.kigawa.kinfra.action.TerraformService
-import net.kigawa.kinfra.util.AnsiColors
+import net.kigawa.kinfra.model.Command
 
 class ApplyCommand(
-    private val terraformService: TerraformService,
-    private val environmentValidator: EnvironmentValidator
-) : EnvironmentCommand() {
+    private val terraformService: TerraformService
+) : Command {
     override fun execute(args: Array<String>): Int {
-        if (args.isEmpty()) return 1
-
-        val environmentName = args[0]
-        val isAutoSelected = args.contains("--auto-selected")
-        val additionalArgs = args.drop(1).filter { it != "--auto-selected" }.toTypedArray()
-
-        val environment = environmentValidator.validate(environmentName)
-        if (environment == null) {
-            println("${AnsiColors.RED}Error:${AnsiColors.RESET} Only 'prod' environment is allowed.")
-            println("${AnsiColors.BLUE}Available environment:${AnsiColors.RESET} prod")
-            return 1
-        }
-
-        if (isAutoSelected) {
-            println("${AnsiColors.BLUE}Using environment:${AnsiColors.RESET} ${environment.name} (automatically selected)")
-        }
-
-        // Check if first additional arg is a plan file
-        val planFile = if (additionalArgs.isNotEmpty() &&
-            (additionalArgs[0].endsWith(".tfplan") || additionalArgs[0] == "tfplan")) {
-            additionalArgs[0]
+        // Check if first arg is a plan file
+        val planFile = if (args.isNotEmpty() &&
+            (args[0].endsWith(".tfplan") || args[0] == "tfplan")) {
+            args[0]
         } else {
             null
         }
 
-        val argsWithoutPlan = if (planFile != null) additionalArgs.drop(1).toTypedArray() else additionalArgs
+        val argsWithoutPlan = if (planFile != null) args.drop(1).toTypedArray() else args
 
-        val result = terraformService.apply(environment, planFile, argsWithoutPlan)
+        val result = terraformService.apply(planFile, argsWithoutPlan)
         return result.exitCode
     }
 
