@@ -93,7 +93,7 @@ val appModule = module {
     single<Command>(named(CommandType.LOGIN.commandName)) { LoginCommand(get(), get()) }
     single<Command>(named(CommandType.SETUP_R2.commandName)) { SetupR2Command(get()) }
     single<Command>(named(CommandType.CONFIG.commandName)) { ConfigCommand(get(), get(), get()) }
-    single<Command>(named(CommandType.HELLO.commandName)) { HelloCommand(get(), get(), get(), get()) }
+    single<Command>(named(CommandType.HELLO.commandName)) { HelloCommand(get(), get(), get(), get(), get()) }
 
     // SDK-based commands (only if BWS_ACCESS_TOKEN is available)
     if (hasBwsToken) {
