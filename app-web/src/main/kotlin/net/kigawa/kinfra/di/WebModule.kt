@@ -1,6 +1,5 @@
 package net.kigawa.kinfra.di
 
-import net.kigawa.kinfra.action.EnvironmentValidator
 import net.kigawa.kinfra.action.TerraformService
 import net.kigawa.kinfra.infrastructure.file.FileRepository
 import net.kigawa.kinfra.infrastructure.file.FileRepositoryImpl
@@ -18,7 +17,6 @@ import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenSecretManagerReposito
 import net.kigawa.kinfra.infrastructure.config.EnvFileLoader
 import net.kigawa.kinfra.infrastructure.config.ConfigRepository
 import net.kigawa.kinfra.infrastructure.config.ConfigRepositoryImpl
-import net.kigawa.kinfra.infrastructure.validator.EnvironmentValidatorImpl
 import net.kigawa.kinfra.infrastructure.logging.Logger
 import net.kigawa.kinfra.infrastructure.logging.FileLogger
 import net.kigawa.kinfra.infrastructure.logging.LogLevel
@@ -39,7 +37,6 @@ val webModule = module {
     single<FileRepository> { FileRepositoryImpl() }
     single<ProcessExecutor> { ProcessExecutorImpl() }
     single<TerraformRepository> { TerraformRepositoryImpl(get()) }
-    single<EnvironmentValidator> { EnvironmentValidatorImpl() }
     single<TerraformService> { TerraformServiceImpl(get(), get()) }
     single<BitwardenRepository> { BitwardenRepositoryImpl(get()) }
     single<ConfigRepository> { ConfigRepositoryImpl() }

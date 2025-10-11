@@ -14,8 +14,4 @@ class ValidateCommand(
     override fun getDescription(): String {
         return "Validate the configuration files"
     }
-
-    override fun requiresEnvironment(): Boolean {
-        return false
-    }
 }

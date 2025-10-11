@@ -6,7 +6,6 @@ import net.kigawa.kinfra.infrastructure.logging.Logger
 import net.kigawa.kinfra.infrastructure.process.ProcessExecutor
 import net.kigawa.kinfra.infrastructure.terraform.TerraformVarsManager
 import net.kigawa.kinfra.model.Command
-import net.kigawa.kinfra.model.Environment
 import net.kigawa.kinfra.model.HostsConfig
 import net.kigawa.kinfra.util.AnsiColors
 
@@ -17,7 +16,6 @@ class HelloCommand(
     private val terraformService: TerraformService,
     private val logger: Logger
 ) : Command {
-    private var currentEnvironment: Environment = Environment.PROD
 
     override fun execute(args: Array<String>): Int {
         println("${AnsiColors.CYAN}${AnsiColors.BOLD}Welcome to kinfra interactive manager!${AnsiColors.RESET}")
@@ -60,7 +58,6 @@ class HelloCommand(
             MenuItem("Disable Terraform directory") { disableHost() },
             MenuItem("Check Git status") { gitStatus() },
             MenuItem("Push to Git repository") { gitPush() },
-            MenuItem("Select environment (current: ${currentEnvironment.name})") { selectEnvironment() },
             MenuItem("Run Terraform init") { terraformInit() },
             MenuItem("Run Terraform plan") { terraformPlan() },
             MenuItem("Run Terraform init + plan") { terraformInitAndPlan() },
@@ -72,10 +69,6 @@ class HelloCommand(
         return "Interactive management tool for Terraform directories and Git operations"
     }
 
-    override fun requiresEnvironment(): Boolean {
-        return false
-    }
-
     private fun showMainMenu(menuItems: List<MenuItem>) {
         println("${AnsiColors.BLUE}${AnsiColors.BOLD}=== Main Menu ===${AnsiColors.RESET}")
         menuItems.forEachIndexed { index, item ->
@@ -85,34 +78,9 @@ class HelloCommand(
         println()
     }
 
-    private fun selectEnvironment() {
-        logger.info("Selecting environment")
-        println("${AnsiColors.BLUE}${AnsiColors.BOLD}Select Environment${AnsiColors.RESET}")
-        println("${AnsiColors.YELLOW}Note: Currently only 'prod' is supported${AnsiColors.RESET}")
-        println()
-        println("  1. prod ${if (currentEnvironment.name == "prod") "${AnsiColors.GREEN}(current)${AnsiColors.RESET}" else ""}")
-        println()
-
-        print("${AnsiColors.GREEN}Enter environment name or number:${AnsiColors.RESET} ")
-        val input = readLine()?.trim()?.lowercase() ?: ""
-
-        val envName = when (input) {
-            "1" -> "prod"
-            else -> input
-        }
-
-        if (Environment.isValid(envName)) {
-            currentEnvironment = Environment.fromString(envName) ?: Environment.PROD
-            println("${AnsiColors.GREEN}✓ Environment set to: ${currentEnvironment.name}${AnsiColors.RESET}")
-        } else {
-            println("${AnsiColors.RED}Error: Invalid environment '$envName'${AnsiColors.RESET}")
-        }
-    }
-
     private fun terraformInit() {
-        logger.info("Running terraform init for environment: ${currentEnvironment.name}")
+        logger.info("Running terraform init")
         println("${AnsiColors.BLUE}${AnsiColors.BOLD}Running Terraform Init${AnsiColors.RESET}")
-        println("${AnsiColors.CYAN}Environment: ${currentEnvironment.name}${AnsiColors.RESET}")
         println()
 
         print("${AnsiColors.GREEN}Do you want to continue? (yes/no):${AnsiColors.RESET} ")
@@ -126,7 +94,7 @@ class HelloCommand(
         println()
         println("${AnsiColors.BLUE}Initializing Terraform...${AnsiColors.RESET}")
 
-        val result = terraformService.init(currentEnvironment, quiet = false)
+        val result = terraformService.init(quiet = false)
 
         if (result.isSuccess) {
             println()
@@ -139,9 +107,8 @@ class HelloCommand(
     }
 
     private fun terraformPlan() {
-        logger.info("Running terraform plan for environment: ${currentEnvironment.name}")
+        logger.info("Running terraform plan")
         println("${AnsiColors.BLUE}${AnsiColors.BOLD}Running Terraform Plan${AnsiColors.RESET}")
-        println("${AnsiColors.CYAN}Environment: ${currentEnvironment.name}${AnsiColors.RESET}")
         println()
 
         print("${AnsiColors.GREEN}Do you want to continue? (yes/no):${AnsiColors.RESET} ")
@@ -155,7 +122,7 @@ class HelloCommand(
         println()
         println("${AnsiColors.BLUE}Planning Terraform changes...${AnsiColors.RESET}")
 
-        val result = terraformService.plan(currentEnvironment, quiet = false)
+        val result = terraformService.plan(quiet = false)
 
         if (result.isSuccess) {
             println()
@@ -168,9 +135,8 @@ class HelloCommand(
     }
 
     private fun terraformInitAndPlan() {
-        logger.info("Running terraform init + plan for environment: ${currentEnvironment.name}")
+        logger.info("Running terraform init + plan")
         println("${AnsiColors.BLUE}${AnsiColors.BOLD}Running Terraform Init + Plan${AnsiColors.RESET}")
-        println("${AnsiColors.CYAN}Environment: ${currentEnvironment.name}${AnsiColors.RESET}")
         println()
 
         print("${AnsiColors.GREEN}Do you want to continue? (yes/no):${AnsiColors.RESET} ")
@@ -184,7 +150,7 @@ class HelloCommand(
         println()
         println("${AnsiColors.BLUE}Step 1/2: Initializing Terraform...${AnsiColors.RESET}")
 
-        val initResult = terraformService.init(currentEnvironment, quiet = false)
+        val initResult = terraformService.init(quiet = false)
 
         if (!initResult.isSuccess) {
             println()
@@ -198,7 +164,7 @@ class HelloCommand(
         println()
         println("${AnsiColors.BLUE}Step 2/2: Planning Terraform changes...${AnsiColors.RESET}")
 
-        val planResult = terraformService.plan(currentEnvironment, quiet = false)
+        val planResult = terraformService.plan(quiet = false)
 
         if (planResult.isSuccess) {
             println()
@@ -211,9 +177,8 @@ class HelloCommand(
     }
 
     private fun terraformApply() {
-        logger.info("Running terraform apply for environment: ${currentEnvironment.name}")
+        logger.info("Running terraform apply")
         println("${AnsiColors.BLUE}${AnsiColors.BOLD}Running Terraform Apply${AnsiColors.RESET}")
-        println("${AnsiColors.CYAN}Environment: ${currentEnvironment.name}${AnsiColors.RESET}")
         println("${AnsiColors.YELLOW}Warning: This will make changes to your infrastructure!${AnsiColors.RESET}")
         println()
 
@@ -228,7 +193,7 @@ class HelloCommand(
         println()
         println("${AnsiColors.BLUE}Applying Terraform changes...${AnsiColors.RESET}")
 
-        val result = terraformService.apply(currentEnvironment, quiet = false)
+        val result = terraformService.apply(quiet = false)
 
         if (result.isSuccess) {
             println()
@@ -339,7 +304,18 @@ class HelloCommand(
         println("${AnsiColors.BLUE}${AnsiColors.BOLD}Git Status${AnsiColors.RESET}")
         println()
 
-        val result = processExecutor.executeWithOutput(arrayOf("git", "status"))
+        val projectConfig = configRepository.loadProjectConfig()
+        val repoPath = projectConfig.githubRepository
+
+        if (repoPath.isNullOrEmpty()) {
+            println("${AnsiColors.RED}Error: No repository configured. Please run 'kinfra login' first.${AnsiColors.RESET}")
+            return
+        }
+
+        val result = processExecutor.executeWithOutput(
+            arrayOf("git", "status"),
+            workingDir = java.io.File(repoPath)
+        )
 
         if (result.exitCode == 0) {
             println(result.output)
@@ -352,8 +328,21 @@ class HelloCommand(
     private fun gitPush() {
         logger.info("Pushing to git repository")
 
+        val projectConfig = configRepository.loadProjectConfig()
+        val repoPath = projectConfig.githubRepository
+
+        if (repoPath.isNullOrEmpty()) {
+            println("${AnsiColors.RED}Error: No repository configured. Please run 'kinfra login' first.${AnsiColors.RESET}")
+            return
+        }
+
+        val repoDir = java.io.File(repoPath)
+
         // まず、現在のブランチを確認
-        val branchResult = processExecutor.executeWithOutput(arrayOf("git", "branch", "--show-current"))
+        val branchResult = processExecutor.executeWithOutput(
+            arrayOf("git", "branch", "--show-current"),
+            workingDir = repoDir
+        )
         if (branchResult.exitCode != 0) {
             println("${AnsiColors.RED}Error: Could not determine current branch${AnsiColors.RESET}")
             return
@@ -364,7 +353,10 @@ class HelloCommand(
         println()
 
         // ステータスを表示
-        val statusResult = processExecutor.executeWithOutput(arrayOf("git", "status", "--short"))
+        val statusResult = processExecutor.executeWithOutput(
+            arrayOf("git", "status", "--short"),
+            workingDir = repoDir
+        )
         if (statusResult.output.isNotEmpty()) {
             println("${AnsiColors.YELLOW}Uncommitted changes:${AnsiColors.RESET}")
             println(statusResult.output)
@@ -382,7 +374,10 @@ class HelloCommand(
         println()
         println("${AnsiColors.BLUE}Pushing to origin/$currentBranch...${AnsiColors.RESET}")
 
-        val pushResult = processExecutor.executeWithOutput(arrayOf("git", "push", "origin", currentBranch))
+        val pushResult = processExecutor.executeWithOutput(
+            arrayOf("git", "push", "origin", currentBranch),
+            workingDir = repoDir
+        )
 
         if (pushResult.exitCode == 0) {
             println("${AnsiColors.GREEN}✓ Successfully pushed to origin/$currentBranch${AnsiColors.RESET}")

@@ -2,7 +2,6 @@ package net.kigawa.kinfra.infrastructure.service
 
 import net.kigawa.kinfra.action.TerraformService
 import net.kigawa.kinfra.model.CommandResult
-import net.kigawa.kinfra.model.Environment
 import net.kigawa.kinfra.model.TerraformConfig
 import net.kigawa.kinfra.infrastructure.process.ProcessExecutor
 import net.kigawa.kinfra.infrastructure.terraform.TerraformRepository
@@ -15,11 +14,11 @@ class TerraformServiceImpl(
     private val terraformRepository: TerraformRepository
 ) : TerraformService {
 
-    override fun init(environment: Environment, additionalArgs: Array<String>, quiet: Boolean): CommandResult {
-        val config = terraformRepository.getTerraformConfig(environment)
+    override fun init(additionalArgs: Array<String>, quiet: Boolean): CommandResult {
+        val config = terraformRepository.getTerraformConfig()
 
         // Check for backend config file
-        val backendConfigArgs = findBackendConfigFile(environment)?.let {
+        val backendConfigArgs = findBackendConfigFile()?.let {
             arrayOf("-backend-config=$it")
         } ?: emptyArray()
 
@@ -33,22 +32,17 @@ class TerraformServiceImpl(
         )
     }
 
-    private fun findBackendConfigFile(environment: Environment): String? {
-        val envBackendConfig = java.io.File("environments/${environment.name}/backend.tfvars")
-        if (envBackendConfig.exists()) {
-            return envBackendConfig.absolutePath
-        }
-
-        val rootBackendConfig = java.io.File("backend.tfvars")
-        if (rootBackendConfig.exists()) {
-            return rootBackendConfig.absolutePath
+    private fun findBackendConfigFile(): String? {
+        val backendConfig = java.io.File("backend.tfvars")
+        if (backendConfig.exists()) {
+            return backendConfig.absolutePath
         }
 
         return null
     }
 
-    override fun plan(environment: Environment, additionalArgs: Array<String>, quiet: Boolean): CommandResult {
-        val config = terraformRepository.getTerraformConfig(environment)
+    override fun plan(additionalArgs: Array<String>, quiet: Boolean): CommandResult {
+        val config = terraformRepository.getTerraformConfig()
         val varFileArgs = if (config.hasVarFile()) {
             arrayOf("-var-file=${config.varFile!!.absolutePath}")
         } else {
@@ -65,8 +59,8 @@ class TerraformServiceImpl(
         )
     }
 
-    override fun apply(environment: Environment, planFile: String?, additionalArgs: Array<String>, quiet: Boolean): CommandResult {
-        val config = terraformRepository.getTerraformConfig(environment)
+    override fun apply(planFile: String?, additionalArgs: Array<String>, quiet: Boolean): CommandResult {
+        val config = terraformRepository.getTerraformConfig()
 
         val baseArgs = arrayOf("terraform", "apply")
         val varFileArgs = if (planFile == null && config.hasVarFile()) {
@@ -86,8 +80,8 @@ class TerraformServiceImpl(
         )
     }
 
-    override fun destroy(environment: Environment, additionalArgs: Array<String>, quiet: Boolean): CommandResult {
-        val config = terraformRepository.getTerraformConfig(environment)
+    override fun destroy(additionalArgs: Array<String>, quiet: Boolean): CommandResult {
+        val config = terraformRepository.getTerraformConfig()
         val varFileArgs = if (config.hasVarFile()) {
             arrayOf("-var-file=${config.varFile!!.absolutePath}")
         } else {
@@ -118,7 +112,7 @@ class TerraformServiceImpl(
         return processExecutor.execute(args = arrayOf("terraform", "validate"), quiet = quiet)
     }
 
-    override fun getTerraformConfig(environment: Environment): TerraformConfig {
-        return terraformRepository.getTerraformConfig(environment)
+    override fun getTerraformConfig(): TerraformConfig {
+        return terraformRepository.getTerraformConfig()
     }
 }

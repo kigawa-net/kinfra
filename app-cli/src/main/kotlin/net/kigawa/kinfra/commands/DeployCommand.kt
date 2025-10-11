@@ -1,53 +1,37 @@
 package net.kigawa.kinfra.commands
 
-import net.kigawa.kinfra.action.EnvironmentValidator
 import net.kigawa.kinfra.action.TerraformService
 import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenRepository
+import net.kigawa.kinfra.model.Command
 import net.kigawa.kinfra.model.R2BackendConfig
 import net.kigawa.kinfra.util.AnsiColors
 import java.io.File
 
 class DeployCommand(
     private val terraformService: TerraformService,
-    private val environmentValidator: EnvironmentValidator,
     private val bitwardenRepository: BitwardenRepository
-) : EnvironmentCommand() {
+) : Command {
     override fun execute(args: Array<String>): Int {
-        if (args.isEmpty()) return 1
+        val additionalArgs = args.filter { it != "--auto-selected" }.toTypedArray()
 
-        val environmentName = args[0]
-        val isAutoSelected = args.contains("--auto-selected")
-        val additionalArgs = args.drop(1).filter { it != "--auto-selected" }.toTypedArray()
-
-        val environment = environmentValidator.validate(environmentName)
-        if (environment == null) {
-            println("${AnsiColors.RED}Error:${AnsiColors.RESET} Only 'prod' environment is allowed.")
-            println("${AnsiColors.BLUE}Available environment:${AnsiColors.RESET} prod")
-            return 1
-        }
-
-        if (isAutoSelected) {
-            println("${AnsiColors.BLUE}Using environment:${AnsiColors.RESET} ${environment.name} (automatically selected)")
-        }
-
-        println("${AnsiColors.BLUE}Starting full deployment pipeline for environment: ${environment.name}${AnsiColors.RESET}")
+        println("${AnsiColors.BLUE}Starting full deployment pipeline${AnsiColors.RESET}")
         println()
 
         // Step 0: Setup R2 backend if needed
-        if (!setupR2BackendIfNeeded(environment.name)) {
+        if (!setupR2BackendIfNeeded()) {
             return 1
         }
 
         // Step 1: Initialize
         println("${AnsiColors.BLUE}Step 1/3: Initializing Terraform${AnsiColors.RESET}")
-        val initResult = terraformService.init(environment, quiet = false)
+        val initResult = terraformService.init(quiet = false)
         if (initResult.isFailure) return initResult.exitCode
 
         println()
 
         // Step 2: Plan
         println("${AnsiColors.BLUE}Step 2/3: Creating execution plan${AnsiColors.RESET}")
-        val planResult = terraformService.plan(environment, additionalArgs, quiet = false)
+        val planResult = terraformService.plan(additionalArgs, quiet = false)
         if (planResult.isFailure) return planResult.exitCode
 
         println()
@@ -59,11 +43,21 @@ class DeployCommand(
         } else {
             additionalArgs + "-auto-approve"
         }
-        val applyResult = terraformService.apply(environment, additionalArgs = applyArgsWithAutoApprove, quiet = false)
+        val applyResult = terraformService.apply(additionalArgs = applyArgsWithAutoApprove, quiet = false)
 
         if (applyResult.isSuccess) {
             println()
             println("${AnsiColors.GREEN}✅ Deployment completed successfully!${AnsiColors.RESET}")
+
+            // Auto git push after successful deployment
+            println()
+            println("${AnsiColors.BLUE}Pushing to remote repository...${AnsiColors.RESET}")
+            val pushResult = gitPush()
+            if (pushResult) {
+                println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Successfully pushed to remote repository")
+            } else {
+                println("${AnsiColors.YELLOW}⚠${AnsiColors.RESET} Failed to push to remote repository (non-fatal)")
+            }
         }
 
         return applyResult.exitCode
@@ -73,8 +67,8 @@ class DeployCommand(
         return "Full deployment pipeline (init → plan → apply)"
     }
 
-    private fun setupR2BackendIfNeeded(environmentName: String): Boolean {
-        val backendFile = File("environments/$environmentName/backend.tfvars")
+    private fun setupR2BackendIfNeeded(): Boolean {
+        val backendFile = File("backend.tfvars")
 
         // Check if backend.tfvars already exists and is valid
         if (backendFile.exists()) {
@@ -140,7 +134,7 @@ class DeployCommand(
             println()
             println("3. Or use the SDK-based deploy command (recommended if using BW_PROJECT):")
             println("   ${AnsiColors.BLUE}export BWS_ACCESS_TOKEN=<your-token>${AnsiColors.RESET}")
-            println("   ${AnsiColors.BLUE}./gradlew run --args=\"deploy-sdk prod\"${AnsiColors.RESET}")
+            println("   ${AnsiColors.BLUE}./gradlew run --args=\"deploy-sdk\"${AnsiColors.RESET}")
             return false
         }
 
@@ -159,7 +153,7 @@ class DeployCommand(
         // Create backend config
         val config = R2BackendConfig(
             bucket = bucketName,
-            key = "$environmentName/terraform.tfstate",
+            key = "terraform.tfstate",
             endpoint = "https://$accountId.r2.cloudflarestorage.com",
             accessKey = accessKey,
             secretKey = secretKey
@@ -175,5 +169,26 @@ class DeployCommand(
         println()
 
         return true
+    }
+
+    private fun gitPush(): Boolean {
+        return try {
+            val process = ProcessBuilder("git", "push")
+                .redirectOutput(ProcessBuilder.Redirect.PIPE)
+                .redirectError(ProcessBuilder.Redirect.PIPE)
+                .start()
+
+            val exitCode = process.waitFor()
+            if (exitCode != 0) {
+                val error = process.errorStream.bufferedReader().readText()
+                println("${AnsiColors.YELLOW}Git push failed: $error${AnsiColors.RESET}")
+                false
+            } else {
+                true
+            }
+        } catch (e: Exception) {
+            println("${AnsiColors.YELLOW}Git push error: ${e.message}${AnsiColors.RESET}")
+            false
+        }
     }
 }

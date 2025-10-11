@@ -14,8 +14,4 @@ class FormatCommand(
     override fun getDescription(): String {
         return "Reformat configuration files to canonical format"
     }
-
-    override fun requiresEnvironment(): Boolean {
-        return false
-    }
 }

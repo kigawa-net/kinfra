@@ -22,6 +22,11 @@ on:
         required: false
         type: boolean
         default: true
+      auto_merge:
+        description: 'Automatically merge PR to main after creation'
+        required: false
+        type: boolean
+        default: true
 
 permissions:
   contents: write
@@ -240,6 +245,57 @@ jobs:
                 .addRaw(`- **Branch**: ${branchName}`)
                 .addRaw(`- **Pull Request**: [#${pr.number}](${pr.html_url})`)
                 .write();
+            }
+
+      - name: Auto-merge Pull Request
+        if: github.event.inputs.create_pr == 'true' && github.event.inputs.auto_merge == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const version = '${{ steps.calculate_version.outputs.VERSION }}';
+            const branchName = '${{ steps.calculate_version.outputs.BRANCH_NAME }}';
+
+            // Get the PR
+            const { data: prs } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              head: `${context.repo.owner}:${branchName}`,
+              base: 'main',
+              state: 'open'
+            });
+
+            if (prs.length === 0) {
+              core.setFailed('No open PR found for auto-merge');
+              return;
+            }
+
+            const pr = prs[0];
+            console.log(`Found PR #${pr.number}: ${pr.html_url}`);
+
+            // Merge the PR
+            try {
+              await github.rest.pulls.merge({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+                merge_method: 'merge',
+                commit_title: `Release v${version}`,
+                commit_message: `Automatically merged release branch ${branchName} into main`
+              });
+
+              console.log(`✅ Successfully merged PR #${pr.number}`);
+
+              core.summary
+                .addHeading('Release PR Auto-Merged')
+                .addRaw(`- **Version**: ${version}`)
+                .addRaw(`- **Branch**: ${branchName}`)
+                .addRaw(`- **PR**: [#${pr.number}](${pr.html_url})`)
+                .addRaw(`- **Status**: ✅ Merged successfully`)
+                .addRaw('')
+                .addRaw('The release workflow will now automatically create a GitHub release with built JARs.')
+                .write();
+            } catch (error) {
+              core.setFailed(`Failed to merge PR: ${error.message}`);
             }
 
       - name: Summary

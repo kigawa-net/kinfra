@@ -13,7 +13,7 @@ KotlinベースのTerraformラッパー。Bitwarden Secret Manager統合によ�
 ```bash
 ./gradlew build                                    # ビルド
 ./gradlew test                                     # 全テスト
-./gradlew :app-cli:run --args="<cmd> <env>"       # CLI実行
+./gradlew :app-cli:run --args="<cmd>"             # CLI実行
 ./gradlew :app-web:run                             # Web実行
 ./gradlew test --tests "net.kigawa.kinfra.Foo"    # 単一テスト
 ```
@@ -24,8 +24,8 @@ KotlinベースのTerraformラッパー。Bitwarden Secret Manager統合によ�
 model (依存なし) → action (契約) → infrastructure (実装) → app-cli / app-web
 ```
 
-- **model**: ドメインモデル（`Command`, `CommandType`, `Environment`など）
-- **action**: ビジネスロジック契約（`TerraformService`, `EnvironmentValidator`）
+- **model**: ドメインモデル（`Command`, `CommandType`, `TerraformConfig`など）
+- **action**: ビジネスロジック契約（`TerraformService`）
 - **infrastructure**: 実装（Terraform/Bitwarden統合、プロセス実行、設定管理、ログ）
 - **app-cli**: CLI（`App.kt`, `TerraformRunner`, `commands/`, Koin DI）
 - **app-web**: Ktor REST API（`Application.kt`, `/terraform/*`エンドポイント）
@@ -43,7 +43,7 @@ model (依存なし) → action (契約) → infrastructure (実装) → app-cli
 3. `di/AppModule.kt`で登録
 4. Terraformチェック不要なら`TerraformRunner.kt`の`skipTerraformCheck`に追加
 
-**重要**: 環境未指定時は自動的に"prod"使用。`deploy`/`setup-r2`はSDK版に自動リダイレクト。
+**重要**: `deploy`/`setup-r2`はSDK版に自動リダイレクト。
 
 ### UI: ANSIカラー
 
@@ -51,7 +51,7 @@ model (依存なし) → action (契約) → infrastructure (実装) → app-cli
 
 ## 設定
 
-**ファイル配置**: `~/.local/kinfra/` - `project.json`, `hosts.json` / プロジェクトルート - `kinfra.yaml`（`login`時自動生成）
+**ファイル配置**: `~/.local/kinfra/` - `project.json`, `hosts.json` / プロジェクトルート - `kinfra.yaml`（`login`時自動生成）、`backend.tfvars`（バックエンド設定）
 
 **環境変数**:
 - `BWS_ACCESS_TOKEN` - Bitwarden Secret Manager（または`.bws_token`）。SDKコマンド有効化
@@ -62,10 +62,11 @@ model (依存なし) → action (契約) → infrastructure (実装) → app-cli
 
 ## Web API (Ktor, :8080)
 
-`POST /terraform/{init,plan,apply,destroy,validate,format}` - リクエスト: `{"environment":"prod","command":"apply"}`
+`POST /terraform/{init,plan,apply,destroy,validate,format}` - リクエスト: `{"command":"apply"}`
 
 ## 実装ノート
 
 - **エラー**: `ConfigRepository`のYAML読込は例外スロー。呼出側でハンドル
 - **シリアライゼーション**: JSON=Gson、YAML=kotlinx-serialization+kaml。modelの`@Serializable`必須
 - **設定管理**: `ConfigRepositoryImpl`は`hosts.json`(Gson)、`project.json`(Gson)、`kinfra.yaml`(kaml)を管理
+- **環境管理**: 環境（prod/dev等）の概念は削除済み。全てのコマンドは環境パラメータなしで動作

@@ -1,6 +1,5 @@
 package net.kigawa.kinfra.infrastructure.terraform
 
-import net.kigawa.kinfra.model.Environment
 import net.kigawa.kinfra.model.TerraformConfig
 import net.kigawa.kinfra.infrastructure.file.FileRepository
 import java.io.File
@@ -9,14 +8,14 @@ import java.io.File
  * Terraform設定の取得を担当するリポジトリ
  */
 interface TerraformRepository {
-    fun getTerraformConfig(environment: Environment): TerraformConfig
+    fun getTerraformConfig(): TerraformConfig
 }
 
 class TerraformRepositoryImpl(
     private val fileRepository: FileRepository
 ) : TerraformRepository {
 
-    override fun getTerraformConfig(environment: Environment): TerraformConfig {
+    override fun getTerraformConfig(): TerraformConfig {
         // プロジェクトルートを特定
         // Gradleから実行された場合、user.dirはappディレクトリを指すので親に移動
         val currentDir = File(System.getProperty("user.dir"))
@@ -26,15 +25,8 @@ class TerraformRepositoryImpl(
             currentDir
         }
 
-        val environmentsDir = File(projectRoot, "environments")
-        val envDir = File(environmentsDir, environment.name)
-
-        // 環境ディレクトリを作成
-        fileRepository.createDirectory(environmentsDir)
-        fileRepository.createDirectory(envDir)
-
         // tfvarsファイルの存在確認
-        val tfvarsFile = File(envDir, "terraform.tfvars")
+        val tfvarsFile = File(projectRoot, "terraform.tfvars")
         val varFile = if (fileRepository.exists(tfvarsFile)) tfvarsFile else null
 
         // SSH設定ファイルのパス
@@ -45,7 +37,6 @@ class TerraformRepositoryImpl(
         val terraformDir = File(projectRoot, "terraform")
 
         return TerraformConfig(
-            environment = environment,
             workingDirectory = terraformDir,
             varFile = varFile,
             sshConfigPath = sshConfigPath
