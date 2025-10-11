@@ -17,10 +17,15 @@ dependencies {
 
 application {
     mainClass = "net.kigawa.kinfra.AppKt"
+    applicationDefaultJvmArgs = listOf("-Dkinfra.version=${project.version}")
 }
 
 tasks.shadowJar {
     archiveBaseName.set("kinfra-cli")
     archiveClassifier.set("")
     archiveVersion.set(project.version.toString())
+    manifest {
+        attributes["Main-Class"] = "net.kigawa.kinfra.AppKt"
+        attributes["Implementation-Version"] = project.version.toString()
+    }
 }

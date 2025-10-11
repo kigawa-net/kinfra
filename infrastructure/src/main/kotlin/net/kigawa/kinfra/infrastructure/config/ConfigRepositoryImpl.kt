@@ -1,16 +1,20 @@
 package net.kigawa.kinfra.infrastructure.config
 
+import com.charleskorn.kaml.Yaml
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import net.kigawa.kinfra.model.HostsConfig
+import net.kigawa.kinfra.model.ProjectConfig
+import net.kigawa.kinfra.model.KinfraConfig
 import java.io.File
 
 class ConfigRepositoryImpl(
-    configDir: String = System.getProperty("user.home") + "/.kinfra"
+    configDir: String = System.getProperty("user.home") + "/.local/kinfra"
 ) : ConfigRepository {
 
     private val gson: Gson = GsonBuilder().setPrettyPrinting().create()
     private val configFile = File(configDir, "hosts.json")
+    private val projectConfigFile = File(configDir, "project.json")
 
     init {
         // 設定ディレクトリが存在しない場合は作成
@@ -42,5 +46,49 @@ class ConfigRepositoryImpl(
 
     override fun getConfigFilePath(): String {
         return configFile.absolutePath
+    }
+
+    override fun loadProjectConfig(): ProjectConfig {
+        return if (projectConfigFile.exists()) {
+            try {
+                val json = projectConfigFile.readText()
+                gson.fromJson(json, ProjectConfig::class.java)
+            } catch (e: Exception) {
+                // ファイルの読み込みに失敗した場合はデフォルト設定を返す
+                ProjectConfig()
+            }
+        } else {
+            // ファイルが存在しない場合はデフォルト設定を返す
+            ProjectConfig()
+        }
+    }
+
+    override fun saveProjectConfig(config: ProjectConfig) {
+        val json = gson.toJson(config)
+        projectConfigFile.writeText(json)
+    }
+
+    override fun getProjectConfigFilePath(): String {
+        return projectConfigFile.absolutePath
+    }
+
+    override fun loadKinfraConfig(filePath: String): KinfraConfig? {
+        val file = File(filePath)
+        if (!file.exists()) {
+            return null
+        }
+
+        val yamlContent = file.readText()
+        return Yaml.default.decodeFromString(KinfraConfig.serializer(), yamlContent)
+    }
+
+    override fun saveKinfraConfig(config: KinfraConfig, filePath: String) {
+        val file = File(filePath)
+        val yamlContent = Yaml.default.encodeToString(KinfraConfig.serializer(), config)
+        file.writeText(yamlContent)
+    }
+
+    override fun kinfraConfigExists(filePath: String): Boolean {
+        return File(filePath).exists()
     }
 }

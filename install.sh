@@ -49,9 +49,9 @@ fi
 
 # Create wrapper script in bin directory
 WRAPPER_PATH="${BIN_DIR}/${APP_NAME}"
-cat > "${WRAPPER_PATH}" << 'EOF'
+cat > "${WRAPPER_PATH}" <<EOF
 #!/bin/bash
-exec java -jar "${HOME}/.local/kinfra/kinfra.jar" "$@"
+exec java -Dkinfra.version="${VERSION#v}" -jar "\${HOME}/.local/kinfra/kinfra.jar" "\$@"
 EOF
 
 # Make wrapper executable
@@ -63,14 +63,38 @@ echo "  Wrapper: ${WRAPPER_PATH}"
 
 # Check if bin directory is in PATH
 if [[ ":$PATH:" != *":${BIN_DIR}:"* ]]; then
-    echo -e "${YELLOW}Warning: ${BIN_DIR} is not in your PATH${NC}"
-    echo ""
-    echo "Add the following line to your shell configuration file (~/.bashrc, ~/.zshrc, etc.):"
-    echo ""
-    echo "  export PATH=\"\${HOME}/.local/bin:\${PATH}\""
-    echo ""
-    echo "Then reload your shell configuration:"
-    echo "  source ~/.bashrc  # or source ~/.zshrc"
+    echo -e "${YELLOW}${BIN_DIR} is not in your PATH${NC}"
+    echo "Adding to PATH configuration..."
+
+    # Detect shell configuration file
+    SHELL_CONFIG=""
+    if [ -n "$ZSH_VERSION" ] || [ -f "${HOME}/.zshrc" ]; then
+        SHELL_CONFIG="${HOME}/.zshrc"
+    elif [ -n "$BASH_VERSION" ] || [ -f "${HOME}/.bashrc" ]; then
+        SHELL_CONFIG="${HOME}/.bashrc"
+    elif [ -f "${HOME}/.bash_profile" ]; then
+        SHELL_CONFIG="${HOME}/.bash_profile"
+    elif [ -f "${HOME}/.profile" ]; then
+        SHELL_CONFIG="${HOME}/.profile"
+    fi
+
+    if [ -n "$SHELL_CONFIG" ]; then
+        # Check if PATH export already exists in the file
+        if ! grep -q "export PATH=\"\${HOME}/.local/bin:\${PATH}\"" "$SHELL_CONFIG" 2>/dev/null; then
+            echo "" >> "$SHELL_CONFIG"
+            echo "# Added by kinfra installer" >> "$SHELL_CONFIG"
+            echo "export PATH=\"\${HOME}/.local/bin:\${PATH}\"" >> "$SHELL_CONFIG"
+            echo -e "${GREEN}Added PATH to ${SHELL_CONFIG}${NC}"
+            echo -e "${YELLOW}Please run: source ${SHELL_CONFIG}${NC}"
+            echo "Or restart your terminal to apply changes"
+        else
+            echo -e "${GREEN}PATH already configured in ${SHELL_CONFIG}${NC}"
+        fi
+    else
+        echo -e "${YELLOW}Could not detect shell configuration file${NC}"
+        echo "Please add the following line to your shell configuration file:"
+        echo "  export PATH=\"\${HOME}/.local/bin:\${PATH}\""
+    fi
 else
     echo -e "${GREEN}${BIN_DIR} is already in your PATH${NC}"
 fi

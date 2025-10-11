@@ -17,6 +17,7 @@ dependencies {
     implementation(project(":model"))
     implementation(project(":action"))
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+    implementation("com.charleskorn.kaml:kaml:0.55.0")
     implementation("com.google.code.gson:gson:2.10.1")
     // Bitwarden Secret Manager: bws CLI を使用（自動インストール機能あり）
     // implementation("com.bitwarden:sdk-secrets:1.0.1")
