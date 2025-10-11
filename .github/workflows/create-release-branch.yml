@@ -108,11 +108,10 @@ jobs:
 
           if git ls-remote --heads origin "$BRANCH_NAME" | grep -q "$BRANCH_NAME"; then
             echo "exists=true" >> $GITHUB_OUTPUT
-            echo "Error: Branch $BRANCH_NAME already exists"
-            exit 1
+            echo "Branch $BRANCH_NAME already exists - will merge dev into it"
           else
             echo "exists=false" >> $GITHUB_OUTPUT
-            echo "Branch $BRANCH_NAME does not exist - proceeding"
+            echo "Branch $BRANCH_NAME does not exist - will create new branch"
           fi
 
       - name: Configure git
@@ -121,6 +120,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Create release branch
+        if: steps.check_branch.outputs.exists == 'false'
         run: |
           BRANCH_NAME="${{ steps.calculate_version.outputs.BRANCH_NAME }}"
           VERSION="${{ steps.calculate_version.outputs.VERSION }}"
@@ -132,6 +132,23 @@ jobs:
 
           git push origin "$BRANCH_NAME"
           echo "Created and pushed branch: $BRANCH_NAME"
+
+      - name: Merge dev into existing release branch
+        if: steps.check_branch.outputs.exists == 'true'
+        run: |
+          BRANCH_NAME="${{ steps.calculate_version.outputs.BRANCH_NAME }}"
+          VERSION="${{ steps.calculate_version.outputs.VERSION }}"
+
+          # Fetch and checkout the existing release branch
+          git fetch origin "$BRANCH_NAME"
+          git checkout "$BRANCH_NAME"
+
+          # Merge dev into the release branch
+          git merge origin/dev --no-edit -m "chore: merge dev into $BRANCH_NAME"
+
+          # Push the merged changes
+          git push origin "$BRANCH_NAME"
+          echo "Merged dev into existing branch: $BRANCH_NAME"
 
       - name: Create Pull Request
         if: github.event.inputs.create_pr == 'true'
