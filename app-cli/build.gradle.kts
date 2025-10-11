@@ -4,6 +4,7 @@
 
 plugins {
     application
+    id("com.github.johnrengelman.shadow")
 }
 
 dependencies {
@@ -16,4 +17,10 @@ dependencies {
 
 application {
     mainClass = "net.kigawa.kinfra.AppKt"
+}
+
+tasks.shadowJar {
+    archiveBaseName.set("kinfra")
+    archiveClassifier.set("")
+    archiveVersion.set(project.version.toString())
 }

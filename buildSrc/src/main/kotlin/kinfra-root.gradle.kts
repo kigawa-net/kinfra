@@ -4,6 +4,7 @@ plugins {
 }
 allprojects {
     group = "net.kigawa.kinfra"
+    version = System.getenv("VERSION") ?: "dev"
     apply(plugin = "kinfra-common")
 }
 
