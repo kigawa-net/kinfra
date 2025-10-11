@@ -1,0 +1,219 @@
+name: Create Release Branch
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: 'Version increment type'
+        required: true
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
+          - custom
+        default: patch
+      custom_version:
+        description: 'Custom version (only used if version_type is "custom", e.g., 1.0.0)'
+        required: false
+        type: string
+      create_pr:
+        description: 'Automatically create PR to main'
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  create-release-branch:
+    name: Create Release Branch from Dev
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout dev branch
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+          fetch-depth: 0
+
+      - name: Get latest version from tags
+        id: get_latest_version
+        run: |
+          # Get the latest version tag (v*.*.*)
+          LATEST_TAG=$(git tag -l "v*.*.*" | sort -V | tail -n 1)
+
+          if [ -z "$LATEST_TAG" ]; then
+            echo "No existing version tags found, starting from 0.0.0"
+            LATEST_VERSION="0.0.0"
+          else
+            # Remove 'v' prefix
+            LATEST_VERSION="${LATEST_TAG#v}"
+            echo "Latest version found: $LATEST_VERSION (from tag $LATEST_TAG)"
+          fi
+
+          echo "LATEST_VERSION=$LATEST_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Calculate new version
+        id: calculate_version
+        run: |
+          VERSION_TYPE="${{ github.event.inputs.version_type }}"
+          LATEST_VERSION="${{ steps.get_latest_version.outputs.LATEST_VERSION }}"
+
+          if [ "$VERSION_TYPE" == "custom" ]; then
+            VERSION="${{ github.event.inputs.custom_version }}"
+            # Remove 'v' prefix if present
+            VERSION="${VERSION#v}"
+
+            # Validate version format (X.Y.Z)
+            if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "Error: Invalid version format: $VERSION"
+              echo "Expected format: 1.0.0 (major.minor.patch)"
+              exit 1
+            fi
+          else
+            # Parse current version
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$LATEST_VERSION"
+
+            # Increment based on type
+            case "$VERSION_TYPE" in
+              major)
+                MAJOR=$((MAJOR + 1))
+                MINOR=0
+                PATCH=0
+                ;;
+              minor)
+                MINOR=$((MINOR + 1))
+                PATCH=0
+                ;;
+              patch)
+                PATCH=$((PATCH + 1))
+                ;;
+            esac
+
+            VERSION="${MAJOR}.${MINOR}.${PATCH}"
+          fi
+
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "BRANCH_NAME=release/$VERSION" >> $GITHUB_OUTPUT
+          echo "New version: $VERSION (from $LATEST_VERSION using $VERSION_TYPE)"
+          echo "Branch name: release/$VERSION"
+
+      - name: Check if branch already exists
+        id: check_branch
+        run: |
+          BRANCH_NAME="${{ steps.calculate_version.outputs.BRANCH_NAME }}"
+
+          if git ls-remote --heads origin "$BRANCH_NAME" | grep -q "$BRANCH_NAME"; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Branch $BRANCH_NAME already exists - will merge dev into it"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "Branch $BRANCH_NAME does not exist - will create new branch"
+          fi
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create release branch
+        if: steps.check_branch.outputs.exists == 'false'
+        run: |
+          BRANCH_NAME="${{ steps.calculate_version.outputs.BRANCH_NAME }}"
+          VERSION="${{ steps.calculate_version.outputs.VERSION }}"
+
+          git checkout -b "$BRANCH_NAME"
+
+          # Create a marker commit for the release branch
+          git commit --allow-empty -m "chore: prepare release $VERSION"
+
+          git push origin "$BRANCH_NAME"
+          echo "Created and pushed branch: $BRANCH_NAME"
+
+      - name: Merge dev into existing release branch
+        if: steps.check_branch.outputs.exists == 'true'
+        run: |
+          BRANCH_NAME="${{ steps.calculate_version.outputs.BRANCH_NAME }}"
+          VERSION="${{ steps.calculate_version.outputs.VERSION }}"
+
+          # Fetch and checkout the existing release branch
+          git fetch origin "$BRANCH_NAME"
+          git checkout "$BRANCH_NAME"
+
+          # Merge dev into the release branch
+          git merge origin/dev --no-edit -m "chore: merge dev into $BRANCH_NAME"
+
+          # Push the merged changes
+          git push origin "$BRANCH_NAME"
+          echo "Merged dev into existing branch: $BRANCH_NAME"
+
+      - name: Create Pull Request
+        if: github.event.inputs.create_pr == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const version = '${{ steps.calculate_version.outputs.VERSION }}';
+            const branchName = '${{ steps.calculate_version.outputs.BRANCH_NAME }}';
+            const versionType = '${{ github.event.inputs.version_type }}';
+            const latestVersion = '${{ steps.get_latest_version.outputs.LATEST_VERSION }}';
+
+            const { data: pr } = await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Release v${version}`,
+              head: branchName,
+              base: 'main',
+              body: `## Release v${version}
+
+            This PR merges the release branch for version ${version} into main.
+
+            **Version Info:**
+            - Previous version: ${latestVersion}
+            - New version: ${version}
+            - Increment type: ${versionType}
+
+            ### Checklist
+            - [ ] All tests pass
+            - [ ] Documentation is updated
+            - [ ] CHANGELOG is updated
+            - [ ] Version numbers are updated
+
+            ### What happens after merge?
+            - Automatically creates tag \`v${version}\`
+            - Triggers release workflow to build and publish JAR
+
+            ---
+            *This PR was created automatically by the Create Release Branch workflow*`
+            });
+
+            console.log(`Created PR #${pr.number}: ${pr.html_url}`);
+            core.summary
+              .addHeading('Release Branch Created')
+              .addRaw(`- **Previous Version**: ${latestVersion}`)
+              .addRaw(`- **New Version**: ${version}`)
+              .addRaw(`- **Increment Type**: ${versionType}`)
+              .addRaw(`- **Branch**: ${branchName}`)
+              .addRaw(`- **Pull Request**: [#${pr.number}](${pr.html_url})`)
+              .write();
+
+      - name: Summary
+        if: github.event.inputs.create_pr == 'false'
+        run: |
+          VERSION="${{ steps.calculate_version.outputs.VERSION }}"
+          BRANCH_NAME="${{ steps.calculate_version.outputs.BRANCH_NAME }}"
+          LATEST_VERSION="${{ steps.get_latest_version.outputs.LATEST_VERSION }}"
+          VERSION_TYPE="${{ github.event.inputs.version_type }}"
+
+          echo "## Release Branch Created" >> $GITHUB_STEP_SUMMARY
+          echo "- **Previous Version**: $LATEST_VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "- **New Version**: $VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "- **Increment Type**: $VERSION_TYPE" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: $BRANCH_NAME" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Next steps:" >> $GITHUB_STEP_SUMMARY
+          echo "1. Make any final changes to the release branch" >> $GITHUB_STEP_SUMMARY
+          echo "2. Create a PR to merge into main" >> $GITHUB_STEP_SUMMARY
+          echo "3. After merge, tag will be created automatically" >> $GITHUB_STEP_SUMMARY
