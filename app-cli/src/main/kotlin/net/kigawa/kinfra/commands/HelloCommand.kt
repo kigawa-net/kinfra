@@ -1,10 +1,12 @@
 package net.kigawa.kinfra.commands
 
+import net.kigawa.kinfra.action.TerraformService
 import net.kigawa.kinfra.infrastructure.config.ConfigRepository
 import net.kigawa.kinfra.infrastructure.logging.Logger
 import net.kigawa.kinfra.infrastructure.process.ProcessExecutor
 import net.kigawa.kinfra.infrastructure.terraform.TerraformVarsManager
 import net.kigawa.kinfra.model.Command
+import net.kigawa.kinfra.model.Environment
 import net.kigawa.kinfra.model.HostsConfig
 import net.kigawa.kinfra.util.AnsiColors
 
@@ -12,32 +14,57 @@ class HelloCommand(
     private val configRepository: ConfigRepository,
     private val terraformVarsManager: TerraformVarsManager,
     private val processExecutor: ProcessExecutor,
+    private val terraformService: TerraformService,
     private val logger: Logger
 ) : Command {
+    private var currentEnvironment: Environment = Environment.PROD
+
     override fun execute(args: Array<String>): Int {
         println("${AnsiColors.CYAN}${AnsiColors.BOLD}Welcome to kinfra interactive manager!${AnsiColors.RESET}")
         println()
 
         while (true) {
-            showMainMenu()
-            print("${AnsiColors.GREEN}Select an option (1-5):${AnsiColors.RESET} ")
+            val menuItems = buildMenuItems()
+            showMainMenu(menuItems)
+            print("${AnsiColors.GREEN}Select an option (1-${menuItems.size}):${AnsiColors.RESET} ")
             val choice = readLine()?.trim() ?: ""
 
             println()
             when (choice) {
-                "1" -> listHosts()
-                "2" -> enableHost()
-                "3" -> disableHost()
-                "4" -> gitStatus()
-                "5" -> gitPush()
                 "0", "q", "quit", "exit" -> {
                     println("${AnsiColors.CYAN}Goodbye!${AnsiColors.RESET}")
                     return 0
                 }
-                else -> println("${AnsiColors.RED}Invalid option. Please try again.${AnsiColors.RESET}")
+                else -> {
+                    val index = choice.toIntOrNull()?.minus(1)
+                    if (index != null && index in menuItems.indices) {
+                        menuItems[index].action()
+                    } else {
+                        println("${AnsiColors.RED}Invalid option. Please try again.${AnsiColors.RESET}")
+                    }
+                }
             }
             println()
         }
+    }
+
+    private data class MenuItem(
+        val label: String,
+        val action: () -> Unit
+    )
+
+    private fun buildMenuItems(): List<MenuItem> {
+        return listOf(
+            MenuItem("List Terraform directories") { listHosts() },
+            MenuItem("Enable Terraform directory") { enableHost() },
+            MenuItem("Disable Terraform directory") { disableHost() },
+            MenuItem("Check Git status") { gitStatus() },
+            MenuItem("Push to Git repository") { gitPush() },
+            MenuItem("Select environment (current: ${currentEnvironment.name})") { selectEnvironment() },
+            MenuItem("Run Terraform init") { terraformInit() },
+            MenuItem("Run Terraform plan") { terraformPlan() },
+            MenuItem("Run Terraform apply") { terraformApply() }
+        )
     }
 
     override fun getDescription(): String {
@@ -48,15 +75,125 @@ class HelloCommand(
         return false
     }
 
-    private fun showMainMenu() {
+    private fun showMainMenu(menuItems: List<MenuItem>) {
         println("${AnsiColors.BLUE}${AnsiColors.BOLD}=== Main Menu ===${AnsiColors.RESET}")
-        println("  ${AnsiColors.CYAN}1.${AnsiColors.RESET} List Terraform directories")
-        println("  ${AnsiColors.CYAN}2.${AnsiColors.RESET} Enable Terraform directory")
-        println("  ${AnsiColors.CYAN}3.${AnsiColors.RESET} Disable Terraform directory")
-        println("  ${AnsiColors.CYAN}4.${AnsiColors.RESET} Check Git status")
-        println("  ${AnsiColors.CYAN}5.${AnsiColors.RESET} Push to Git repository")
+        menuItems.forEachIndexed { index, item ->
+            println("  ${AnsiColors.CYAN}${index + 1}.${AnsiColors.RESET} ${item.label}")
+        }
         println("  ${AnsiColors.CYAN}0.${AnsiColors.RESET} Exit")
         println()
+    }
+
+    private fun selectEnvironment() {
+        logger.info("Selecting environment")
+        println("${AnsiColors.BLUE}${AnsiColors.BOLD}Select Environment${AnsiColors.RESET}")
+        println("${AnsiColors.YELLOW}Note: Currently only 'prod' is supported${AnsiColors.RESET}")
+        println()
+        println("  1. prod ${if (currentEnvironment.name == "prod") "${AnsiColors.GREEN}(current)${AnsiColors.RESET}" else ""}")
+        println()
+
+        print("${AnsiColors.GREEN}Enter environment name or number:${AnsiColors.RESET} ")
+        val input = readLine()?.trim()?.lowercase() ?: ""
+
+        val envName = when (input) {
+            "1" -> "prod"
+            else -> input
+        }
+
+        if (Environment.isValid(envName)) {
+            currentEnvironment = Environment.fromString(envName) ?: Environment.PROD
+            println("${AnsiColors.GREEN}✓ Environment set to: ${currentEnvironment.name}${AnsiColors.RESET}")
+        } else {
+            println("${AnsiColors.RED}Error: Invalid environment '$envName'${AnsiColors.RESET}")
+        }
+    }
+
+    private fun terraformInit() {
+        logger.info("Running terraform init for environment: ${currentEnvironment.name}")
+        println("${AnsiColors.BLUE}${AnsiColors.BOLD}Running Terraform Init${AnsiColors.RESET}")
+        println("${AnsiColors.CYAN}Environment: ${currentEnvironment.name}${AnsiColors.RESET}")
+        println()
+
+        print("${AnsiColors.GREEN}Do you want to continue? (yes/no):${AnsiColors.RESET} ")
+        val confirmation = readLine()?.trim()?.lowercase() ?: ""
+
+        if (confirmation != "yes" && confirmation != "y") {
+            println("${AnsiColors.YELLOW}Init cancelled.${AnsiColors.RESET}")
+            return
+        }
+
+        println()
+        println("${AnsiColors.BLUE}Initializing Terraform...${AnsiColors.RESET}")
+
+        val result = terraformService.init(currentEnvironment, quiet = false)
+
+        if (result.isSuccess) {
+            println()
+            println("${AnsiColors.GREEN}✓ Terraform init completed successfully${AnsiColors.RESET}")
+        } else {
+            println()
+            println("${AnsiColors.RED}✗ Terraform init failed${AnsiColors.RESET}")
+            result.message?.let { println("${AnsiColors.RED}Error: $it${AnsiColors.RESET}") }
+        }
+    }
+
+    private fun terraformPlan() {
+        logger.info("Running terraform plan for environment: ${currentEnvironment.name}")
+        println("${AnsiColors.BLUE}${AnsiColors.BOLD}Running Terraform Plan${AnsiColors.RESET}")
+        println("${AnsiColors.CYAN}Environment: ${currentEnvironment.name}${AnsiColors.RESET}")
+        println()
+
+        print("${AnsiColors.GREEN}Do you want to continue? (yes/no):${AnsiColors.RESET} ")
+        val confirmation = readLine()?.trim()?.lowercase() ?: ""
+
+        if (confirmation != "yes" && confirmation != "y") {
+            println("${AnsiColors.YELLOW}Plan cancelled.${AnsiColors.RESET}")
+            return
+        }
+
+        println()
+        println("${AnsiColors.BLUE}Planning Terraform changes...${AnsiColors.RESET}")
+
+        val result = terraformService.plan(currentEnvironment, quiet = false)
+
+        if (result.isSuccess) {
+            println()
+            println("${AnsiColors.GREEN}✓ Terraform plan completed successfully${AnsiColors.RESET}")
+        } else {
+            println()
+            println("${AnsiColors.RED}✗ Terraform plan failed${AnsiColors.RESET}")
+            result.message?.let { println("${AnsiColors.RED}Error: $it${AnsiColors.RESET}") }
+        }
+    }
+
+    private fun terraformApply() {
+        logger.info("Running terraform apply for environment: ${currentEnvironment.name}")
+        println("${AnsiColors.BLUE}${AnsiColors.BOLD}Running Terraform Apply${AnsiColors.RESET}")
+        println("${AnsiColors.CYAN}Environment: ${currentEnvironment.name}${AnsiColors.RESET}")
+        println("${AnsiColors.YELLOW}Warning: This will make changes to your infrastructure!${AnsiColors.RESET}")
+        println()
+
+        print("${AnsiColors.GREEN}Do you want to continue? (yes/no):${AnsiColors.RESET} ")
+        val confirmation = readLine()?.trim()?.lowercase() ?: ""
+
+        if (confirmation != "yes" && confirmation != "y") {
+            println("${AnsiColors.YELLOW}Apply cancelled.${AnsiColors.RESET}")
+            return
+        }
+
+        println()
+        println("${AnsiColors.BLUE}Applying Terraform changes...${AnsiColors.RESET}")
+
+        val result = terraformService.apply(currentEnvironment, quiet = false)
+
+        if (result.isSuccess) {
+            println()
+            println("${AnsiColors.GREEN}✓ Terraform apply completed successfully${AnsiColors.RESET}")
+        } else {
+            println()
+            println("${AnsiColors.RED}✗ Terraform apply failed${AnsiColors.RESET}")
+            result.message?.let { println("${AnsiColors.RED}Error: $it${AnsiColors.RESET}") }
+        }
     }
 
     private fun listHosts() {
