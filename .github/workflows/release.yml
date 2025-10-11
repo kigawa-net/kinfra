@@ -1,15 +1,17 @@
-name: Release
+name: Manual Release
 
 on:
-  push:
-    tags:
-      - 'v*.*.*'
   workflow_dispatch:
     inputs:
       version:
         description: 'Version tag (e.g., v1.0.0)'
         required: true
         type: string
+      create_tag:
+        description: 'Create tag if it does not exist'
+        required: false
+        type: boolean
+        default: true
 
 permissions:
   contents: write
@@ -38,10 +40,10 @@ jobs:
       - name: Get version
         id: get_version
         run: |
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            VERSION="${{ github.event.inputs.version }}"
-          else
-            VERSION="${GITHUB_REF#refs/tags/}"
+          VERSION="${{ github.event.inputs.version }}"
+          # Ensure version starts with 'v'
+          if [[ ! "$VERSION" =~ ^v ]]; then
+            VERSION="v$VERSION"
           fi
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
           echo "VERSION_NUMBER=${VERSION#v}" >> $GITHUB_OUTPUT

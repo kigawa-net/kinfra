@@ -1,4 +1,4 @@
-name: Auto Tag Release
+name: Auto Release
 
 on:
   pull_request:
@@ -10,8 +10,8 @@ permissions:
   contents: write
 
 jobs:
-  auto-tag:
-    name: Create Release Tag
+  auto-release:
+    name: Build and Create Release
     runs-on: ubuntu-latest
     if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'release/')
 
@@ -40,32 +40,76 @@ jobs:
           fi
 
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "VERSION_NUMBER=${VERSION#v}" >> $GITHUB_OUTPUT
           echo "Extracted version: $VERSION"
 
-      - name: Check if tag already exists
-        id: check_tag
+      - name: Check if release already exists
+        id: check_release
         run: |
           VERSION="${{ steps.extract_version.outputs.VERSION }}"
-          if git rev-parse "$VERSION" >/dev/null 2>&1; then
+          if gh release view "$VERSION" >/dev/null 2>&1; then
             echo "exists=true" >> $GITHUB_OUTPUT
-            echo "Tag $VERSION already exists"
+            echo "Release $VERSION already exists"
           else
             echo "exists=false" >> $GITHUB_OUTPUT
-            echo "Tag $VERSION does not exist"
+            echo "Release $VERSION does not exist"
           fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create and push tag
-        if: steps.check_tag.outputs.exists == 'false'
+      - name: Set up JDK 21
+        if: steps.check_release.outputs.exists == 'false'
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        if: steps.check_release.outputs.exists == 'false'
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Make gradlew executable
+        if: steps.check_release.outputs.exists == 'false'
+        run: chmod +x gradlew
+
+      - name: Run tests
+        if: steps.check_release.outputs.exists == 'false'
+        run: ./gradlew test
+        env:
+          VERSION: ${{ steps.extract_version.outputs.VERSION_NUMBER }}
+
+      - name: Build CLI Shadow JAR
+        if: steps.check_release.outputs.exists == 'false'
+        run: ./gradlew :app-cli:shadowJar
+        env:
+          VERSION: ${{ steps.extract_version.outputs.VERSION_NUMBER }}
+
+      - name: Build Web Shadow JAR
+        if: steps.check_release.outputs.exists == 'false'
+        run: ./gradlew :app-web:shadowJar
+        env:
+          VERSION: ${{ steps.extract_version.outputs.VERSION_NUMBER }}
+
+      - name: Create Release (without tag)
+        if: steps.check_release.outputs.exists == 'false'
+        id: create_release
         run: |
           VERSION="${{ steps.extract_version.outputs.VERSION }}"
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag -a "$VERSION" -m "Release $VERSION"
-          git push origin "$VERSION"
-          echo "Created and pushed tag: $VERSION"
 
-      - name: Skip tag creation
-        if: steps.check_tag.outputs.exists == 'true'
+          gh release create "$VERSION" \
+            --title "Release $VERSION" \
+            --generate-notes \
+            --draft=false \
+            --prerelease=false \
+            app-cli/build/libs/kinfra-cli-*.jar \
+            app-web/build/libs/kinfra-web-*.jar
+
+          echo "Created release: $VERSION"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Skip release creation
+        if: steps.check_release.outputs.exists == 'true'
         run: |
           VERSION="${{ steps.extract_version.outputs.VERSION }}"
-          echo "Skipping tag creation - tag $VERSION already exists"
+          echo "Skipping release creation - release $VERSION already exists"
