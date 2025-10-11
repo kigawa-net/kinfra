@@ -2,10 +2,13 @@ package net.kigawa.kinfra.commands
 
 import net.kigawa.kinfra.model.Command
 import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenRepository
+import net.kigawa.kinfra.infrastructure.config.ConfigRepository
+import net.kigawa.kinfra.model.ProjectConfig
 import java.io.File
 
 class LoginCommand(
-    private val bitwardenRepository: BitwardenRepository
+    private val bitwardenRepository: BitwardenRepository,
+    private val configRepository: ConfigRepository
 ) : Command {
 
     companion object {
@@ -19,6 +22,20 @@ class LoginCommand(
     }
 
     override fun execute(args: Array<String>): Int {
+        // GitHubリポジトリ引数が指定されている場合は保存
+        if (args.isNotEmpty()) {
+            val githubRepo = args[0]
+            println("${BLUE}=== Setting up project ===${RESET}")
+            println("${BLUE}GitHub Repository:${RESET} $githubRepo")
+            println()
+
+            val projectConfig = ProjectConfig(githubRepository = githubRepo)
+            configRepository.saveProjectConfig(projectConfig)
+            val configPath = configRepository.getProjectConfigFilePath()
+            println("${GREEN}✓${RESET} Project configuration saved to $configPath")
+            println()
+        }
+
         println("${BLUE}=== Bitwarden Login ===${RESET}")
         println()
 
@@ -154,6 +171,6 @@ class LoginCommand(
     override fun requiresEnvironment(): Boolean = false
 
     override fun getDescription(): String {
-        return "Login and unlock Bitwarden vault"
+        return "Setup project and login to Bitwarden vault (usage: login [github-repo])"
     }
 }

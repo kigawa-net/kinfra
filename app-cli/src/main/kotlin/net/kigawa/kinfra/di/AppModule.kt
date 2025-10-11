@@ -84,7 +84,7 @@ val appModule = module {
     // Commands that don't require environment
     single<Command>(named(CommandType.FMT.commandName)) { FormatCommand(get()) }
     single<Command>(named(CommandType.VALIDATE.commandName)) { ValidateCommand(get()) }
-    single<Command>(named(CommandType.LOGIN.commandName)) { LoginCommand(get()) }
+    single<Command>(named(CommandType.LOGIN.commandName)) { LoginCommand(get(), get()) }
     single<Command>(named(CommandType.SETUP_R2.commandName)) { SetupR2Command(get()) }
     single<Command>(named(CommandType.CONFIG.commandName)) { ConfigCommand(get(), get(), get()) }
 
