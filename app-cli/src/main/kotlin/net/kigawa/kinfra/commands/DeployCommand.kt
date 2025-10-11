@@ -48,6 +48,16 @@ class DeployCommand(
         if (applyResult.isSuccess) {
             println()
             println("${AnsiColors.GREEN}✅ Deployment completed successfully!${AnsiColors.RESET}")
+
+            // Auto git push after successful deployment
+            println()
+            println("${AnsiColors.BLUE}Pushing to remote repository...${AnsiColors.RESET}")
+            val pushResult = gitPush()
+            if (pushResult) {
+                println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Successfully pushed to remote repository")
+            } else {
+                println("${AnsiColors.YELLOW}⚠${AnsiColors.RESET} Failed to push to remote repository (non-fatal)")
+            }
         }
 
         return applyResult.exitCode
@@ -159,5 +169,26 @@ class DeployCommand(
         println()
 
         return true
+    }
+
+    private fun gitPush(): Boolean {
+        return try {
+            val process = ProcessBuilder("git", "push")
+                .redirectOutput(ProcessBuilder.Redirect.PIPE)
+                .redirectError(ProcessBuilder.Redirect.PIPE)
+                .start()
+
+            val exitCode = process.waitFor()
+            if (exitCode != 0) {
+                val error = process.errorStream.bufferedReader().readText()
+                println("${AnsiColors.YELLOW}Git push failed: $error${AnsiColors.RESET}")
+                false
+            } else {
+                true
+            }
+        } catch (e: Exception) {
+            println("${AnsiColors.YELLOW}Git push error: ${e.message}${AnsiColors.RESET}")
+            false
+        }
     }
 }
