@@ -2,6 +2,7 @@ package net.kigawa.kinfra.commands
 
 import net.kigawa.kinfra.action.EnvironmentValidator
 import net.kigawa.kinfra.action.TerraformService
+import net.kigawa.kinfra.util.AnsiColors
 
 class InitCommand(
     private val terraformService: TerraformService,
@@ -16,13 +17,13 @@ class InitCommand(
 
         val environment = environmentValidator.validate(environmentName)
         if (environment == null) {
-            println("${RED}Error:${RESET} Only 'prod' environment is allowed.")
-            println("${BLUE}Available environment:${RESET} prod")
+            println("${AnsiColors.RED}Error:${AnsiColors.RESET} Only 'prod' environment is allowed.")
+            println("${AnsiColors.BLUE}Available environment:${AnsiColors.RESET} prod")
             return 1
         }
 
         if (isAutoSelected) {
-            println("${BLUE}Using environment:${RESET} ${environment.name} (automatically selected)")
+            println("${AnsiColors.BLUE}Using environment:${AnsiColors.RESET} ${environment.name} (automatically selected)")
         }
 
         val config = terraformService.getTerraformConfig(environment)

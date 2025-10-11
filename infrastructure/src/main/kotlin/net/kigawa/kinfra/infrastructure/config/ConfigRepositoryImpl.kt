@@ -1,9 +1,11 @@
 package net.kigawa.kinfra.infrastructure.config
 
+import com.charleskorn.kaml.Yaml
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import net.kigawa.kinfra.model.HostsConfig
 import net.kigawa.kinfra.model.ProjectConfig
+import net.kigawa.kinfra.model.KinfraConfig
 import java.io.File
 
 class ConfigRepositoryImpl(
@@ -68,5 +70,25 @@ class ConfigRepositoryImpl(
 
     override fun getProjectConfigFilePath(): String {
         return projectConfigFile.absolutePath
+    }
+
+    override fun loadKinfraConfig(filePath: String): KinfraConfig? {
+        val file = File(filePath)
+        if (!file.exists()) {
+            return null
+        }
+
+        val yamlContent = file.readText()
+        return Yaml.default.decodeFromString(KinfraConfig.serializer(), yamlContent)
+    }
+
+    override fun saveKinfraConfig(config: KinfraConfig, filePath: String) {
+        val file = File(filePath)
+        val yamlContent = Yaml.default.encodeToString(KinfraConfig.serializer(), config)
+        file.writeText(yamlContent)
+    }
+
+    override fun kinfraConfigExists(filePath: String): Boolean {
+        return File(filePath).exists()
     }
 }

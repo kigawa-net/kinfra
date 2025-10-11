@@ -13,7 +13,8 @@ enum class CommandType(val commandName: String) {
     DESTROY("destroy"),
     DEPLOY("deploy"),
     DEPLOY_SDK("deploy-sdk"),
-    HELP("help");
+    HELP("help"),
+    HELLO("hello");
 
     companion object {
         fun fromString(name: String): CommandType? {
