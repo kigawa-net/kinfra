@@ -116,7 +116,51 @@ kinfraは、Bitwarden Secret Manager統合を備えたKotlinベースのTerrafor
 - `TerraformRunner`がコマンドのルーティング、検証、実行を処理
 - 環境を必要とするコマンド（init、plan、apply、destroy、deploy）は、環境が指定されていない場合、自動的に"prod"をデフォルトとして使用（`TerraformRunner.kt:95-105`を参照）
 
+#### 新しいコマンドの追加
+
+1. `CommandType` enumに新しいコマンドを追加（`model/src/main/kotlin/net/kigawa/kinfra/model/CommandType.kt`）
+2. `Command`インターフェースを実装したコマンドクラスを作成（`app-cli/src/main/kotlin/net/kigawa/kinfra/commands/`）
+3. DIモジュールでコマンドを登録（`app-cli/src/main/kotlin/net/kigawa/kinfra/di/AppModule.kt`）
+
+#### loginコマンドの動作
+
+`LoginCommand`は以下の処理を順次実行します：
+1. GitHubリポジトリ引数が指定されている場合、`~/.local/kinfra/project.json`に保存
+2. カレントディレクトリの`kinfra.yaml`を読み込み（存在しない場合は自動生成）
+3. Bitwardenへのログイン（Secret ManagerまたはCLI）
+
+使用例：
+```bash
+./gradlew :app-cli:run --args="login owner/repo"
+```
+
 ## 設定
+
+### 設定ファイルの配置
+
+すべての設定ファイルは `~/.local/kinfra/` に保存されます：
+- `~/.local/kinfra/project.json` - プロジェクト設定（GitHubリポジトリ情報など）
+- `~/.local/kinfra/hosts.json` - ホスト有効/無効設定
+- `kinfra.yaml` - プロジェクトルートの設定ファイル（自動生成可能）
+
+### kinfra.yaml
+
+プロジェクトルートに配置される設定ファイル。`login`コマンド実行時に存在しない場合は自動作成されます：
+
+```yaml
+project:
+  name: ""
+  repository: "owner/repo"
+  description: ""
+terraform:
+  version: ""
+  workingDirectory: "terraform"
+bitwarden:
+  projectId: ""
+  useSecretManager: true
+```
+
+実装: `model/src/main/kotlin/net/kigawa/kinfra/model/KinfraConfig.kt`
 
 ### 環境変数
 
@@ -223,3 +267,26 @@ Webアプリケーションは以下のエンドポイントを提供：
 - `KINFRA_LOG_LEVEL`経由で設定可能なログレベルをサポート
 - 各実行ごとにタイムスタンプ付きログファイルを作成
 - Koin DIを通じてアプリケーション全体で利用可能
+
+## 重要な実装ノート
+
+### エラーハンドリング
+
+例外は握りつぶさずに適切にハンドリングすること。特に：
+- `ConfigRepository`のYAML読み込みメソッドは例外をスローする（呼び出し側でハンドリング）
+- ファイル操作やネットワーク操作では明示的なエラーメッセージを提供
+
+### シリアライゼーション
+
+- **JSON**: Gsonを使用（`ConfigRepository`のホスト・プロジェクト設定）
+- **YAML**: kotlinx-serialization + kamlを使用（`kinfra.yaml`）
+- modelモジュールのデータクラスには`@Serializable`アノテーションが必要
+
+### 設定ファイルの管理
+
+`ConfigRepositoryImpl`は3種類の設定を管理：
+1. `hosts.json` - Terraform変数生成に使用（JSON、Gson）
+2. `project.json` - プロジェクトメタデータ（JSON、Gson）
+3. `kinfra.yaml` - プロジェクトルートの設定ファイル（YAML、kaml）
+
+設定ディレクトリ（`~/.local/kinfra`）は自動的に作成される。

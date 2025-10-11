@@ -4,6 +4,8 @@ import net.kigawa.kinfra.model.Command
 import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenRepository
 import net.kigawa.kinfra.infrastructure.config.ConfigRepository
 import net.kigawa.kinfra.model.ProjectConfig
+import net.kigawa.kinfra.model.KinfraConfig
+import net.kigawa.kinfra.model.ProjectInfo
 import java.io.File
 
 class LoginCommand(
@@ -35,6 +37,9 @@ class LoginCommand(
             println("${GREEN}✓${RESET} Project configuration saved to $configPath")
             println()
         }
+
+        // kinfra.yamlを読み込むか作成
+        setupKinfraConfig()
 
         println("${BLUE}=== Bitwarden Login ===${RESET}")
         println()
@@ -105,6 +110,50 @@ class LoginCommand(
         } catch (e: Exception) {
             println("${RED}Error:${RESET} Failed to save token: ${e.message}")
             return 1
+        }
+    }
+
+    private fun setupKinfraConfig() {
+        println("${BLUE}=== Kinfra Configuration ===${RESET}")
+
+        if (configRepository.kinfraConfigExists()) {
+            println("${GREEN}✓${RESET} Found kinfra.yaml")
+            try {
+                val config = configRepository.loadKinfraConfig()
+                if (config != null) {
+                    println("${BLUE}Project:${RESET} ${config.project.name}")
+                    if (config.project.repository.isNotEmpty()) {
+                        println("${BLUE}Repository:${RESET} ${config.project.repository}")
+                    }
+                    println()
+                } else {
+                    println("${YELLOW}Warning:${RESET} Failed to parse kinfra.yaml")
+                    println()
+                }
+            } catch (e: Exception) {
+                println("${RED}Error:${RESET} Failed to read kinfra.yaml: ${e.message}")
+                println()
+            }
+        } else {
+            println("${YELLOW}kinfra.yaml not found${RESET}")
+            println("${BLUE}Creating default kinfra.yaml...${RESET}")
+
+            val projectConfig = configRepository.loadProjectConfig()
+            val defaultConfig = KinfraConfig(
+                project = ProjectInfo(
+                    repository = projectConfig.githubRepository ?: ""
+                )
+            )
+
+            try {
+                configRepository.saveKinfraConfig(defaultConfig)
+                println("${GREEN}✓${RESET} Created kinfra.yaml")
+                println("${BLUE}You can customize it later by editing the file${RESET}")
+                println()
+            } catch (e: Exception) {
+                println("${RED}Error:${RESET} Failed to create kinfra.yaml: ${e.message}")
+                println()
+            }
         }
     }
 
