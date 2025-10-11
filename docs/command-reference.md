@@ -128,9 +128,21 @@ init + plan + applyを連続実行。
 kinfra deploy
 ```
 
+**実行内容**:
+1. R2バックエンド設定の確認・作成
+2. `terraform init`
+3. `terraform plan`
+4. `terraform apply -auto-approve`
+5. **デプロイ成功後、自動的に`git push`を実行**
+
 **SDKモード**:
 - `BWS_ACCESS_TOKEN`がある場合、自動的に`deploy-sdk`にリダイレクト
 - Bitwarden Secret Managerからシークレットを取得して適用
+
+**注意**:
+- デプロイが成功した場合のみ、自動的にリモートリポジトリへプッシュされます
+- git pushが失敗してもデプロイの結果には影響しません（警告として表示）
+- プッシュしたくない場合は、事前にコミットしていないことを確認してください
 
 ---
 
