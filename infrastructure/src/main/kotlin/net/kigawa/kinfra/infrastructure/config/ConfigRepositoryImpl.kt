@@ -6,18 +6,43 @@ import com.google.gson.GsonBuilder
 import net.kigawa.kinfra.model.HostsConfig
 import net.kigawa.kinfra.model.ProjectConfig
 import net.kigawa.kinfra.model.KinfraConfig
+import net.kigawa.kinfra.infrastructure.git.GitRepository
 import java.io.File
 
 class ConfigRepositoryImpl(
-    configDir: String = System.getProperty("user.home") + "/.local/kinfra"
+    private val baseConfigDir: String = System.getProperty("user.home") + "/.local/kinfra"
 ) : ConfigRepository {
 
     private val gson: Gson = GsonBuilder().setPrettyPrinting().create()
-    private val configFile = File(configDir, "hosts.json")
-    private val projectConfigFile = File(configDir, "project.json")
+
+    /**
+     * リポジトリ固有の設定ディレクトリを取得
+     * リポジトリ名が取得できない場合は、baseConfigDirを返す（後方互換性）
+     */
+    private fun getRepoConfigDir(): String {
+        val repoName = GitRepository.getRepositoryName()
+        return if (repoName != null) {
+            "$baseConfigDir/$repoName"
+        } else {
+            baseConfigDir
+        }
+    }
+
+    private val configDir: String
+        get() = getRepoConfigDir()
+
+    private val configFile: File
+        get() = File(configDir, "hosts.json")
+
+    private val projectConfigFile: File
+        get() = File(configDir, "project.json")
 
     init {
         // 設定ディレクトリが存在しない場合は作成
+        ensureConfigDirExists()
+    }
+
+    private fun ensureConfigDirExists() {
         val dir = File(configDir)
         if (!dir.exists()) {
             dir.mkdirs()
@@ -25,6 +50,7 @@ class ConfigRepositoryImpl(
     }
 
     override fun loadHostsConfig(): HostsConfig {
+        ensureConfigDirExists()
         return if (configFile.exists()) {
             try {
                 val json = configFile.readText()
@@ -40,6 +66,7 @@ class ConfigRepositoryImpl(
     }
 
     override fun saveHostsConfig(config: HostsConfig) {
+        ensureConfigDirExists()
         val json = gson.toJson(config)
         configFile.writeText(json)
     }
@@ -49,6 +76,7 @@ class ConfigRepositoryImpl(
     }
 
     override fun loadProjectConfig(): ProjectConfig {
+        ensureConfigDirExists()
         return if (projectConfigFile.exists()) {
             try {
                 val json = projectConfigFile.readText()
@@ -64,6 +92,7 @@ class ConfigRepositoryImpl(
     }
 
     override fun saveProjectConfig(config: ProjectConfig) {
+        ensureConfigDirExists()
         val json = gson.toJson(config)
         projectConfigFile.writeText(json)
     }

@@ -14,7 +14,8 @@ enum class CommandType(val commandName: String) {
     DEPLOY("deploy"),
     DEPLOY_SDK("deploy-sdk"),
     HELP("help"),
-    HELLO("hello");
+    HELLO("hello"),
+    SELF_UPDATE("self-update");
 
     companion object {
         fun fromString(name: String): CommandType? {

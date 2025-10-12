@@ -2,9 +2,15 @@ package net.kigawa.kinfra.commands
 
 import net.kigawa.kinfra.model.Command
 import net.kigawa.kinfra.util.AnsiColors
+import net.kigawa.kinfra.util.GitHelper
 
 class HelpCommand(private val commands: Map<String, Command>) : Command {
     override fun execute(args: Array<String>): Int {
+        // Pull latest changes from git repository
+        if (!GitHelper.pullRepository()) {
+            println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Failed to pull from git repository, continuing anyway...")
+        }
+
         println("${AnsiColors.BLUE}Usage:${AnsiColors.RESET} java -jar app.jar [command] [options]")
         println()
         println("${AnsiColors.BLUE}Commands:${AnsiColors.RESET}")

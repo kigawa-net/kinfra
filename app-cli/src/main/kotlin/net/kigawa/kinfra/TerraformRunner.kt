@@ -75,13 +75,14 @@ class TerraformRunner : KoinComponent {
             exitProcess(1)
         }
 
-        // Skip Terraform check for help, login, config, hello and setup-r2 commands
+        // Skip Terraform check for help, login, config, hello, setup-r2 and self-update commands
         val skipTerraformCheck = commandName == CommandType.HELP.commandName
             || commandName == CommandType.LOGIN.commandName
             || commandName == CommandType.CONFIG.commandName
             || commandName == CommandType.HELLO.commandName
             || commandName == CommandType.SETUP_R2.commandName
             || commandName == CommandType.SETUP_R2_SDK.commandName
+            || commandName == CommandType.SELF_UPDATE.commandName
         if (!skipTerraformCheck && !isTerraformInstalled()) {
             logger.error("Terraform is not installed")
             println("${AnsiColors.RED}Error:${AnsiColors.RESET} Terraform is not installed or not found in PATH.")

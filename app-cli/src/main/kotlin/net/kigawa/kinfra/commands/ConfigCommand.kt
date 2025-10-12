@@ -7,6 +7,7 @@ import net.kigawa.kinfra.model.Command
 import net.kigawa.kinfra.model.HostConfig
 import net.kigawa.kinfra.model.HostsConfig
 import net.kigawa.kinfra.util.AnsiColors
+import net.kigawa.kinfra.util.GitHelper
 
 class ConfigCommand(
     private val configRepository: ConfigRepository,
@@ -15,6 +16,11 @@ class ConfigCommand(
 ) : Command {
 
     override fun execute(args: Array<String>): Int {
+        // Pull latest changes from git repository
+        if (!GitHelper.pullRepository()) {
+            println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Failed to pull from git repository, continuing anyway...")
+        }
+
         logger.info("Executing config command with args: ${args.joinToString(" ")}")
 
         if (args.isEmpty()) {

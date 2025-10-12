@@ -2,6 +2,18 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 目次
+
+- [プロジェクト概要](#プロジェクト概要)
+- [ビルド: Gradle 8.10.2 / Java 21 / Kotlin 2.2.0](#ビルド-gradle-8102--java-21--kotlin-220)
+- [アーキテクチャ: レイヤードマルチモジュール](#アーキテクチャ-レイヤードマルチモジュール)
+  - [DI（Koin）](#dikoin)
+  - [コマンドシステム](#コマンドシステム)
+  - [UI: ANSIカラー](#ui-ansiカラー)
+- [設定](#設定)
+- [Web API (Ktor, :8080)](#web-api-ktor-8080)
+- [実装ノート](#実装ノート)
+
 ## プロジェクト概要
 
 KotlinベースのTerraformラッパー。Bitwarden Secret Manager統合によりシークレットを安全に管理。
