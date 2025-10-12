@@ -103,23 +103,11 @@ class ConfigRepositoryImpl(
 
     /**
      * ファイルパスを解決する
-     * 相対パスの場合はGitリポジトリのルートを基準にする
+     * 相対パスの場合はログインしているリポジトリの設定ディレクトリを基準にする
      * 絶対パスの場合はそのまま返す
      */
     private fun resolveFilePath(filePath: String): File {
-        val file = File(filePath)
-        if (file.isAbsolute) {
-            return file
-        }
-
-        // 相対パスの場合、Gitリポジトリのルートを基準にする
-        val repoRoot = GitRepository.getRepositoryRoot()
-        return if (repoRoot != null) {
-            File(repoRoot, filePath)
-        } else {
-            // Gitリポジトリでない場合は、カレントディレクトリを基準にする
-            file
-        }
+        return File(configDir, filePath)
     }
 
     override fun loadKinfraConfig(filePath: String): KinfraConfig? {
