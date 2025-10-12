@@ -5,6 +5,7 @@ import net.kigawa.kinfra.infrastructure.config.ConfigRepository
 import net.kigawa.kinfra.infrastructure.update.VersionChecker
 import net.kigawa.kinfra.infrastructure.update.AutoUpdater
 import net.kigawa.kinfra.util.AnsiColors
+import net.kigawa.kinfra.util.GitHelper
 
 class SelfUpdateCommand(
     private val configRepository: ConfigRepository,
@@ -13,6 +14,11 @@ class SelfUpdateCommand(
 ) : Command {
 
     override fun execute(args: Array<String>): Int {
+        // Pull latest changes from git repository
+        if (!GitHelper.pullRepository()) {
+            println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Failed to pull from git repository, continuing anyway...")
+        }
+
         println("${AnsiColors.BLUE}=== Kinfra Self-Update ===${AnsiColors.RESET}")
         println()
 
