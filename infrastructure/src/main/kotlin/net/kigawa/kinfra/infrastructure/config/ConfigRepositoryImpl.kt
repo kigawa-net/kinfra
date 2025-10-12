@@ -108,12 +108,6 @@ class ConfigRepositoryImpl(
      * 絶対パスの場合はそのまま返す
      */
     private fun resolveFilePath(filePath: String): File {
-        val file = File(filePath)
-        if (file.isAbsolute) {
-            return file
-        }
-
-        // 相対パスの場合、ログインしているリポジトリの設定ディレクトリを基準にする
         return File(configDir, filePath)
     }
 
