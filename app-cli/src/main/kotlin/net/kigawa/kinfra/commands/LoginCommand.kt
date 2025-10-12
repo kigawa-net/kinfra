@@ -22,23 +22,56 @@ class LoginCommand(
     }
 
     override fun execute(args: Array<String>): Int {
-        // Pull latest changes from git repository
-        if (!gitHelper.pullRepository()) {
-            println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Failed to pull from git repository, continuing anyway...")
-        }
-
-        // GitHubリポジトリ引数が指定されている場合は保存
+        // GitHubリポジトリ引数が指定されている場合はクローンまたはpull
         if (args.isNotEmpty()) {
             val githubRepo = args[0]
             println("${AnsiColors.BLUE}=== Setting up project ===${AnsiColors.RESET}")
             println("${AnsiColors.BLUE}GitHub Repository:${AnsiColors.RESET} $githubRepo")
             println()
 
-            val projectConfig = ProjectConfig(githubRepository = githubRepo)
+            // Parse GitHub repository URL to extract user/repo
+            val repoPath = parseGitHubRepoPath(githubRepo)
+            if (repoPath == null) {
+                println("${AnsiColors.RED}Error:${AnsiColors.RESET} Invalid GitHub repository format: $githubRepo")
+                println("${AnsiColors.BLUE}Expected format:${AnsiColors.RESET} user/repo or https://github.com/user/repo.git")
+                return 1
+            }
+
+            // Determine target directory
+            val targetDir = File(repoPath.second)
+
+            // Save project configuration
+            val projectConfig = ProjectConfig(githubRepository = targetDir.absolutePath)
             configRepository.saveProjectConfig(projectConfig)
             val configPath = configRepository.getProjectConfigFilePath()
             println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Project configuration saved to $configPath")
             println()
+
+            // Clone or pull repository
+            if (targetDir.exists() && gitHelper.isGitRepository(targetDir)) {
+                println("${AnsiColors.BLUE}Repository already exists, pulling latest changes...${AnsiColors.RESET}")
+                if (!gitHelper.pullRepository()) {
+                    println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Failed to pull from git repository, continuing anyway...")
+                }
+            } else {
+                // Clone the repository
+                val repoUrl = if (githubRepo.startsWith("http") || githubRepo.startsWith("git@")) {
+                    githubRepo
+                } else {
+                    "https://github.com/$githubRepo.git"
+                }
+
+                if (!gitHelper.cloneRepository(repoUrl, targetDir)) {
+                    println("${AnsiColors.RED}Error:${AnsiColors.RESET} Failed to clone repository")
+                    return 1
+                }
+            }
+            println()
+        } else {
+            // Pull latest changes from git repository (if configured)
+            if (!gitHelper.pullRepository()) {
+                println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Failed to pull from git repository, continuing anyway...")
+            }
         }
 
         // kinfra.yamlを読み込むか作成
@@ -52,7 +85,7 @@ class LoginCommand(
         println("  1) Secret Manager (BWS_ACCESS_TOKEN) - Recommended")
         println("  2) CLI (bw) - Legacy")
         print("Choice [1]: ")
-        val choice = readLine()?.takeIf { it.isNotBlank() } ?: "1"
+        val choice = readlnOrNull()?.takeIf { it.isNotBlank() } ?: "1"
 
         return when (choice) {
             "1" -> setupSecretManagerToken()
@@ -218,6 +251,41 @@ class LoginCommand(
         println("After logging in, run this command again to unlock your vault.")
 
         return 1
+    }
+
+    /**
+     * Parse GitHub repository URL or path to extract repository name and local path
+     * @param githubRepo GitHub repository in various formats:
+     *   - user/repo
+     *   - https://github.com/user/repo.git
+     *   - git@github.com:user/repo.git
+     * @return Pair of (repoName, localPath) or null if invalid format
+     */
+    private fun parseGitHubRepoPath(githubRepo: String): Pair<String, String>? {
+        val repoName = when {
+            // HTTPS URL: https://github.com/user/repo.git
+            githubRepo.startsWith("https://github.com/") -> {
+                githubRepo.removePrefix("https://github.com/").removeSuffix(".git")
+            }
+            // SSH URL: git@github.com:user/repo.git
+            githubRepo.startsWith("git@github.com:") -> {
+                githubRepo.removePrefix("git@github.com:").removeSuffix(".git")
+            }
+            // Short format: user/repo
+            githubRepo.matches(Regex("^[a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+$")) -> {
+                githubRepo
+            }
+            else -> return null
+        }
+
+        // Extract repo directory name (last part after /)
+        val repoDirName = repoName.substringAfterLast('/')
+
+        // Default local path: ~/.local/kinfra/repos/{repo}
+        val homeDir = System.getProperty("user.home")
+        val localPath = "$homeDir/.local/kinfra/repos/$repoDirName"
+
+        return Pair(repoName, localPath)
     }
 
     override fun getDescription(): String {

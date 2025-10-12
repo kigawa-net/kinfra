@@ -13,5 +13,6 @@ interface TerraformService {
     fun destroy(additionalArgs: Array<String> = emptyArray(), quiet: Boolean = true): CommandResult
     fun format(recursive: Boolean = true, quiet: Boolean = true): CommandResult
     fun validate(quiet: Boolean = true): CommandResult
+    fun show(additionalArgs: Array<String> = emptyArray(), quiet: Boolean = true): CommandResult
     fun getTerraformConfig(): TerraformConfig
 }

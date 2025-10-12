@@ -3,6 +3,7 @@ package net.kigawa.kinfra.model
 enum class CommandType(val commandName: String) {
     FMT("fmt"),
     VALIDATE("validate"),
+    STATUS("status"),
     LOGIN("login"),
     SETUP_R2("setup-r2"),
     SETUP_R2_SDK("setup-r2-sdk"),

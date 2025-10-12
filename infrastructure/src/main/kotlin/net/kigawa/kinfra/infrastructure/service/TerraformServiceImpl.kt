@@ -112,6 +112,18 @@ class TerraformServiceImpl(
         return processExecutor.execute(args = arrayOf("terraform", "validate"), quiet = quiet)
     }
 
+    override fun show(additionalArgs: Array<String>, quiet: Boolean): CommandResult {
+        val config = terraformRepository.getTerraformConfig()
+        val args = arrayOf("terraform", "show") + additionalArgs
+
+        return processExecutor.execute(
+            args = args,
+            workingDir = config.workingDirectory,
+            environment = mapOf("SSH_CONFIG" to config.sshConfigPath),
+            quiet = quiet
+        )
+    }
+
     override fun getTerraformConfig(): TerraformConfig {
         return terraformRepository.getTerraformConfig()
     }

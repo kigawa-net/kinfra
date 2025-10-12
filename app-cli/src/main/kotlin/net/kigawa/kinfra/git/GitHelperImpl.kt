@@ -103,4 +103,62 @@ class GitHelperImpl : GitHelper {
             false
         }
     }
+
+    /**
+     * Clone a git repository to the specified directory
+     * @param repoUrl Git repository URL (e.g., https://github.com/user/repo.git or git@github.com:user/repo.git)
+     * @param targetDir Target directory to clone into
+     * @return true if clone was successful, false if failed
+     */
+    override fun cloneRepository(repoUrl: String, targetDir: File): Boolean {
+        if (targetDir.exists()) {
+            if (targetDir.listFiles()?.isNotEmpty() == true) {
+                println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Target directory is not empty: ${targetDir.absolutePath}")
+                print("Continue and overwrite? (y/N): ")
+                val confirm = readlnOrNull()?.lowercase()
+                if (confirm != "y" && confirm != "yes") {
+                    println("${AnsiColors.BLUE}Clone cancelled${AnsiColors.RESET}")
+                    return false
+                }
+            }
+        } else {
+            // Create parent directories if they don't exist
+            if (!targetDir.mkdirs()) {
+                println("${AnsiColors.RED}Error:${AnsiColors.RESET} Failed to create target directory: ${targetDir.absolutePath}")
+                return false
+            }
+        }
+
+        return try {
+            println("${AnsiColors.BLUE}Cloning repository from $repoUrl...${AnsiColors.RESET}")
+            val process = ProcessBuilder("git", "clone", repoUrl, targetDir.absolutePath)
+                .redirectOutput(ProcessBuilder.Redirect.PIPE)
+                .redirectError(ProcessBuilder.Redirect.PIPE)
+                .start()
+
+            val exitCode = process.waitFor()
+            val output = process.inputStream.bufferedReader().readText()
+            val errorOutput = process.errorStream.bufferedReader().readText()
+
+            if (exitCode == 0) {
+                println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Successfully cloned repository to ${targetDir.absolutePath}")
+                if (output.isNotBlank()) {
+                    println(output.trim())
+                }
+                true
+            } else {
+                println("${AnsiColors.RED}Error:${AnsiColors.RESET} Failed to clone repository")
+                if (errorOutput.isNotBlank()) {
+                    println(errorOutput.trim())
+                }
+                if (output.isNotBlank()) {
+                    println(output.trim())
+                }
+                false
+            }
+        } catch (e: Exception) {
+            println("${AnsiColors.RED}Error:${AnsiColors.RESET} Failed to execute git clone: ${e.message}")
+            false
+        }
+    }
 }
