@@ -6,11 +6,12 @@ import com.google.gson.GsonBuilder
 import net.kigawa.kinfra.model.HostsConfig
 import net.kigawa.kinfra.model.ProjectConfig
 import net.kigawa.kinfra.model.KinfraConfig
+import net.kigawa.kinfra.model.FilePaths
 import net.kigawa.kinfra.infrastructure.git.GitRepository
 import java.io.File
 
 class ConfigRepositoryImpl(
-    private val baseConfigDir: String = System.getProperty("user.home") + "/.local/kinfra"
+    private val baseConfigDir: String = FilePaths.BASE_CONFIG_DIR
 ) : ConfigRepository {
 
     private val gson: Gson = GsonBuilder().setPrettyPrinting().create()
@@ -32,10 +33,10 @@ class ConfigRepositoryImpl(
         get() = getRepoConfigDir()
 
     private val configFile: File
-        get() = File(configDir, "hosts.json")
+        get() = File(configDir, FilePaths.HOSTS_CONFIG_FILE)
 
     private val projectConfigFile: File
-        get() = File(configDir, "project.json")
+        get() = File(configDir, FilePaths.PROJECT_CONFIG_FILE)
 
     init {
         // 設定ディレクトリが存在しない場合は作成

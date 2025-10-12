@@ -1,6 +1,7 @@
 package net.kigawa.kinfra.infrastructure.update
 
 import net.kigawa.kinfra.infrastructure.logging.Logger
+import net.kigawa.kinfra.model.FilePaths
 import java.io.File
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
@@ -17,7 +18,7 @@ interface AutoUpdater {
 class AutoUpdaterImpl(
     private val logger: Logger
 ) : AutoUpdater {
-    private val appDir = File(System.getProperty("user.home"), ".local/kinfra")
+    private val appDir = File(FilePaths.BASE_CONFIG_DIR)
     private val jarPath = File(appDir, "kinfra.jar")
     private val lastCheckFile = File(appDir, ".last_update_check")
 

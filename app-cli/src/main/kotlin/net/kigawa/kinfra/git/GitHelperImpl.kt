@@ -1,6 +1,7 @@
 package net.kigawa.kinfra.git
 
 import net.kigawa.kinfra.action.GitHelper
+import net.kigawa.kinfra.model.FilePaths
 import net.kigawa.kinfra.util.AnsiColors
 import java.io.File
 
@@ -8,8 +9,8 @@ import java.io.File
  * Git repository operations implementation
  */
 class GitHelperImpl : GitHelper {
-    private val configDir = "${System.getProperty("user.home")}/.local/kinfra"
-    private val projectConfigFile = File(configDir, "project.json")
+    private val configDir = FilePaths.BASE_CONFIG_DIR
+    private val projectConfigFile = File(configDir, FilePaths.PROJECT_CONFIG_FILE)
 
     /**
      * Check if the specified directory is a git repository

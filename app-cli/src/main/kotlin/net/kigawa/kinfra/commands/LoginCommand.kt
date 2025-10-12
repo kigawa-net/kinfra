@@ -2,6 +2,7 @@ package net.kigawa.kinfra.commands
 
 import net.kigawa.kinfra.action.GitHelper
 import net.kigawa.kinfra.model.Command
+import net.kigawa.kinfra.model.FilePaths
 import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenRepository
 import net.kigawa.kinfra.infrastructure.config.ConfigRepository
 import net.kigawa.kinfra.model.ProjectConfig
@@ -15,11 +16,6 @@ class LoginCommand(
     private val configRepository: ConfigRepository,
     private val gitHelper: GitHelper
 ) : Command {
-
-    companion object {
-        private const val SESSION_FILE = ".bw_session"
-        private const val BWS_TOKEN_FILE = ".bws_token"
-    }
 
     override fun execute(args: Array<String>): Int {
         // GitHubリポジトリ引数が指定されている場合はクローンまたはpull
@@ -103,7 +99,7 @@ class LoginCommand(
         println()
 
         // Check if token already exists
-        val tokenFile = File(BWS_TOKEN_FILE)
+        val tokenFile = File(FilePaths.BWS_TOKEN_FILE)
         if (tokenFile.exists()) {
             println("${AnsiColors.YELLOW}BWS_ACCESS_TOKEN file already exists${AnsiColors.RESET}")
             print("Overwrite? (y/N): ")
@@ -140,7 +136,7 @@ class LoginCommand(
             println()
             println("${AnsiColors.BLUE}The token will be automatically loaded on next run.${AnsiColors.RESET}")
             println("${AnsiColors.BLUE}You can also set it manually:${AnsiColors.RESET}")
-            println("  export BWS_ACCESS_TOKEN=\$(cat ${BWS_TOKEN_FILE})")
+            println("  export BWS_ACCESS_TOKEN=\$(cat ${FilePaths.BWS_TOKEN_FILE})")
 
             return 0
         } catch (e: Exception) {
@@ -227,7 +223,7 @@ class LoginCommand(
 
             // Save session to file
             try {
-                val sessionFile = File(SESSION_FILE)
+                val sessionFile = File(FilePaths.BW_SESSION_FILE)
                 sessionFile.writeText(session)
                 sessionFile.setReadable(false, false)
                 sessionFile.setReadable(true, true)
@@ -237,7 +233,7 @@ class LoginCommand(
                 println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Session saved to ${sessionFile.absolutePath}")
                 println()
                 println("${AnsiColors.BLUE}To use the session, run:${AnsiColors.RESET}")
-                println("  export BW_SESSION=\$(cat ${SESSION_FILE})")
+                println("  export BW_SESSION=\$(cat ${FilePaths.BW_SESSION_FILE})")
             } catch (e: Exception) {
                 println("${AnsiColors.RED}Error:${AnsiColors.RESET} Failed to save session: ${e.message}")
                 return 1
@@ -282,8 +278,7 @@ class LoginCommand(
         val repoDirName = repoName.substringAfterLast('/')
 
         // Default local path: ~/.local/kinfra/repos/{repo}
-        val homeDir = System.getProperty("user.home")
-        val localPath = "$homeDir/.local/kinfra/repos/$repoDirName"
+        val localPath = "${FilePaths.BASE_CONFIG_DIR}/${FilePaths.REPOS_DIR}/$repoDirName"
 
         return Pair(repoName, localPath)
     }

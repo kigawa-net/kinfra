@@ -1,6 +1,7 @@
 package net.kigawa.kinfra.di
 
 import net.kigawa.kinfra.action.TerraformService
+import net.kigawa.kinfra.model.FilePaths
 import net.kigawa.kinfra.infrastructure.file.FileRepository
 import net.kigawa.kinfra.infrastructure.file.FileRepositoryImpl
 import net.kigawa.kinfra.infrastructure.process.ProcessExecutor
@@ -47,7 +48,7 @@ val webModule = module {
         println("✓ Using BWS_ACCESS_TOKEN from environment variable")
     } ?: run {
         // ファイルから読み込み
-        val tokenFile = java.io.File(".bws_token")
+        val tokenFile = java.io.File(FilePaths.BWS_TOKEN_FILE)
         if (tokenFile.exists() && tokenFile.canRead()) {
             tokenFile.readText().trim().takeIf { it.isNotBlank() }?.also {
                 println("✓ Loaded BWS_ACCESS_TOKEN from .bws_token file")

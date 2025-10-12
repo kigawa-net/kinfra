@@ -12,7 +12,7 @@ interface GitHelper {
     fun isGitRepository(workingDir: File): Boolean
 
     /**
-     * Execute git pull in the repository specified in ~/.local/kinfra/project.json
+     * Execute git pull in the repository specified in the project configuration
      * @return true if pull was successful or skipped (not an error), false if failed
      */
     fun pullRepository(): Boolean
