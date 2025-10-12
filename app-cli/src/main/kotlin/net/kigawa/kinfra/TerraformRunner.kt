@@ -7,6 +7,7 @@ import net.kigawa.kinfra.infrastructure.config.ConfigRepository
 import net.kigawa.kinfra.model.Command
 import net.kigawa.kinfra.model.CommandType
 import net.kigawa.kinfra.util.AnsiColors
+import net.kigawa.kinfra.util.VersionUtil
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.qualifier.named
@@ -134,8 +135,8 @@ class TerraformRunner : KoinComponent {
                 return
             }
 
-            // Get current version from system property (set by Gradle)
-            val currentVersion = System.getProperty("kinfra.version") ?: "dev"
+            // Get current version from build-time generated properties
+            val currentVersion = VersionUtil.getVersion()
 
             logger.debug("Checking for updates - current version: $currentVersion")
 

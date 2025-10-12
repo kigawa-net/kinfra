@@ -90,6 +90,7 @@ val appModule = module {
     // Commands
     single<Command>(named(CommandType.FMT.commandName)) { FormatCommand(get(), get()) }
     single<Command>(named(CommandType.VALIDATE.commandName)) { ValidateCommand(get(), get()) }
+    single<Command>(named(CommandType.STATUS.commandName)) { StatusCommand(get(), get()) }
     single<Command>(named(CommandType.LOGIN.commandName)) { LoginCommand(get(), get(), get()) }
     single<Command>(named(CommandType.SETUP_R2.commandName)) { SetupR2Command(get(), get()) }
     single<Command>(named(CommandType.CONFIG.commandName)) { ConfigCommand(get(), get(), get(), get()) }

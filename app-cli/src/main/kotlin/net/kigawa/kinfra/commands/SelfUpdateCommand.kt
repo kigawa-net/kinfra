@@ -6,6 +6,7 @@ import net.kigawa.kinfra.infrastructure.config.ConfigRepository
 import net.kigawa.kinfra.infrastructure.update.VersionChecker
 import net.kigawa.kinfra.infrastructure.update.AutoUpdater
 import net.kigawa.kinfra.util.AnsiColors
+import net.kigawa.kinfra.util.VersionUtil
 
 class SelfUpdateCommand(
     private val configRepository: ConfigRepository,
@@ -24,7 +25,7 @@ class SelfUpdateCommand(
         println()
 
         // Get current version
-        val currentVersion = System.getProperty("kinfra.version") ?: "dev"
+        val currentVersion = VersionUtil.getVersion()
         println("${AnsiColors.BLUE}Current version:${AnsiColors.RESET} $currentVersion")
         println()
 
