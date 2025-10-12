@@ -1,5 +1,6 @@
 package net.kigawa.kinfra.commands
 
+import net.kigawa.kinfra.action.GitHelper
 import net.kigawa.kinfra.model.Command
 import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenRepository
 import net.kigawa.kinfra.infrastructure.config.ConfigRepository
@@ -7,12 +8,12 @@ import net.kigawa.kinfra.model.ProjectConfig
 import net.kigawa.kinfra.model.KinfraConfig
 import net.kigawa.kinfra.model.ProjectInfo
 import net.kigawa.kinfra.util.AnsiColors
-import net.kigawa.kinfra.util.GitHelper
 import java.io.File
 
 class LoginCommand(
     private val bitwardenRepository: BitwardenRepository,
-    private val configRepository: ConfigRepository
+    private val configRepository: ConfigRepository,
+    private val gitHelper: GitHelper
 ) : Command {
 
     companion object {
@@ -22,7 +23,7 @@ class LoginCommand(
 
     override fun execute(args: Array<String>): Int {
         // Pull latest changes from git repository
-        if (!GitHelper.pullRepository()) {
+        if (!gitHelper.pullRepository()) {
             println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Failed to pull from git repository, continuing anyway...")
         }
 

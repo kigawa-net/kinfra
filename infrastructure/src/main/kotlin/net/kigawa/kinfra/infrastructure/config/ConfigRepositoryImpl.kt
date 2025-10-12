@@ -101,8 +101,29 @@ class ConfigRepositoryImpl(
         return projectConfigFile.absolutePath
     }
 
-    override fun loadKinfraConfig(filePath: String): KinfraConfig? {
+    /**
+     * ファイルパスを解決する
+     * 相対パスの場合はGitリポジトリのルートを基準にする
+     * 絶対パスの場合はそのまま返す
+     */
+    private fun resolveFilePath(filePath: String): File {
         val file = File(filePath)
+        if (file.isAbsolute) {
+            return file
+        }
+
+        // 相対パスの場合、Gitリポジトリのルートを基準にする
+        val repoRoot = GitRepository.getRepositoryRoot()
+        return if (repoRoot != null) {
+            File(repoRoot, filePath)
+        } else {
+            // Gitリポジトリでない場合は、カレントディレクトリを基準にする
+            file
+        }
+    }
+
+    override fun loadKinfraConfig(filePath: String): KinfraConfig? {
+        val file = resolveFilePath(filePath)
         if (!file.exists()) {
             return null
         }
@@ -112,12 +133,12 @@ class ConfigRepositoryImpl(
     }
 
     override fun saveKinfraConfig(config: KinfraConfig, filePath: String) {
-        val file = File(filePath)
+        val file = resolveFilePath(filePath)
         val yamlContent = Yaml.default.encodeToString(KinfraConfig.serializer(), config)
         file.writeText(yamlContent)
     }
 
     override fun kinfraConfigExists(filePath: String): Boolean {
-        return File(filePath).exists()
+        return resolveFilePath(filePath).exists()
     }
 }
