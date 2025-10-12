@@ -115,7 +115,7 @@ class GitHelperImpl : GitHelper {
             if (targetDir.listFiles()?.isNotEmpty() == true) {
                 println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Target directory is not empty: ${targetDir.absolutePath}")
                 print("Continue and overwrite? (y/N): ")
-                val confirm = readLine()?.lowercase()
+                val confirm = readlnOrNull()?.lowercase()
                 if (confirm != "y" && confirm != "yes") {
                     println("${AnsiColors.BLUE}Clone cancelled${AnsiColors.RESET}")
                     return false

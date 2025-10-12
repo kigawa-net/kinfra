@@ -85,7 +85,7 @@ class LoginCommand(
         println("  1) Secret Manager (BWS_ACCESS_TOKEN) - Recommended")
         println("  2) CLI (bw) - Legacy")
         print("Choice [1]: ")
-        val choice = readLine()?.takeIf { it.isNotBlank() } ?: "1"
+        val choice = readlnOrNull()?.takeIf { it.isNotBlank() } ?: "1"
 
         return when (choice) {
             "1" -> setupSecretManagerToken()
