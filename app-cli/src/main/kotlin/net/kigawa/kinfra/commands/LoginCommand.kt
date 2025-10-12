@@ -7,6 +7,7 @@ import net.kigawa.kinfra.model.ProjectConfig
 import net.kigawa.kinfra.model.KinfraConfig
 import net.kigawa.kinfra.model.ProjectInfo
 import net.kigawa.kinfra.util.AnsiColors
+import net.kigawa.kinfra.util.GitHelper
 import java.io.File
 
 class LoginCommand(
@@ -20,6 +21,11 @@ class LoginCommand(
     }
 
     override fun execute(args: Array<String>): Int {
+        // Pull latest changes from git repository
+        if (!GitHelper.pullRepository()) {
+            println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Failed to pull from git repository, continuing anyway...")
+        }
+
         // GitHubリポジトリ引数が指定されている場合は保存
         if (args.isNotEmpty()) {
             val githubRepo = args[0]

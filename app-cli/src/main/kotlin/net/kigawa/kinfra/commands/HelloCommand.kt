@@ -8,6 +8,7 @@ import net.kigawa.kinfra.infrastructure.terraform.TerraformVarsManager
 import net.kigawa.kinfra.model.Command
 import net.kigawa.kinfra.model.HostsConfig
 import net.kigawa.kinfra.util.AnsiColors
+import net.kigawa.kinfra.util.GitHelper
 
 class HelloCommand(
     private val configRepository: ConfigRepository,
@@ -18,6 +19,11 @@ class HelloCommand(
 ) : Command {
 
     override fun execute(args: Array<String>): Int {
+        // Pull latest changes from git repository
+        if (!GitHelper.pullRepository()) {
+            println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Failed to pull from git repository, continuing anyway...")
+        }
+
         println("${AnsiColors.CYAN}${AnsiColors.BOLD}Welcome to kinfra interactive manager!${AnsiColors.RESET}")
         println()
 
