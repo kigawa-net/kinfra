@@ -96,6 +96,7 @@ val appModule = module {
     single<Command>(named(CommandType.APPLY.commandName)) { ApplyCommand(get()) }
     single<Command>(named(CommandType.DESTROY.commandName)) { DestroyCommand(get()) }
     single<Command>(named(CommandType.DEPLOY.commandName)) { DeployCommand(get(), get()) }
+    single<Command>(named(CommandType.SELF_UPDATE.commandName)) { SelfUpdateCommand(get(), get(), get()) }
 
     // SDK-based commands (only if BWS_ACCESS_TOKEN is available)
     if (hasBwsToken) {

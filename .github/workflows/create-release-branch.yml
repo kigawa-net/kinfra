@@ -319,10 +319,13 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
+          cache: 'gradle'
 
       - name: Setup Gradle
         if: github.event.inputs.create_pr == 'true' && github.event.inputs.auto_merge == 'true' && steps.auto_merge.outputs.merged == 'true'
         uses: gradle/actions/setup-gradle@v3
+        with:
+          cache-read-only: false
 
       - name: Make gradlew executable
         if: github.event.inputs.create_pr == 'true' && github.event.inputs.auto_merge == 'true' && steps.auto_merge.outputs.merged == 'true'
