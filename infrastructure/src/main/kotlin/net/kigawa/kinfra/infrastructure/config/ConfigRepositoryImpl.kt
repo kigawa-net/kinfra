@@ -1,9 +1,6 @@
 package net.kigawa.kinfra.infrastructure.config
 
 import com.charleskorn.kaml.Yaml
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
-import net.kigawa.kinfra.model.HostsConfig
 import net.kigawa.kinfra.model.ProjectConfig
 import net.kigawa.kinfra.model.KinfraConfig
 import net.kigawa.kinfra.model.FilePaths
@@ -13,8 +10,6 @@ import java.io.File
 class ConfigRepositoryImpl(
     private val baseConfigDir: String = FilePaths.BASE_CONFIG_DIR
 ) : ConfigRepository {
-
-    private val gson: Gson = GsonBuilder().setPrettyPrinting().create()
 
     /**
      * リポジトリ固有の設定ディレクトリを取得
@@ -32,9 +27,6 @@ class ConfigRepositoryImpl(
     private val configDir: String
         get() = getRepoConfigDir()
 
-    private val configFile: File
-        get() = File(configDir, FilePaths.HOSTS_CONFIG_FILE)
-
     private val projectConfigFile: File
         get() = File(configDir, FilePaths.PROJECT_CONFIG_FILE)
 
@@ -50,38 +42,12 @@ class ConfigRepositoryImpl(
         }
     }
 
-    override fun loadHostsConfig(): HostsConfig {
-        ensureConfigDirExists()
-        return if (configFile.exists()) {
-            try {
-                val json = configFile.readText()
-                gson.fromJson(json, HostsConfig::class.java)
-            } catch (e: Exception) {
-                // ファイルの読み込みに失敗した場合はデフォルト設定を返す
-                HostsConfig(HostsConfig.DEFAULT_HOSTS)
-            }
-        } else {
-            // ファイルが存在しない場合はデフォルト設定を返す
-            HostsConfig(HostsConfig.DEFAULT_HOSTS)
-        }
-    }
-
-    override fun saveHostsConfig(config: HostsConfig) {
-        ensureConfigDirExists()
-        val json = gson.toJson(config)
-        configFile.writeText(json)
-    }
-
-    override fun getConfigFilePath(): String {
-        return configFile.absolutePath
-    }
-
     override fun loadProjectConfig(): ProjectConfig {
         ensureConfigDirExists()
         return if (projectConfigFile.exists()) {
             try {
-                val json = projectConfigFile.readText()
-                gson.fromJson(json, ProjectConfig::class.java)
+                val yamlContent = projectConfigFile.readText()
+                Yaml.default.decodeFromString(ProjectConfig.serializer(), yamlContent)
             } catch (e: Exception) {
                 // ファイルの読み込みに失敗した場合はデフォルト設定を返す
                 ProjectConfig()
@@ -94,8 +60,8 @@ class ConfigRepositoryImpl(
 
     override fun saveProjectConfig(config: ProjectConfig) {
         ensureConfigDirExists()
-        val json = gson.toJson(config)
-        projectConfigFile.writeText(json)
+        val yamlContent = Yaml.default.encodeToString(ProjectConfig.serializer(), config)
+        projectConfigFile.writeText(yamlContent)
     }
 
     override fun getProjectConfigFilePath(): String {

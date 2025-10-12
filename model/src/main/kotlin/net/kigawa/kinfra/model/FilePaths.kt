@@ -21,8 +21,7 @@ object FilePaths {
     /**
      * 設定ファイル名
      */
-    const val HOSTS_CONFIG_FILE = "hosts.json"
-    const val PROJECT_CONFIG_FILE = "project.json"
+    const val PROJECT_CONFIG_FILE = "project.yaml"
     const val KINFRA_CONFIG_FILE = "kinfra.yaml"
 
     /**

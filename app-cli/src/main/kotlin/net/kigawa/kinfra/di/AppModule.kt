@@ -15,8 +15,6 @@ import net.kigawa.kinfra.infrastructure.process.ProcessExecutorImpl
 import net.kigawa.kinfra.infrastructure.service.TerraformServiceImpl
 import net.kigawa.kinfra.infrastructure.terraform.TerraformRepository
 import net.kigawa.kinfra.infrastructure.terraform.TerraformRepositoryImpl
-import net.kigawa.kinfra.infrastructure.terraform.TerraformVarsManager
-import net.kigawa.kinfra.infrastructure.terraform.TerraformVarsManagerImpl
 import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenRepository
 import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenRepositoryImpl
 import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenSecretManagerRepository
@@ -52,7 +50,6 @@ val appModule = module {
     single<TerraformService> { TerraformServiceImpl(get(), get()) }
     single<BitwardenRepository> { BitwardenRepositoryImpl(get()) }
     single<ConfigRepository> { ConfigRepositoryImpl() }
-    single<TerraformVarsManager> { TerraformVarsManagerImpl(get()) }
     single<VersionChecker> { VersionCheckerImpl(get()) }
     single<AutoUpdater> { AutoUpdaterImpl(get()) }
     single<GitHelper> { GitHelperImpl() }
@@ -94,8 +91,7 @@ val appModule = module {
     single<Command>(named(CommandType.STATUS.commandName)) { StatusCommand(get(), get()) }
     single<Command>(named(CommandType.LOGIN.commandName)) { LoginCommand(get(), get(), get()) }
     single<Command>(named(CommandType.SETUP_R2.commandName)) { SetupR2Command(get(), get()) }
-    single<Command>(named(CommandType.CONFIG.commandName)) { ConfigCommand(get(), get(), get(), get()) }
-    single<Command>(named(CommandType.HELLO.commandName)) { HelloCommand(get(), get(), get(), get(), get(), get()) }
+    single<Command>(named(CommandType.HELLO.commandName)) { HelloCommand(get(), get(), get(), get(), get()) }
     single<Command>(named(CommandType.INIT.commandName)) { InitCommand(get(), get()) }
     single<Command>(named(CommandType.PLAN.commandName)) { PlanCommand(get(), get()) }
     single<Command>(named(CommandType.APPLY.commandName)) { ApplyCommand(get()) }

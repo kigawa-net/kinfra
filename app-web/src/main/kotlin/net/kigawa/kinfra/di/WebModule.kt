@@ -9,8 +9,6 @@ import net.kigawa.kinfra.infrastructure.process.ProcessExecutorImpl
 import net.kigawa.kinfra.infrastructure.service.TerraformServiceImpl
 import net.kigawa.kinfra.infrastructure.terraform.TerraformRepository
 import net.kigawa.kinfra.infrastructure.terraform.TerraformRepositoryImpl
-import net.kigawa.kinfra.infrastructure.terraform.TerraformVarsManager
-import net.kigawa.kinfra.infrastructure.terraform.TerraformVarsManagerImpl
 import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenRepository
 import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenRepositoryImpl
 import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenSecretManagerRepository
@@ -41,7 +39,6 @@ val webModule = module {
     single<TerraformService> { TerraformServiceImpl(get(), get()) }
     single<BitwardenRepository> { BitwardenRepositoryImpl(get()) }
     single<ConfigRepository> { ConfigRepositoryImpl() }
-    single<TerraformVarsManager> { TerraformVarsManagerImpl(get()) }
 
     // Bitwarden Secret Manager (環境変数または .bws_token ファイルから BWS_ACCESS_TOKEN を取得)
     val bwsAccessToken = System.getenv("BWS_ACCESS_TOKEN")?.also {

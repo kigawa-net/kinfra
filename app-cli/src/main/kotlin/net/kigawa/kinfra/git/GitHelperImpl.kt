@@ -1,17 +1,16 @@
 package net.kigawa.kinfra.git
 
 import net.kigawa.kinfra.action.GitHelper
-import net.kigawa.kinfra.model.FilePaths
+import net.kigawa.kinfra.infrastructure.config.ConfigRepository
 import net.kigawa.kinfra.util.AnsiColors
 import java.io.File
 
 /**
  * Git repository operations implementation
  */
-class GitHelperImpl : GitHelper {
-    private val configDir = FilePaths.BASE_CONFIG_DIR
-    private val projectConfigFile = File(configDir, FilePaths.PROJECT_CONFIG_FILE)
-
+class GitHelperImpl(
+    private val configRepository: ConfigRepository
+) : GitHelper {
     /**
      * Check if the specified directory is a git repository
      */
@@ -21,32 +20,20 @@ class GitHelperImpl : GitHelper {
     }
 
     /**
-     * Get repository path from ~/.local/kinfra/project.json
+     * Get repository path from project.yaml
      */
     private fun getRepositoryPath(): File? {
-        if (!projectConfigFile.exists()) {
-            return null
-        }
-
-        return try {
-            val json = projectConfigFile.readText()
-            // Simple JSON parsing for githubRepository field
-            val githubRepoPattern = """"githubRepository"\s*:\s*"([^"]+)"""".toRegex()
-            val match = githubRepoPattern.find(json)
-            val repoPath = match?.groupValues?.get(1)
-
-            if (repoPath != null && repoPath.isNotEmpty()) {
-                File(repoPath)
-            } else {
-                null
-            }
-        } catch (e: Exception) {
+        val projectConfig = configRepository.loadProjectConfig()
+        val repoPath = projectConfig.githubRepository
+        return if (repoPath != null && repoPath.isNotEmpty()) {
+            File(repoPath)
+        } else {
             null
         }
     }
 
     /**
-     * Execute git pull in the repository specified in ~/.local/kinfra/project.json
+     * Execute git pull in the repository specified in project.yaml
      * @return true if pull was successful or skipped (not an error), false if failed
      */
     override fun pullRepository(): Boolean {
