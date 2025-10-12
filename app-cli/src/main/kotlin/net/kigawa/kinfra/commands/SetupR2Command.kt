@@ -1,19 +1,20 @@
 package net.kigawa.kinfra.commands
 
+import net.kigawa.kinfra.action.GitHelper
 import net.kigawa.kinfra.model.Command
 import net.kigawa.kinfra.model.R2BackendConfig
 import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenRepository
 import net.kigawa.kinfra.util.AnsiColors
-import net.kigawa.kinfra.util.GitHelper
 import java.io.File
 
 class SetupR2Command(
-    private val bitwardenRepository: BitwardenRepository
+    private val bitwardenRepository: BitwardenRepository,
+    private val gitHelper: GitHelper
 ) : Command {
 
     override fun execute(args: Array<String>): Int {
         // Pull latest changes from git repository
-        if (!GitHelper.pullRepository()) {
+        if (!gitHelper.pullRepository()) {
             println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Failed to pull from git repository, continuing anyway...")
         }
 

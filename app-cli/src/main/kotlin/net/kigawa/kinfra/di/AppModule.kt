@@ -1,8 +1,10 @@
 package net.kigawa.kinfra.di
 
 import net.kigawa.kinfra.TerraformRunner
+import net.kigawa.kinfra.action.GitHelper
 import net.kigawa.kinfra.action.TerraformService
 import net.kigawa.kinfra.commands.*
+import net.kigawa.kinfra.git.GitHelperImpl
 import net.kigawa.kinfra.model.Command
 import net.kigawa.kinfra.model.CommandType
 import net.kigawa.kinfra.infrastructure.file.FileRepository
@@ -52,6 +54,7 @@ val appModule = module {
     single<TerraformVarsManager> { TerraformVarsManagerImpl(get()) }
     single<VersionChecker> { VersionCheckerImpl(get()) }
     single<AutoUpdater> { AutoUpdaterImpl(get()) }
+    single<GitHelper> { GitHelperImpl() }
 
     // Bitwarden Secret Manager (環境変数または .bws_token ファイルから BWS_ACCESS_TOKEN を取得)
     val bwsAccessToken = System.getenv("BWS_ACCESS_TOKEN")?.also {
@@ -85,22 +88,22 @@ val appModule = module {
     single<TerraformRunner> { TerraformRunner() }
 
     // Commands
-    single<Command>(named(CommandType.FMT.commandName)) { FormatCommand(get()) }
-    single<Command>(named(CommandType.VALIDATE.commandName)) { ValidateCommand(get()) }
-    single<Command>(named(CommandType.LOGIN.commandName)) { LoginCommand(get(), get()) }
-    single<Command>(named(CommandType.SETUP_R2.commandName)) { SetupR2Command(get()) }
-    single<Command>(named(CommandType.CONFIG.commandName)) { ConfigCommand(get(), get(), get()) }
-    single<Command>(named(CommandType.HELLO.commandName)) { HelloCommand(get(), get(), get(), get(), get()) }
-    single<Command>(named(CommandType.INIT.commandName)) { InitCommand(get()) }
-    single<Command>(named(CommandType.PLAN.commandName)) { PlanCommand(get()) }
+    single<Command>(named(CommandType.FMT.commandName)) { FormatCommand(get(), get()) }
+    single<Command>(named(CommandType.VALIDATE.commandName)) { ValidateCommand(get(), get()) }
+    single<Command>(named(CommandType.LOGIN.commandName)) { LoginCommand(get(), get(), get()) }
+    single<Command>(named(CommandType.SETUP_R2.commandName)) { SetupR2Command(get(), get()) }
+    single<Command>(named(CommandType.CONFIG.commandName)) { ConfigCommand(get(), get(), get(), get()) }
+    single<Command>(named(CommandType.HELLO.commandName)) { HelloCommand(get(), get(), get(), get(), get(), get()) }
+    single<Command>(named(CommandType.INIT.commandName)) { InitCommand(get(), get()) }
+    single<Command>(named(CommandType.PLAN.commandName)) { PlanCommand(get(), get()) }
     single<Command>(named(CommandType.APPLY.commandName)) { ApplyCommand(get()) }
-    single<Command>(named(CommandType.DESTROY.commandName)) { DestroyCommand(get()) }
+    single<Command>(named(CommandType.DESTROY.commandName)) { DestroyCommand(get(), get()) }
     single<Command>(named(CommandType.DEPLOY.commandName)) { DeployCommand(get(), get()) }
-    single<Command>(named(CommandType.SELF_UPDATE.commandName)) { SelfUpdateCommand(get(), get(), get()) }
+    single<Command>(named(CommandType.SELF_UPDATE.commandName)) { SelfUpdateCommand(get(), get(), get(), get()) }
 
     // SDK-based commands (only if BWS_ACCESS_TOKEN is available)
     if (hasBwsToken) {
-        single<Command>(named(CommandType.SETUP_R2_SDK.commandName)) { SetupR2CommandWithSDK(get()) }
+        single<Command>(named(CommandType.SETUP_R2_SDK.commandName)) { SetupR2CommandWithSDK(get(), get()) }
         single<Command>(named(CommandType.DEPLOY_SDK.commandName)) { DeployCommandWithSDK(get(), get()) }
     }
 
@@ -116,6 +119,6 @@ val appModule = module {
             }
         }
 
-        HelpCommand(commandMap)
+        HelpCommand(commandMap, get())
     }
 }

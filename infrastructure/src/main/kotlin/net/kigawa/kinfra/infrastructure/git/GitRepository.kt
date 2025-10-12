@@ -62,4 +62,31 @@ object GitRepository {
         val gitDir = File(workingDir, ".git")
         return gitDir.exists() && gitDir.isDirectory
     }
+
+    /**
+     * Gitリポジトリのルートディレクトリを取得
+     *
+     * @param workingDir 作業ディレクトリ（デフォルトはカレントディレクトリ）
+     * @return リポジトリのルートディレクトリ（取得できない場合はnull）
+     */
+    fun getRepositoryRoot(workingDir: File = File(System.getProperty("user.dir"))): File? {
+        return try {
+            // git rev-parse --show-toplevelでリポジトリルートを取得
+            val process = ProcessBuilder("git", "rev-parse", "--show-toplevel")
+                .directory(workingDir)
+                .redirectErrorStream(true)
+                .start()
+
+            val output = process.inputStream.bufferedReader().readText().trim()
+            val exitCode = process.waitFor()
+
+            if (exitCode != 0 || output.isEmpty()) {
+                return null
+            }
+
+            File(output)
+        } catch (e: Exception) {
+            null
+        }
+    }
 }

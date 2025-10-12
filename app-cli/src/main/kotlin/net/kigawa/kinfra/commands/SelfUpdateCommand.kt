@@ -1,21 +1,22 @@
 package net.kigawa.kinfra.commands
 
+import net.kigawa.kinfra.action.GitHelper
 import net.kigawa.kinfra.model.Command
 import net.kigawa.kinfra.infrastructure.config.ConfigRepository
 import net.kigawa.kinfra.infrastructure.update.VersionChecker
 import net.kigawa.kinfra.infrastructure.update.AutoUpdater
 import net.kigawa.kinfra.util.AnsiColors
-import net.kigawa.kinfra.util.GitHelper
 
 class SelfUpdateCommand(
     private val configRepository: ConfigRepository,
     private val versionChecker: VersionChecker,
-    private val autoUpdater: AutoUpdater
+    private val autoUpdater: AutoUpdater,
+    private val gitHelper: GitHelper
 ) : Command {
 
     override fun execute(args: Array<String>): Int {
         // Pull latest changes from git repository
-        if (!GitHelper.pullRepository()) {
+        if (!gitHelper.pullRepository()) {
             println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Failed to pull from git repository, continuing anyway...")
         }
 
