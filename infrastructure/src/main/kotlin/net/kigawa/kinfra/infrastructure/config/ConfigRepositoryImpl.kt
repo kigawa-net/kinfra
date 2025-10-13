@@ -1,9 +1,9 @@
 package net.kigawa.kinfra.infrastructure.config
 
 import com.charleskorn.kaml.Yaml
-import net.kigawa.kinfra.model.FilePaths
-import net.kigawa.kinfra.model.GlobalConfig
-import net.kigawa.kinfra.model.KinfraConfig
+import net.kigawa.kinfra.model.conf.FilePaths
+import net.kigawa.kinfra.model.conf.GlobalConfig
+import net.kigawa.kinfra.model.conf.KinfraConfig
 import java.io.File
 
 class ConfigRepositoryImpl(

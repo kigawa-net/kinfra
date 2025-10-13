@@ -1,7 +1,7 @@
 package net.kigawa.kinfra.infrastructure.update
 
 import net.kigawa.kinfra.infrastructure.logging.Logger
-import net.kigawa.kinfra.model.FilePaths
+import net.kigawa.kinfra.model.conf.FilePaths
 import java.io.File
 import java.io.FileOutputStream
 import java.net.HttpURLConnection

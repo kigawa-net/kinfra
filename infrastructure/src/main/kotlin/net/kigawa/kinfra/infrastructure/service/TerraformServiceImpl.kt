@@ -2,8 +2,8 @@ package net.kigawa.kinfra.infrastructure.service
 
 import net.kigawa.kinfra.action.TerraformService
 import net.kigawa.kinfra.model.CommandResult
-import net.kigawa.kinfra.model.TerraformConfig
-import net.kigawa.kinfra.model.FilePaths
+import net.kigawa.kinfra.model.conf.TerraformConfig
+import net.kigawa.kinfra.model.conf.FilePaths
 import net.kigawa.kinfra.infrastructure.process.ProcessExecutor
 import net.kigawa.kinfra.infrastructure.terraform.TerraformRepository
 

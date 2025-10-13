@@ -5,7 +5,7 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import net.kigawa.kinfra.infrastructure.process.ProcessExecutor
 import net.kigawa.kinfra.model.BitwardenItem
-import net.kigawa.kinfra.model.FilePaths
+import net.kigawa.kinfra.model.conf.FilePaths
 import java.io.File
 
 class BitwardenRepositoryImpl(

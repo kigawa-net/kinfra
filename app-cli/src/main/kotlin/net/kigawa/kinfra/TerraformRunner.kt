@@ -6,6 +6,7 @@ import net.kigawa.kinfra.infrastructure.update.AutoUpdater
 import net.kigawa.kinfra.infrastructure.config.ConfigRepository
 import net.kigawa.kinfra.model.Command
 import net.kigawa.kinfra.model.CommandType
+import net.kigawa.kinfra.model.conf.FilePaths
 import net.kigawa.kinfra.util.AnsiColors
 import net.kigawa.kinfra.util.VersionUtil
 import org.koin.core.component.KoinComponent
@@ -22,6 +23,8 @@ class TerraformRunner : KoinComponent {
                 runCatching {
                     val command: Command by inject(named(commandType.commandName))
                     put(commandType.commandName, command)
+                }.onFailure { e ->
+                    logger.warn("Failed to register command ${commandType.commandName}: ${e.message}")
                 }
             }
         }
@@ -38,6 +41,12 @@ class TerraformRunner : KoinComponent {
 
         var commandName = args[0]
         logger.debug("Original command: $commandName")
+
+        // Map --help and -h flags to help command
+        if (commandName == "--help" || commandName == "-h") {
+            commandName = CommandType.HELP.commandName
+            logger.debug("Mapped $commandName to help command")
+        }
 
         // deploy と setup-r2 コマンドは常に SDK 版を使用
         when (commandName) {
@@ -113,7 +122,7 @@ class TerraformRunner : KoinComponent {
             val configRepository: ConfigRepository by inject()
             val versionChecker: VersionChecker by inject()
             val autoUpdater: AutoUpdater by inject()
-            val filePaths: net.kigawa.kinfra.model.FilePaths by inject()
+            val filePaths: FilePaths by inject()
 
             // Load config to check if auto-update is enabled
             val config = runCatching {

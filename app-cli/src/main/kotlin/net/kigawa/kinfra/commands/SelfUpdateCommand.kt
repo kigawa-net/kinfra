@@ -2,7 +2,7 @@ package net.kigawa.kinfra.commands
 
 import net.kigawa.kinfra.action.GitHelper
 import net.kigawa.kinfra.model.Command
-import net.kigawa.kinfra.model.FilePaths
+import net.kigawa.kinfra.model.conf.FilePaths
 import net.kigawa.kinfra.infrastructure.config.ConfigRepository
 import net.kigawa.kinfra.infrastructure.update.VersionChecker
 import net.kigawa.kinfra.infrastructure.update.AutoUpdater

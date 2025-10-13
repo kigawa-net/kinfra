@@ -7,7 +7,10 @@ import net.kigawa.kinfra.commands.*
 import net.kigawa.kinfra.git.GitHelperImpl
 import net.kigawa.kinfra.model.Command
 import net.kigawa.kinfra.model.CommandType
-import net.kigawa.kinfra.model.FilePaths
+import net.kigawa.kinfra.model.conf.FilePaths
+import net.kigawa.kinfra.model.conf.HomeDirGetter
+import net.kigawa.kinfra.model.conf.SystemHomeDirGetter
+import net.kigawa.kinfra.model.conf.GlobalConfig
 import net.kigawa.kinfra.infrastructure.file.FileRepository
 import net.kigawa.kinfra.infrastructure.file.FileRepositoryImpl
 import net.kigawa.kinfra.infrastructure.process.ProcessExecutor
@@ -32,11 +35,15 @@ import net.kigawa.kinfra.infrastructure.update.AutoUpdaterImpl
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
-// FilePaths インスタンスは一度だけ作成
-private val filePaths = FilePaths()
-
 val appModule = module {
     // Infrastructure layer
+    single<HomeDirGetter> { SystemHomeDirGetter() }
+    single<FilePaths> { FilePaths(get()) }
+    // GlobalConfig: Load from file, or use default empty config
+    single<GlobalConfig> {
+        val configRepo = ConfigRepositoryImpl(get(), GlobalConfig())
+        runCatching { configRepo.loadGlobalConfig() }.getOrElse { GlobalConfig() }
+    }
     single<Logger> {
         val logDir = System.getenv("KINFRA_LOG_DIR") ?: "logs"
         val logLevelStr = System.getenv("KINFRA_LOG_LEVEL") ?: "INFO"
@@ -49,7 +56,6 @@ val appModule = module {
     }
     single<FileRepository> { FileRepositoryImpl() }
     single<ProcessExecutor> { ProcessExecutorImpl() }
-    single { filePaths }
     single<TerraformRepository> { TerraformRepositoryImpl(get()) }
     single<TerraformService> { TerraformServiceImpl(get(), get(),get  ()) }
     single<BitwardenRepository> { BitwardenRepositoryImpl(get(),get()) }
@@ -59,11 +65,13 @@ val appModule = module {
     single<GitHelper> { GitHelperImpl(get()) }
 
     // Bitwarden Secret Manager (環境変数または .bws_token ファイルから BWS_ACCESS_TOKEN を取得)
+    // Note: FilePaths は既に登録されているので、早期に取得可能
+    val filePathsInstance = FilePaths(SystemHomeDirGetter())
     val bwsAccessToken = System.getenv("BWS_ACCESS_TOKEN")?.also {
         println("✓ Using BWS_ACCESS_TOKEN from environment variable")
     } ?: run {
         // ファイルから読み込み
-        val tokenFile = java.io.File(filePaths.BWS_TOKEN_FILE)
+        val tokenFile = java.io.File(filePathsInstance.BWS_TOKEN_FILE)
         if (tokenFile.exists() && tokenFile.canRead()) {
             tokenFile.readText().trim().takeIf { it.isNotBlank() }?.also {
                 println("✓ Loaded BWS_ACCESS_TOKEN from .bws_token file")
