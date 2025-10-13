@@ -5,14 +5,11 @@ import net.kigawa.kinfra.action.TerraformService
 import net.kigawa.kinfra.infrastructure.config.ConfigRepository
 import net.kigawa.kinfra.infrastructure.logging.Logger
 import net.kigawa.kinfra.infrastructure.process.ProcessExecutor
-import net.kigawa.kinfra.infrastructure.terraform.TerraformVarsManager
 import net.kigawa.kinfra.model.Command
-import net.kigawa.kinfra.model.HostsConfig
 import net.kigawa.kinfra.util.AnsiColors
 
 class HelloCommand(
     private val configRepository: ConfigRepository,
-    private val terraformVarsManager: TerraformVarsManager,
     private val processExecutor: ProcessExecutor,
     private val terraformService: TerraformService,
     private val logger: Logger,
@@ -60,9 +57,6 @@ class HelloCommand(
 
     private fun buildMenuItems(): List<MenuItem> {
         return listOf(
-            MenuItem("List Terraform directories") { listHosts() },
-            MenuItem("Enable Terraform directory") { enableHost() },
-            MenuItem("Disable Terraform directory") { disableHost() },
             MenuItem("Check Git status") { gitStatus() },
             MenuItem("Push to Git repository") { gitPush() },
             MenuItem("Run Terraform init") { terraformInit() },
@@ -212,116 +206,16 @@ class HelloCommand(
         }
     }
 
-    private fun listHosts() {
-        logger.info("Listing hosts")
-        val config = configRepository.loadHostsConfig()
-        val configPath = configRepository.getConfigFilePath()
-
-        println("${AnsiColors.BLUE}${AnsiColors.BOLD}Terraform Directories${AnsiColors.RESET}")
-        println("${AnsiColors.CYAN}Config file: $configPath${AnsiColors.RESET}")
-        println()
-
-        val hosts = mutableListOf<Triple<String, Boolean, String>>()
-        HostsConfig.DEFAULT_HOSTS.keys.forEach { hostName ->
-            val enabled = config.hosts[hostName] ?: HostsConfig.DEFAULT_HOSTS[hostName] ?: false
-            val description = HostsConfig.HOST_DESCRIPTIONS[hostName] ?: "No description"
-            hosts.add(Triple(hostName, enabled, description))
-        }
-
-        hosts.forEach { (name, enabled, description) ->
-            val status = if (enabled) "${AnsiColors.GREEN}enabled${AnsiColors.RESET}" else "${AnsiColors.YELLOW}disabled${AnsiColors.RESET}"
-            println("  ${name.padEnd(15)} [$status]  $description")
-        }
-    }
-
-    private fun enableHost() {
-        logger.info("Enabling host")
-        println("${AnsiColors.BLUE}Available directories:${AnsiColors.RESET}")
-        HostsConfig.DEFAULT_HOSTS.keys.forEachIndexed { index, host ->
-            println("  ${index + 1}. $host")
-        }
-        println()
-
-        print("${AnsiColors.GREEN}Enter directory name or number:${AnsiColors.RESET} ")
-        val input = readLine()?.trim() ?: ""
-
-        val hostName = input.toIntOrNull()?.let { number ->
-            HostsConfig.DEFAULT_HOSTS.keys.toList().getOrNull(number - 1)
-        } ?: input
-
-        if (!HostsConfig.DEFAULT_HOSTS.containsKey(hostName)) {
-            println("${AnsiColors.RED}Error: Unknown directory '$hostName'${AnsiColors.RESET}")
-            return
-        }
-
-        val config = configRepository.loadHostsConfig()
-        val updatedHosts = config.hosts.toMutableMap()
-        updatedHosts[hostName] = true
-
-        configRepository.saveHostsConfig(HostsConfig(updatedHosts))
-        logger.info("Host $hostName enabled")
-
-        terraformVarsManager.updateHostsVars()
-        val varsPath = terraformVarsManager.getVarsFilePath()
-        logger.info("Updated Terraform vars file: $varsPath")
-
-        println("${AnsiColors.GREEN}✓ Directory '$hostName' has been enabled${AnsiColors.RESET}")
-        println("${AnsiColors.CYAN}Updated Terraform vars: $varsPath${AnsiColors.RESET}")
-        println("${AnsiColors.BLUE}Note: Run 'init' and 'apply' to apply changes${AnsiColors.RESET}")
-    }
-
-    private fun disableHost() {
-        logger.info("Disabling host")
-        println("${AnsiColors.BLUE}Available directories:${AnsiColors.RESET}")
-        HostsConfig.DEFAULT_HOSTS.keys.forEachIndexed { index, host ->
-            println("  ${index + 1}. $host")
-        }
-        println()
-
-        print("${AnsiColors.GREEN}Enter directory name or number:${AnsiColors.RESET} ")
-        val input = readLine()?.trim() ?: ""
-
-        val hostName = input.toIntOrNull()?.let { number ->
-            HostsConfig.DEFAULT_HOSTS.keys.toList().getOrNull(number - 1)
-        } ?: input
-
-        if (!HostsConfig.DEFAULT_HOSTS.containsKey(hostName)) {
-            println("${AnsiColors.RED}Error: Unknown directory '$hostName'${AnsiColors.RESET}")
-            return
-        }
-
-        val config = configRepository.loadHostsConfig()
-        val updatedHosts = config.hosts.toMutableMap()
-        updatedHosts[hostName] = false
-
-        configRepository.saveHostsConfig(HostsConfig(updatedHosts))
-        logger.info("Host $hostName disabled")
-
-        terraformVarsManager.updateHostsVars()
-        val varsPath = terraformVarsManager.getVarsFilePath()
-        logger.info("Updated Terraform vars file: $varsPath")
-
-        println("${AnsiColors.GREEN}✓ Directory '$hostName' has been disabled${AnsiColors.RESET}")
-        println("${AnsiColors.CYAN}Updated Terraform vars: $varsPath${AnsiColors.RESET}")
-        println("${AnsiColors.BLUE}Note: Run 'init' and 'apply' to apply changes${AnsiColors.RESET}")
-    }
-
     private fun gitStatus() {
         logger.info("Checking git status")
         println("${AnsiColors.BLUE}${AnsiColors.BOLD}Git Status${AnsiColors.RESET}")
         println()
 
-        val projectConfig = configRepository.loadProjectConfig()
-        val repoPath = projectConfig.githubRepository
-
-        if (repoPath.isNullOrEmpty()) {
-            println("${AnsiColors.RED}Error: No repository configured. Please run 'kinfra login' first.${AnsiColors.RESET}")
-            return
-        }
+        val repoDir = java.io.File(System.getProperty("user.dir"))
 
         val result = processExecutor.executeWithOutput(
             arrayOf("git", "status"),
-            workingDir = java.io.File(repoPath)
+            workingDir = repoDir
         )
 
         if (result.exitCode == 0) {
@@ -335,15 +229,7 @@ class HelloCommand(
     private fun gitPush() {
         logger.info("Pushing to git repository")
 
-        val projectConfig = configRepository.loadProjectConfig()
-        val repoPath = projectConfig.githubRepository
-
-        if (repoPath.isNullOrEmpty()) {
-            println("${AnsiColors.RED}Error: No repository configured. Please run 'kinfra login' first.${AnsiColors.RESET}")
-            return
-        }
-
-        val repoDir = java.io.File(repoPath)
+        val repoDir = java.io.File(System.getProperty("user.dir"))
 
         // まず、現在のブランチを確認
         val branchResult = processExecutor.executeWithOutput(

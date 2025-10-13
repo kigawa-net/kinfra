@@ -52,19 +52,6 @@ kinfra login
 
 ---
 
-### config
-
-現在の設定を表示。
-
-```bash
-kinfra config
-```
-
-**表示内容**:
-- プロジェクト設定
-- ホスト設定
-
----
 
 ## Terraformコマンド
 
@@ -246,23 +233,6 @@ export KINFRA_LOG_DIR=/var/log/kinfra
 {
   "projectId": "abc123",
   "name": "my-project"
-}
-```
-
----
-
-### ~/.local/kinfra/hosts.json
-
-ホスト設定。
-
-```json
-{
-  "hosts": [
-    {
-      "name": "web-server",
-      "address": "192.168.1.10"
-    }
-  ]
 }
 ```
 

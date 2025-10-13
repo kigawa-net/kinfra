@@ -1,19 +1,15 @@
 package net.kigawa.kinfra.infrastructure.config
 
-import net.kigawa.kinfra.model.HostsConfig
-import net.kigawa.kinfra.model.ProjectConfig
+import net.kigawa.kinfra.model.GlobalConfig
 import net.kigawa.kinfra.model.KinfraConfig
+import net.kigawa.kinfra.model.FilePaths
 
 interface ConfigRepository {
-    fun loadHostsConfig(): HostsConfig
-    fun saveHostsConfig(config: HostsConfig)
-    fun getConfigFilePath(): String
-
-    fun loadProjectConfig(): ProjectConfig
-    fun saveProjectConfig(config: ProjectConfig)
+    fun loadGlobalConfig(): GlobalConfig
+    fun saveGlobalConfig(config: GlobalConfig)
     fun getProjectConfigFilePath(): String
 
-    fun loadKinfraConfig(filePath: String = "kinfra.yaml"): KinfraConfig?
-    fun saveKinfraConfig(config: KinfraConfig, filePath: String = "kinfra.yaml")
-    fun kinfraConfigExists(filePath: String = "kinfra.yaml"): Boolean
+    fun loadKinfraConfig(filePath: String ): KinfraConfig?
+    fun saveKinfraConfig(config: KinfraConfig, filePath: String)
+    fun kinfraConfigExists(filePath: String ): Boolean
 }

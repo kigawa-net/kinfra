@@ -1,41 +1,37 @@
 package net.kigawa.kinfra.infrastructure.config
 
 import com.charleskorn.kaml.Yaml
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
-import net.kigawa.kinfra.model.HostsConfig
-import net.kigawa.kinfra.model.ProjectConfig
+import net.kigawa.kinfra.model.FilePaths
+import net.kigawa.kinfra.model.GlobalConfig
 import net.kigawa.kinfra.model.KinfraConfig
-import net.kigawa.kinfra.infrastructure.git.GitRepository
 import java.io.File
 
 class ConfigRepositoryImpl(
-    private val baseConfigDir: String = System.getProperty("user.home") + "/.local/kinfra"
-) : ConfigRepository {
-
-    private val gson: Gson = GsonBuilder().setPrettyPrinting().create()
+    val filePaths: FilePaths,
+    val globalConfig: GlobalConfig,
+): ConfigRepository {
 
     /**
      * リポジトリ固有の設定ディレクトリを取得
      * リポジトリ名が取得できない場合は、baseConfigDirを返す（後方互換性）
      */
-    private fun getRepoConfigDir(): String {
-        val repoName = GitRepository.getRepositoryName()
-        return if (repoName != null) {
-            "$baseConfigDir/$repoName"
+
+    private fun
+        getRepoConfigDir(): String {
+        val repo = loginConfig?.repo
+        return if (repo != null) {
+            "${filePaths.baseConfigDir}/${repo}"
         } else {
-            baseConfigDir
+            filePaths.baseConfigDir
         }
     }
 
+    val loginConfig get() = globalConfig.login
     private val configDir: String
         get() = getRepoConfigDir()
 
-    private val configFile: File
-        get() = File(configDir, "hosts.json")
-
     private val projectConfigFile: File
-        get() = File(configDir, "project.json")
+        get() = File(configDir, filePaths.PROJECT_CONFIG_FILE)
 
     init {
         // 設定ディレクトリが存在しない場合は作成
@@ -49,52 +45,26 @@ class ConfigRepositoryImpl(
         }
     }
 
-    override fun loadHostsConfig(): HostsConfig {
-        ensureConfigDirExists()
-        return if (configFile.exists()) {
-            try {
-                val json = configFile.readText()
-                gson.fromJson(json, HostsConfig::class.java)
-            } catch (e: Exception) {
-                // ファイルの読み込みに失敗した場合はデフォルト設定を返す
-                HostsConfig(HostsConfig.DEFAULT_HOSTS)
-            }
-        } else {
-            // ファイルが存在しない場合はデフォルト設定を返す
-            HostsConfig(HostsConfig.DEFAULT_HOSTS)
-        }
-    }
-
-    override fun saveHostsConfig(config: HostsConfig) {
-        ensureConfigDirExists()
-        val json = gson.toJson(config)
-        configFile.writeText(json)
-    }
-
-    override fun getConfigFilePath(): String {
-        return configFile.absolutePath
-    }
-
-    override fun loadProjectConfig(): ProjectConfig {
+    override fun loadGlobalConfig(): GlobalConfig {
         ensureConfigDirExists()
         return if (projectConfigFile.exists()) {
             try {
-                val json = projectConfigFile.readText()
-                gson.fromJson(json, ProjectConfig::class.java)
+                val yamlContent = projectConfigFile.readText()
+                Yaml.default.decodeFromString(GlobalConfig.serializer(), yamlContent)
             } catch (e: Exception) {
                 // ファイルの読み込みに失敗した場合はデフォルト設定を返す
-                ProjectConfig()
+                GlobalConfig()
             }
         } else {
             // ファイルが存在しない場合はデフォルト設定を返す
-            ProjectConfig()
+            GlobalConfig()
         }
     }
 
-    override fun saveProjectConfig(config: ProjectConfig) {
+    override fun saveGlobalConfig(config: GlobalConfig) {
         ensureConfigDirExists()
-        val json = gson.toJson(config)
-        projectConfigFile.writeText(json)
+        val yamlContent = Yaml.default.encodeToString(GlobalConfig.serializer(), config)
+        projectConfigFile.writeText(yamlContent)
     }
 
     override fun getProjectConfigFilePath(): String {

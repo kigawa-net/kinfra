@@ -1,16 +1,16 @@
 package net.kigawa.kinfra.git
 
 import net.kigawa.kinfra.action.GitHelper
+import net.kigawa.kinfra.infrastructure.config.ConfigRepository
 import net.kigawa.kinfra.util.AnsiColors
 import java.io.File
 
 /**
  * Git repository operations implementation
  */
-class GitHelperImpl : GitHelper {
-    private val configDir = "${System.getProperty("user.home")}/.local/kinfra"
-    private val projectConfigFile = File(configDir, "project.json")
-
+class GitHelperImpl(
+    private val configRepository: ConfigRepository
+) : GitHelper {
     /**
      * Check if the specified directory is a git repository
      */
@@ -20,32 +20,24 @@ class GitHelperImpl : GitHelper {
     }
 
     /**
-     * Get repository path from ~/.local/kinfra/project.json
+     * Get repository path from project.yaml
      */
     private fun getRepositoryPath(): File? {
-        if (!projectConfigFile.exists()) {
-            return null
-        }
-
-        return try {
-            val json = projectConfigFile.readText()
-            // Simple JSON parsing for githubRepository field
-            val githubRepoPattern = """"githubRepository"\s*:\s*"([^"]+)"""".toRegex()
-            val match = githubRepoPattern.find(json)
-            val repoPath = match?.groupValues?.get(1)
-
-            if (repoPath != null && repoPath.isNotEmpty()) {
-                File(repoPath)
-            } else {
-                null
-            }
-        } catch (e: Exception) {
+        val projectConfig = configRepository.loadGlobalConfig()
+        val repo = projectConfig.login?.repo
+        return if (repo != null && repo.isNotEmpty()) {
+            // repo contains "user/repo" format, need to convert to local path
+            // Use FilePaths to get the base directory
+            val repoDirName = repo.substringAfterLast('/')
+            val userHome = System.getProperty("user.home")
+            File("$userHome/.local/kinfra/repos/$repoDirName")
+        } else {
             null
         }
     }
 
     /**
-     * Execute git pull in the repository specified in ~/.local/kinfra/project.json
+     * Execute git pull in the repository specified in project.yaml
      * @return true if pull was successful or skipped (not an error), false if failed
      */
     override fun pullRepository(): Boolean {

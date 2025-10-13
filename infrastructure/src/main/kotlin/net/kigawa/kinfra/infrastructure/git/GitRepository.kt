@@ -14,7 +14,7 @@ object GitRepository {
      * @param workingDir 作業ディレクトリ（デフォルトはカレントディレクトリ）
      * @return リポジトリ名（取得できない場合はnull）
      */
-    fun getRepositoryName(workingDir: File = File(System.getProperty("user.dir"))): String? {
+    fun getRepositoryName(workingDir: File ): String? {
         return try {
             // git remote get-url originでリモートURLを取得
             val process = ProcessBuilder("git", "remote", "get-url", "origin")

@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     id("org.jetbrains.kotlin.jvm")
 }
@@ -20,4 +22,8 @@ java {
 
 tasks.named<Test>("test") {
     useJUnitPlatform()
+}
+val compileKotlin: KotlinCompile by tasks
+compileKotlin.compilerOptions {
+    freeCompilerArgs.set(listOf("-Xcontext-parameters"))
 }

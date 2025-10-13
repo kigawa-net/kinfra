@@ -1,6 +1,7 @@
 package net.kigawa.kinfra.di
 
 import net.kigawa.kinfra.action.TerraformService
+import net.kigawa.kinfra.model.FilePaths
 import net.kigawa.kinfra.infrastructure.file.FileRepository
 import net.kigawa.kinfra.infrastructure.file.FileRepositoryImpl
 import net.kigawa.kinfra.infrastructure.process.ProcessExecutor
@@ -8,8 +9,6 @@ import net.kigawa.kinfra.infrastructure.process.ProcessExecutorImpl
 import net.kigawa.kinfra.infrastructure.service.TerraformServiceImpl
 import net.kigawa.kinfra.infrastructure.terraform.TerraformRepository
 import net.kigawa.kinfra.infrastructure.terraform.TerraformRepositoryImpl
-import net.kigawa.kinfra.infrastructure.terraform.TerraformVarsManager
-import net.kigawa.kinfra.infrastructure.terraform.TerraformVarsManagerImpl
 import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenRepository
 import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenRepositoryImpl
 import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenSecretManagerRepository
@@ -21,6 +20,9 @@ import net.kigawa.kinfra.infrastructure.logging.Logger
 import net.kigawa.kinfra.infrastructure.logging.FileLogger
 import net.kigawa.kinfra.infrastructure.logging.LogLevel
 import org.koin.dsl.module
+
+// FilePaths インスタンスは一度だけ作成
+private val filePaths = FilePaths()
 
 val webModule = module {
     // Infrastructure layer
@@ -34,20 +36,20 @@ val webModule = module {
         }
         FileLogger(logDir, logLevel)
     }
+    single { filePaths }
     single<FileRepository> { FileRepositoryImpl() }
     single<ProcessExecutor> { ProcessExecutorImpl() }
     single<TerraformRepository> { TerraformRepositoryImpl(get()) }
-    single<TerraformService> { TerraformServiceImpl(get(), get()) }
-    single<BitwardenRepository> { BitwardenRepositoryImpl(get()) }
-    single<ConfigRepository> { ConfigRepositoryImpl() }
-    single<TerraformVarsManager> { TerraformVarsManagerImpl(get()) }
+    single<TerraformService> { TerraformServiceImpl(get(), get(),get()) }
+    single<BitwardenRepository> { BitwardenRepositoryImpl(get(),get()) }
+    single<ConfigRepository> { ConfigRepositoryImpl(get(),get()) }
 
     // Bitwarden Secret Manager (環境変数または .bws_token ファイルから BWS_ACCESS_TOKEN を取得)
     val bwsAccessToken = System.getenv("BWS_ACCESS_TOKEN")?.also {
         println("✓ Using BWS_ACCESS_TOKEN from environment variable")
     } ?: run {
         // ファイルから読み込み
-        val tokenFile = java.io.File(".bws_token")
+        val tokenFile = java.io.File(filePaths.BWS_TOKEN_FILE)
         if (tokenFile.exists() && tokenFile.canRead()) {
             tokenFile.readText().trim().takeIf { it.isNotBlank() }?.also {
                 println("✓ Loaded BWS_ACCESS_TOKEN from .bws_token file")

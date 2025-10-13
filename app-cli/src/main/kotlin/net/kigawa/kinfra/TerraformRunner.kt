@@ -76,10 +76,9 @@ class TerraformRunner : KoinComponent {
             exitProcess(1)
         }
 
-        // Skip Terraform check for help, login, config, hello, setup-r2 and self-update commands
+        // Skip Terraform check for help, login, hello, setup-r2 and self-update commands
         val skipTerraformCheck = commandName == CommandType.HELP.commandName
             || commandName == CommandType.LOGIN.commandName
-            || commandName == CommandType.CONFIG.commandName
             || commandName == CommandType.HELLO.commandName
             || commandName == CommandType.SETUP_R2.commandName
             || commandName == CommandType.SETUP_R2_SDK.commandName
@@ -114,10 +113,11 @@ class TerraformRunner : KoinComponent {
             val configRepository: ConfigRepository by inject()
             val versionChecker: VersionChecker by inject()
             val autoUpdater: AutoUpdater by inject()
+            val filePaths: net.kigawa.kinfra.model.FilePaths by inject()
 
             // Load config to check if auto-update is enabled
             val config = runCatching {
-                configRepository.loadKinfraConfig()
+                configRepository.loadKinfraConfig(filePaths.KINFRA_CONFIG_FILE)
             }.getOrNull()
 
             // Skip update check if auto-update is disabled

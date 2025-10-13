@@ -63,7 +63,7 @@ model (依存なし) → action (契約) → infrastructure (実装) → app-cli
 
 ## 設定
 
-**ファイル配置**: `~/.local/kinfra/` - `project.json`, `hosts.json` / プロジェクトルート - `kinfra.yaml`（`login`時自動生成）、`backend.tfvars`（バックエンド設定）
+**ファイル配置**: `~/.local/kinfra/` - `project.json` / プロジェクトルート - `kinfra.yaml`（`login`時自動生成）、`backend.tfvars`（バックエンド設定）
 
 **環境変数**:
 - `BWS_ACCESS_TOKEN` - Bitwarden Secret Manager（または`.bws_token`）。SDKコマンド有効化
@@ -80,5 +80,5 @@ model (依存なし) → action (契約) → infrastructure (実装) → app-cli
 
 - **エラー**: `ConfigRepository`のYAML読込は例外スロー。呼出側でハンドル
 - **シリアライゼーション**: JSON=Gson、YAML=kotlinx-serialization+kaml。modelの`@Serializable`必須
-- **設定管理**: `ConfigRepositoryImpl`は`hosts.json`(Gson)、`project.json`(Gson)、`kinfra.yaml`(kaml)を管理
+- **設定管理**: `ConfigRepositoryImpl`は`project.json`(Gson)、`kinfra.yaml`(kaml)を管理
 - **環境管理**: 環境（prod/dev等）の概念は削除済み。全てのコマンドは環境パラメータなしで動作
