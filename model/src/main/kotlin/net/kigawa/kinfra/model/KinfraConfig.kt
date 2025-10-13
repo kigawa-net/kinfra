@@ -13,7 +13,6 @@ data class KinfraConfig(
 @Serializable
 data class ProjectInfo(
     val name: String = "",
-    val repository: String = "",
     val description: String = ""
 )
 

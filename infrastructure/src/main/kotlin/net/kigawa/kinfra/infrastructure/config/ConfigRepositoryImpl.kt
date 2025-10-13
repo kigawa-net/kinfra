@@ -1,22 +1,25 @@
 package net.kigawa.kinfra.infrastructure.config
 
 import com.charleskorn.kaml.Yaml
-import net.kigawa.kinfra.model.ProjectConfig
+import net.kigawa.kinfra.model.GlobalConfig
 import net.kigawa.kinfra.model.KinfraConfig
 import net.kigawa.kinfra.model.FilePaths
 import net.kigawa.kinfra.infrastructure.git.GitRepository
+import net.kigawa.kinfra.model.err.ErrScope
 import java.io.File
 
 class ConfigRepositoryImpl(
-    private val baseConfigDir: String = FilePaths.BASE_CONFIG_DIR
+    private val baseConfigDir: String = FilePaths.BASE_CONFIG_DIR,
+    val globalConfig: GlobalConfig,
 ) : ConfigRepository {
 
     /**
      * リポジトリ固有の設定ディレクトリを取得
      * リポジトリ名が取得できない場合は、baseConfigDirを返す（後方互換性）
      */
+    context(err: ErrScope<Exception>)
     private fun getRepoConfigDir(): String {
-        val repoName = GitRepository.getRepositoryName()
+        val repoName = globalConfig.githubRepository
         return if (repoName != null) {
             "$baseConfigDir/$repoName"
         } else {
@@ -42,25 +45,25 @@ class ConfigRepositoryImpl(
         }
     }
 
-    override fun loadProjectConfig(): ProjectConfig {
+    override fun loadGlobalConfig(): GlobalConfig {
         ensureConfigDirExists()
         return if (projectConfigFile.exists()) {
             try {
                 val yamlContent = projectConfigFile.readText()
-                Yaml.default.decodeFromString(ProjectConfig.serializer(), yamlContent)
+                Yaml.default.decodeFromString(GlobalConfig.serializer(), yamlContent)
             } catch (e: Exception) {
                 // ファイルの読み込みに失敗した場合はデフォルト設定を返す
-                ProjectConfig()
+                GlobalConfig()
             }
         } else {
             // ファイルが存在しない場合はデフォルト設定を返す
-            ProjectConfig()
+            GlobalConfig()
         }
     }
 
-    override fun saveProjectConfig(config: ProjectConfig) {
+    override fun saveGlobalConfig(config: GlobalConfig) {
         ensureConfigDirExists()
-        val yamlContent = Yaml.default.encodeToString(ProjectConfig.serializer(), config)
+        val yamlContent = Yaml.default.encodeToString(GlobalConfig.serializer(), config)
         projectConfigFile.writeText(yamlContent)
     }
 

@@ -23,7 +23,7 @@ class GitHelperImpl(
      * Get repository path from project.yaml
      */
     private fun getRepositoryPath(): File? {
-        val projectConfig = configRepository.loadProjectConfig()
+        val projectConfig = configRepository.loadGlobalConfig()
         val repoPath = projectConfig.githubRepository
         return if (repoPath != null && repoPath.isNotEmpty()) {
             File(repoPath)

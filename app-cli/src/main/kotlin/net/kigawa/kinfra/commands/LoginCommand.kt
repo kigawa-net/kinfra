@@ -5,7 +5,7 @@ import net.kigawa.kinfra.model.Command
 import net.kigawa.kinfra.model.FilePaths
 import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenRepository
 import net.kigawa.kinfra.infrastructure.config.ConfigRepository
-import net.kigawa.kinfra.model.ProjectConfig
+import net.kigawa.kinfra.model.GlobalConfig
 import net.kigawa.kinfra.model.KinfraConfig
 import net.kigawa.kinfra.model.ProjectInfo
 import net.kigawa.kinfra.util.AnsiColors
@@ -37,8 +37,8 @@ class LoginCommand(
             val targetDir = File(repoPath.second)
 
             // Save project configuration
-            val projectConfig = ProjectConfig(githubRepository = targetDir.absolutePath)
-            configRepository.saveProjectConfig(projectConfig)
+            val globalConfig = GlobalConfig(githubRepository = targetDir.absolutePath)
+            configRepository.saveGlobalConfig(globalConfig)
             val configPath = configRepository.getProjectConfigFilePath()
             println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Project configuration saved to $configPath")
             println()
@@ -154,9 +154,6 @@ class LoginCommand(
                 val config = configRepository.loadKinfraConfig()
                 if (config != null) {
                     println("${AnsiColors.BLUE}Project:${AnsiColors.RESET} ${config.project.name}")
-                    if (config.project.repository.isNotEmpty()) {
-                        println("${AnsiColors.BLUE}Repository:${AnsiColors.RESET} ${config.project.repository}")
-                    }
                     println()
                 } else {
                     println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Failed to parse kinfra.yaml")
@@ -170,11 +167,8 @@ class LoginCommand(
             println("${AnsiColors.YELLOW}kinfra.yaml not found${AnsiColors.RESET}")
             println("${AnsiColors.BLUE}Creating default kinfra.yaml...${AnsiColors.RESET}")
 
-            val projectConfig = configRepository.loadProjectConfig()
             val defaultConfig = KinfraConfig(
-                project = ProjectInfo(
-                    repository = projectConfig.githubRepository ?: ""
-                )
+                project = ProjectInfo()
             )
 
             try {
