@@ -103,7 +103,7 @@ val appModule = module {
     single<Action>(named(ActionType.STATUS.actionName)) { StatusAction(get(), get()) }
     single<Action>(named(ActionType.LOGIN.actionName)) { LoginAction(get(), get(), get(), get()) }
     single<Action>(named(ActionType.SETUP_R2.actionName)) { SetupR2Action(get(), get()) }
-    single<Action>(named(ActionType.HELLO.actionName)) { HelloAction(get(), get(), get(), get()) }
+    single<Action>(named(ActionType.HELLO.actionName)) { HelloAction(get(), get(), get()) }
     single<Action>(named(ActionType.INIT.actionName)) { InitAction(get(), get()) }
     single<Action>(named(ActionType.PLAN.actionName)) { PlanAction(get(), get()) }
     single<Action>(named(ActionType.APPLY.actionName)) { ApplyAction(get()) }

@@ -24,4 +24,22 @@ interface GitHelper {
      * @return true if clone was successful, false if failed
      */
     fun cloneRepository(repoUrl: String, targetDir: File): Boolean
+
+    /**
+     * Get the configured repository directory
+     * @return Repository directory or null if not configured
+     */
+    fun getRepositoryDirectory(): File?
+
+    /**
+     * Get git status for the configured repository
+     * @return Pair of (exitCode, output) or null if no repository configured
+     */
+    fun getStatus(): Pair<Int, String>?
+
+    /**
+     * Push changes to remote repository
+     * @return true if push was successful, false if failed
+     */
+    fun pushToRemote(): Boolean
 }
