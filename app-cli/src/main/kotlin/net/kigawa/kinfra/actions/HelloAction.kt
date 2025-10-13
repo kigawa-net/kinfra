@@ -2,16 +2,13 @@ package net.kigawa.kinfra.actions
 
 import net.kigawa.kinfra.action.GitHelper
 import net.kigawa.kinfra.action.TerraformService
-import net.kigawa.kinfra.action.config.ConfigRepository
 import net.kigawa.kinfra.infrastructure.logging.Logger
-import net.kigawa.kinfra.infrastructure.process.ProcessExecutor
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.util.AnsiColors
 import net.kigawa.kinfra.model.util.isSuccess
 import net.kigawa.kinfra.model.util.message
 
 class HelloAction(
-    private val processExecutor: ProcessExecutor,
     private val terraformService: TerraformService,
     private val logger: Logger,
     private val gitHelper: GitHelper
@@ -212,82 +209,24 @@ class HelloAction(
         println("${AnsiColors.BLUE}${AnsiColors.BOLD}Git Status${AnsiColors.RESET}")
         println()
 
-        val repoDir = java.io.File(System.getProperty("user.dir"))
+        val result = gitHelper.getStatus()
+        if (result == null) {
+            println("${AnsiColors.RED}Error:${AnsiColors.RESET} No repository configured or repository not found")
+            println("${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Run 'kinfra login <github-repo>' to set up a repository")
+            return
+        }
 
-        val result = processExecutor.executeWithOutput(
-            arrayOf("git", "status"),
-            workingDir = repoDir
-        )
-
-        if (result.exitCode == 0) {
-            println(result.output)
+        val (exitCode, output) = result
+        if (exitCode == 0) {
+            println(output)
         } else {
             println("${AnsiColors.RED}Error checking git status:${AnsiColors.RESET}")
-            println(result.error)
+            println(output)
         }
     }
 
     private fun gitPush() {
         logger.info("Pushing to git repository")
-
-        val repoDir = java.io.File(System.getProperty("user.dir"))
-
-        // まず、現在のブランチを確認（rev-parseの方が互換性が高い）
-        val branchResult = processExecutor.executeWithOutput(
-            arrayOf("git", "rev-parse", "--abbrev-ref", "HEAD"),
-            workingDir = repoDir
-        )
-        if (branchResult.exitCode != 0) {
-            println("${AnsiColors.RED}Error: Could not determine current branch${AnsiColors.RESET}")
-            println("${AnsiColors.RED}Details: ${branchResult.error}${AnsiColors.RESET}")
-            logger.error("git rev-parse failed: ${branchResult.error}")
-            return
-        }
-
-        val currentBranch = branchResult.output.trim()
-        if (currentBranch.isEmpty()) {
-            println("${AnsiColors.RED}Error: Branch name is empty${AnsiColors.RESET}")
-            logger.error("git rev-parse returned empty output")
-            return
-        }
-        println("${AnsiColors.BLUE}Current branch: ${AnsiColors.CYAN}$currentBranch${AnsiColors.RESET}")
-        println()
-
-        // ステータスを表示
-        val statusResult = processExecutor.executeWithOutput(
-            arrayOf("git", "status", "--short"),
-            workingDir = repoDir
-        )
-        if (statusResult.output.isNotEmpty()) {
-            println("${AnsiColors.YELLOW}Uncommitted changes:${AnsiColors.RESET}")
-            println(statusResult.output)
-            println()
-        }
-
-        print("${AnsiColors.GREEN}Do you want to push to origin/$currentBranch? (yes/no):${AnsiColors.RESET} ")
-        val confirmation = readLine()?.trim()?.lowercase() ?: ""
-
-        if (confirmation != "yes" && confirmation != "y") {
-            println("${AnsiColors.YELLOW}Push cancelled.${AnsiColors.RESET}")
-            return
-        }
-
-        println()
-        println("${AnsiColors.BLUE}Pushing to origin/$currentBranch...${AnsiColors.RESET}")
-
-        val pushResult = processExecutor.executeWithOutput(
-            arrayOf("git", "push", "origin", currentBranch),
-            workingDir = repoDir
-        )
-
-        if (pushResult.exitCode == 0) {
-            println("${AnsiColors.GREEN}✓ Successfully pushed to origin/$currentBranch${AnsiColors.RESET}")
-            if (pushResult.output.isNotEmpty()) {
-                println(pushResult.output)
-            }
-        } else {
-            println("${AnsiColors.RED}Error pushing to repository:${AnsiColors.RESET}")
-            println(pushResult.error)
-        }
+        gitHelper.pushToRemote()
     }
 }

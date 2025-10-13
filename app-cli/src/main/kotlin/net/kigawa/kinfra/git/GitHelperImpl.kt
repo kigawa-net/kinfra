@@ -153,4 +153,140 @@ class GitHelperImpl(
             false
         }
     }
+
+    /**
+     * Get the configured repository directory
+     * @return Repository directory or null if not configured
+     */
+    override fun getRepositoryDirectory(): File? {
+        return getRepositoryPath()
+    }
+
+    /**
+     * Get git status for the configured repository
+     * @return Pair of (exitCode, output) or null if no repository configured
+     */
+    override fun getStatus(): Pair<Int, String>? {
+        val repoDir = getRepositoryPath() ?: return null
+
+        if (!repoDir.exists() || !isGitRepository(repoDir)) {
+            return null
+        }
+
+        return try {
+            val process = ProcessBuilder("git", "status")
+                .directory(repoDir)
+                .redirectOutput(ProcessBuilder.Redirect.PIPE)
+                .redirectError(ProcessBuilder.Redirect.PIPE)
+                .start()
+
+            val exitCode = process.waitFor()
+            val output = process.inputStream.bufferedReader().readText()
+            val errorOutput = process.errorStream.bufferedReader().readText()
+
+            Pair(exitCode, if (exitCode == 0) output else errorOutput)
+        } catch (e: Exception) {
+            Pair(1, "Error: ${e.message}")
+        }
+    }
+
+    /**
+     * Push changes to remote repository
+     * @return true if push was successful, false if failed
+     */
+    override fun pushToRemote(): Boolean {
+        val repoDir = getRepositoryPath()
+
+        if (repoDir == null) {
+            println("${AnsiColors.RED}Error:${AnsiColors.RESET} No repository configured")
+            return false
+        }
+
+        if (!repoDir.exists() || !isGitRepository(repoDir)) {
+            println("${AnsiColors.RED}Error:${AnsiColors.RESET} Repository not found or not a git repository: ${repoDir.absolutePath}")
+            return false
+        }
+
+        return try {
+            // Get current branch
+            val branchProcess = ProcessBuilder("git", "rev-parse", "--abbrev-ref", "HEAD")
+                .directory(repoDir)
+                .redirectOutput(ProcessBuilder.Redirect.PIPE)
+                .redirectError(ProcessBuilder.Redirect.PIPE)
+                .start()
+
+            val branchExitCode = branchProcess.waitFor()
+            val branchOutput = branchProcess.inputStream.bufferedReader().readText().trim()
+            val branchError = branchProcess.errorStream.bufferedReader().readText()
+
+            if (branchExitCode != 0) {
+                println("${AnsiColors.RED}Error:${AnsiColors.RESET} Could not determine current branch")
+                println("${AnsiColors.RED}Details:${AnsiColors.RESET} $branchError")
+                return false
+            }
+
+            if (branchOutput.isEmpty()) {
+                println("${AnsiColors.RED}Error:${AnsiColors.RESET} Branch name is empty")
+                return false
+            }
+
+            val currentBranch = branchOutput
+            println("${AnsiColors.BLUE}Current branch: ${AnsiColors.CYAN}$currentBranch${AnsiColors.RESET}")
+            println()
+
+            // Show status
+            val statusProcess = ProcessBuilder("git", "status", "--short")
+                .directory(repoDir)
+                .redirectOutput(ProcessBuilder.Redirect.PIPE)
+                .redirectError(ProcessBuilder.Redirect.PIPE)
+                .start()
+
+            statusProcess.waitFor()
+            val statusOutput = statusProcess.inputStream.bufferedReader().readText()
+
+            if (statusOutput.isNotEmpty()) {
+                println("${AnsiColors.YELLOW}Uncommitted changes:${AnsiColors.RESET}")
+                println(statusOutput)
+                println()
+            }
+
+            // Prompt for confirmation
+            print("${AnsiColors.GREEN}Do you want to push to origin/$currentBranch? (yes/no):${AnsiColors.RESET} ")
+            val confirmation = readlnOrNull()?.trim()?.lowercase() ?: ""
+
+            if (confirmation != "yes" && confirmation != "y") {
+                println("${AnsiColors.YELLOW}Push cancelled.${AnsiColors.RESET}")
+                return false
+            }
+
+            println()
+            println("${AnsiColors.BLUE}Pushing to origin/$currentBranch...${AnsiColors.RESET}")
+
+            // Execute push
+            val pushProcess = ProcessBuilder("git", "push", "origin", currentBranch)
+                .directory(repoDir)
+                .redirectOutput(ProcessBuilder.Redirect.PIPE)
+                .redirectError(ProcessBuilder.Redirect.PIPE)
+                .start()
+
+            val pushExitCode = pushProcess.waitFor()
+            val pushOutput = pushProcess.inputStream.bufferedReader().readText()
+            val pushError = pushProcess.errorStream.bufferedReader().readText()
+
+            if (pushExitCode == 0) {
+                println("${AnsiColors.GREEN}✓ Successfully pushed to origin/$currentBranch${AnsiColors.RESET}")
+                if (pushOutput.isNotEmpty()) {
+                    println(pushOutput)
+                }
+                true
+            } else {
+                println("${AnsiColors.RED}Error pushing to repository:${AnsiColors.RESET}")
+                println(pushError)
+                false
+            }
+        } catch (e: Exception) {
+            println("${AnsiColors.RED}Error:${AnsiColors.RESET} Failed to execute git push: ${e.message}")
+            false
+        }
+    }
 }
