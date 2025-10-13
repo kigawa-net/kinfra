@@ -9,29 +9,13 @@ import java.io.File
 
 class ConfigRepositoryImpl(
     val filePaths: FilePaths,
-    val globalConfig: GlobalConfig,
+    val globalConfigScheme: GlobalConfig,
 ): ConfigRepository {
+    val loginConfig get() = globalConfigScheme.login
+    private val configDir: File
+        get() = filePaths.baseConfigDir?.toFile() ?: throw IllegalStateException("Config directory not available")
 
-    /**
-     * リポジトリ固有の設定ディレクトリを取得
-     * リポジトリ名が取得できない場合は、baseConfigDirを返す（後方互換性）
-     */
-
-    private fun
-        getRepoConfigDir(): String {
-        val repo = loginConfig?.repo
-        return if (repo != null) {
-            "${filePaths.baseConfigDir}/${repo}"
-        } else {
-            filePaths.baseConfigDir
-        }
-    }
-
-    val loginConfig get() = globalConfig.login
-    private val configDir: String
-        get() = getRepoConfigDir()
-
-    private val projectConfigFile: File
+    private val projectFile: File
         get() = File(configDir, filePaths.PROJECT_CONFIG_FILE)
 
     init {
@@ -40,45 +24,37 @@ class ConfigRepositoryImpl(
     }
 
     private fun ensureConfigDirExists() {
-        val dir = File(configDir)
-        if (!dir.exists()) {
-            dir.mkdirs()
+        if (!configDir.exists()) {
+            configDir.mkdirs()
         }
     }
 
     override fun loadGlobalConfig(): GlobalConfig {
         ensureConfigDirExists()
-        return if (projectConfigFile.exists()) {
+        return if (projectFile.exists()) {
             try {
-                val yamlContent = projectConfigFile.readText()
-                Yaml.default.decodeFromString(GlobalConfig.serializer(), yamlContent)
+                val yamlContent = projectFile.readText()
+                Yaml.default.decodeFromString(GlobalConfigScheme.serializer(), yamlContent)
             } catch (e: Exception) {
                 // ファイルの読み込みに失敗した場合はデフォルト設定を返す
-                GlobalConfig()
+                GlobalConfigScheme()
             }
         } else {
             // ファイルが存在しない場合はデフォルト設定を返す
-            GlobalConfig()
+            GlobalConfigScheme()
         }
     }
 
     override fun saveGlobalConfig(config: GlobalConfig) {
         ensureConfigDirExists()
-        val yamlContent = Yaml.default.encodeToString(GlobalConfig.serializer(), config)
-        projectConfigFile.writeText(yamlContent)
+        val yamlContent = Yaml.default.encodeToString(
+            GlobalConfigScheme.serializer(), GlobalConfigScheme.from(config)
+        )
+        projectFile.writeText(yamlContent)
     }
 
     override fun getProjectConfigFilePath(): String {
-        return projectConfigFile.absolutePath
-    }
-
-    /**
-     * ファイルパスを解決する
-     * 相対パスの場合はログインしているリポジトリの設定ディレクトリを基準にする
-     * 絶対パスの場合はそのまま返す
-     */
-    private fun resolveFilePath(filePath: String): File {
-        return File(configDir, filePath)
+        return projectFile.absolutePath
     }
 
     override fun loadKinfraConfig(filePath: String): KinfraConfig? {
@@ -88,16 +64,20 @@ class ConfigRepositoryImpl(
         }
 
         val yamlContent = file.readText()
-        return Yaml.default.decodeFromString(KinfraConfig.serializer(), yamlContent)
+        return Yaml.default.decodeFromString(KinfraConfigScheme.serializer(), yamlContent)
     }
 
     override fun saveKinfraConfig(config: KinfraConfig, filePath: String) {
         val file = resolveFilePath(filePath)
-        val yamlContent = Yaml.default.encodeToString(KinfraConfig.serializer(), config)
+        val yamlContent = Yaml.default.encodeToString(KinfraConfigScheme.serializer(), KinfraConfigScheme.from(config))
         file.writeText(yamlContent)
     }
 
     override fun kinfraConfigExists(filePath: String): Boolean {
         return resolveFilePath(filePath).exists()
+    }
+
+    private fun resolveFilePath(filePath: String): File {
+        return File(filePath)
     }
 }

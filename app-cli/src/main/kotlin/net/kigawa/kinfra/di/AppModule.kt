@@ -28,10 +28,11 @@ import net.kigawa.kinfra.infrastructure.update.VersionChecker
 import net.kigawa.kinfra.infrastructure.update.VersionCheckerImpl
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.ActionType
+import net.kigawa.kinfra.infrastructure.config.GlobalConfigScheme
+import net.kigawa.kinfra.infrastructure.file.SystemHomeDirGetter
 import net.kigawa.kinfra.model.conf.FilePaths
 import net.kigawa.kinfra.model.conf.GlobalConfig
 import net.kigawa.kinfra.model.conf.HomeDirGetter
-import net.kigawa.kinfra.model.conf.SystemHomeDirGetter
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
@@ -41,8 +42,8 @@ val appModule = module {
     single<FilePaths> { FilePaths(get()) }
     // GlobalConfig: Load from file, or use default empty config
     single<GlobalConfig> {
-        val configRepo = ConfigRepositoryImpl(get(), GlobalConfig())
-        runCatching { configRepo.loadGlobalConfig() }.getOrElse { GlobalConfig() }
+        val configRepo = ConfigRepositoryImpl(get(), GlobalConfigScheme())
+        runCatching { configRepo.loadGlobalConfig() }.getOrElse { GlobalConfigScheme() }
     }
     single<Logger> {
         val logDir = System.getenv("KINFRA_LOG_DIR") ?: "logs"

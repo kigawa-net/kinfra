@@ -19,9 +19,12 @@ class AutoUpdaterImpl(
     private val logger: Logger,
     val filePaths: FilePaths
 ) : AutoUpdater {
-    private val appDir = File(filePaths.baseConfigDir)
-    private val jarPath = File(appDir, "kinfra.jar")
-    private val lastCheckFile = File(appDir, ".last_update_check")
+    private val appDir: File
+        get() = filePaths.baseConfigDir?.toFile() ?: throw IllegalStateException("Config directory not available")
+    private val jarPath: File
+        get() = File(appDir, "kinfra.jar")
+    private val lastCheckFile: File
+        get() = File(appDir, ".last_update_check")
 
     override fun performUpdate(versionInfo: VersionInfo): Boolean {
         if (!versionInfo.updateAvailable) {

@@ -1,5 +1,7 @@
 package net.kigawa.kinfra.model.conf
 
+import java.nio.file.Path
+
 /**
  * ファイルパス定数
  *
@@ -13,14 +15,14 @@ class FilePaths(
     /**
      * ユーザーホームディレクトリを取得
      */
-    private val userHome: String get() = homeDirGetter.getHomeDir()
+    private val userHome: Path get() = homeDirGetter.getHomeDir()
 
     /**
      * ベース設定ディレクトリ
      * デフォルト: ~/.local/kinfra
      */
      val baseConfigDirName = ".local/kinfra"
-    val baseConfigDir: String = "$userHome/$baseConfigDirName"
+    val baseConfigDir: Path? = userHome.resolve(baseConfigDirName).toAbsolutePath()
 
     /**
      * 設定ファイル名

@@ -5,8 +5,8 @@ import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.conf.FilePaths
 import net.kigawa.kinfra.action.bitwarden.BitwardenRepository
 import net.kigawa.kinfra.action.config.ConfigRepository
-import net.kigawa.kinfra.model.conf.GlobalConfig
-import net.kigawa.kinfra.model.conf.LoginConfig
+import net.kigawa.kinfra.infrastructure.config.GlobalConfigScheme
+import net.kigawa.kinfra.infrastructure.config.LoginConfigScheme
 import net.kigawa.kinfra.model.conf.KinfraConfig
 import net.kigawa.kinfra.model.conf.ProjectInfo
 import net.kigawa.kinfra.model.util.AnsiColors
@@ -39,9 +39,9 @@ class LoginAction(
             val targetDir = File(repoPath.second)
 
             // Save project configuration (repo identifier like "kigawa01/infra")
-            val loginConfig = LoginConfig(repo = repoPath.first)
-            val globalConfig = GlobalConfig(login = loginConfig)
-            configRepository.saveGlobalConfig(globalConfig)
+            val loginConfig = LoginConfigScheme(repo = repoPath.first)
+            val globalConfigScheme = GlobalConfigScheme(login = loginConfig)
+            configRepository.saveGlobalConfig(globalConfigScheme)
             val configPath = configRepository.getProjectConfigFilePath()
             println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Project configuration saved to $configPath")
             println()
@@ -170,8 +170,8 @@ class LoginAction(
             println("${AnsiColors.YELLOW}kinfra.yaml not found${AnsiColors.RESET}")
             println("${AnsiColors.BLUE}Creating default kinfra.yaml...${AnsiColors.RESET}")
 
-            val defaultConfig = KinfraConfig(
-                project = ProjectInfo()
+            val defaultConfig = net.kigawa.kinfra.infrastructure.config.KinfraConfigScheme(
+                project = net.kigawa.kinfra.infrastructure.config.ProjectInfoScheme()
             )
 
             try {

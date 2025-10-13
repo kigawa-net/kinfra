@@ -18,10 +18,11 @@ import net.kigawa.kinfra.infrastructure.process.ProcessExecutorImpl
 import net.kigawa.kinfra.infrastructure.service.TerraformServiceImpl
 import net.kigawa.kinfra.infrastructure.terraform.TerraformRepository
 import net.kigawa.kinfra.infrastructure.terraform.TerraformRepositoryImpl
+import net.kigawa.kinfra.infrastructure.config.GlobalConfigScheme
+import net.kigawa.kinfra.infrastructure.file.SystemHomeDirGetter
 import net.kigawa.kinfra.model.conf.FilePaths
 import net.kigawa.kinfra.model.conf.GlobalConfig
 import net.kigawa.kinfra.model.conf.HomeDirGetter
-import net.kigawa.kinfra.model.conf.SystemHomeDirGetter
 import org.koin.dsl.module
 
 val webModule = module {
@@ -30,8 +31,8 @@ val webModule = module {
     single<FilePaths> { FilePaths(get()) }
     // GlobalConfig: Load from file, or use default empty config
     single<GlobalConfig> {
-        val configRepo = ConfigRepositoryImpl(get(), GlobalConfig())
-        runCatching { configRepo.loadGlobalConfig() }.getOrElse { GlobalConfig() }
+        val configRepo = ConfigRepositoryImpl(get(), GlobalConfigScheme())
+        runCatching { configRepo.loadGlobalConfig() }.getOrElse { GlobalConfigScheme() }
     }
     single<Logger> {
         val logDir = System.getenv("KINFRA_LOG_DIR") ?: "logs"
