@@ -1,11 +1,12 @@
-package net.kigawa.kinfra.commands
+package net.kigawa.kinfra.actions
 
 import net.kigawa.kinfra.action.TerraformService
-import net.kigawa.kinfra.model.Command
+import net.kigawa.kinfra.model.Action
+import net.kigawa.kinfra.model.util.exitCode
 
-class ApplyCommand(
+class ApplyAction(
     private val terraformService: TerraformService
-) : Command {
+) : Action {
     override fun execute(args: Array<String>): Int {
         // Check if first arg is a plan file
         val planFile = if (args.isNotEmpty() &&
@@ -18,7 +19,7 @@ class ApplyCommand(
         val argsWithoutPlan = if (planFile != null) args.drop(1).toTypedArray() else args
 
         val result = terraformService.apply(planFile, argsWithoutPlan)
-        return result.exitCode
+        return result.exitCode()
     }
 
     override fun getDescription(): String {

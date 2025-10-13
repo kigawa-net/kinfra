@@ -1,16 +1,23 @@
-package net.kigawa.kinfra.commands
+package net.kigawa.kinfra.actions
+import net.kigawa.kinfra.model.util.exitCode
+import net.kigawa.kinfra.model.util.isSuccess
+import net.kigawa.kinfra.model.util.isFailure
+import net.kigawa.kinfra.model.util.message
 
 import net.kigawa.kinfra.action.TerraformService
-import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenRepository
-import net.kigawa.kinfra.model.Command
+import net.kigawa.kinfra.action.bitwarden.BitwardenRepository
+import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.conf.R2BackendConfig
-import net.kigawa.kinfra.util.AnsiColors
+import net.kigawa.kinfra.model.util.AnsiColors
+import net.kigawa.kinfra.model.util.exitCode
+import net.kigawa.kinfra.model.util.isFailure
+import net.kigawa.kinfra.model.util.isSuccess
 import java.io.File
 
-class DeployCommand(
+class DeployAction(
     private val terraformService: TerraformService,
     private val bitwardenRepository: BitwardenRepository
-) : Command {
+) : Action {
     override fun execute(args: Array<String>): Int {
         val additionalArgs = args.filter { it != "--auto-selected" }.toTypedArray()
 
@@ -25,14 +32,14 @@ class DeployCommand(
         // Step 1: Initialize
         println("${AnsiColors.BLUE}Step 1/3: Initializing Terraform${AnsiColors.RESET}")
         val initResult = terraformService.init(quiet = false)
-        if (initResult.isFailure) return initResult.exitCode
+        if (initResult.isFailure()) return initResult.exitCode()
 
         println()
 
         // Step 2: Plan
         println("${AnsiColors.BLUE}Step 2/3: Creating execution plan${AnsiColors.RESET}")
         val planResult = terraformService.plan(additionalArgs, quiet = false)
-        if (planResult.isFailure) return planResult.exitCode
+        if (planResult.isFailure()) return planResult.exitCode()
 
         println()
 
@@ -45,7 +52,7 @@ class DeployCommand(
         }
         val applyResult = terraformService.apply(additionalArgs = applyArgsWithAutoApprove, quiet = false)
 
-        if (applyResult.isSuccess) {
+        if (applyResult.isSuccess()) {
             println()
             println("${AnsiColors.GREEN}✅ Deployment completed successfully!${AnsiColors.RESET}")
 
@@ -60,7 +67,7 @@ class DeployCommand(
             }
         }
 
-        return applyResult.exitCode
+        return applyResult.exitCode()
     }
 
     override fun getDescription(): String {

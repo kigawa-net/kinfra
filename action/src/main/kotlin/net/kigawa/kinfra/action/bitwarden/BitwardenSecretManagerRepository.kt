@@ -1,4 +1,4 @@
-package net.kigawa.kinfra.infrastructure.bitwarden
+package net.kigawa.kinfra.action.bitwarden
 
 import net.kigawa.kinfra.model.BitwardenSecret
 

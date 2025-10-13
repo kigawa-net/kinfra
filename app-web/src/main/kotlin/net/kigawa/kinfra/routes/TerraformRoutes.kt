@@ -7,6 +7,8 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
 import net.kigawa.kinfra.action.TerraformService
+import net.kigawa.kinfra.model.util.exitCode
+import net.kigawa.kinfra.model.util.message
 import org.koin.ktor.ext.inject
 
 @Serializable
@@ -31,10 +33,10 @@ fun Route.terraformRoutes() {
                 val result = terraformService.init()
                 call.respond(
                     TerraformResponse(
-                        success = result.exitCode == 0,
-                        message = result.message ?: (if (result.exitCode == 0) "Init successful" else "Init failed"),
-                        output = result.message,
-                        exitCode = result.exitCode
+                        success = result.exitCode() == 0,
+                        message = result.message() ?: (if (result.exitCode() == 0) "Init successful" else "Init failed"),
+                        output = result.message(),
+                        exitCode = result.exitCode()
                     )
                 )
             } catch (e: Exception) {
@@ -53,10 +55,10 @@ fun Route.terraformRoutes() {
                 val result = terraformService.plan()
                 call.respond(
                     TerraformResponse(
-                        success = result.exitCode == 0,
-                        message = result.message ?: (if (result.exitCode == 0) "Plan successful" else "Plan failed"),
-                        output = result.message,
-                        exitCode = result.exitCode
+                        success = result.exitCode() == 0,
+                        message = result.message() ?: (if (result.exitCode() == 0) "Plan successful" else "Plan failed"),
+                        output = result.message(),
+                        exitCode = result.exitCode()
                     )
                 )
             } catch (e: Exception) {
@@ -75,10 +77,10 @@ fun Route.terraformRoutes() {
                 val result = terraformService.apply()
                 call.respond(
                     TerraformResponse(
-                        success = result.exitCode == 0,
-                        message = result.message ?: (if (result.exitCode == 0) "Apply successful" else "Apply failed"),
-                        output = result.message,
-                        exitCode = result.exitCode
+                        success = result.exitCode() == 0,
+                        message = result.message() ?: (if (result.exitCode() == 0) "Apply successful" else "Apply failed"),
+                        output = result.message(),
+                        exitCode = result.exitCode()
                     )
                 )
             } catch (e: Exception) {
@@ -97,10 +99,10 @@ fun Route.terraformRoutes() {
                 val result = terraformService.destroy()
                 call.respond(
                     TerraformResponse(
-                        success = result.exitCode == 0,
-                        message = result.message ?: (if (result.exitCode == 0) "Destroy successful" else "Destroy failed"),
-                        output = result.message,
-                        exitCode = result.exitCode
+                        success = result.exitCode() == 0,
+                        message = result.message() ?: (if (result.exitCode() == 0) "Destroy successful" else "Destroy failed"),
+                        output = result.message(),
+                        exitCode = result.exitCode()
                     )
                 )
             } catch (e: Exception) {
@@ -119,10 +121,10 @@ fun Route.terraformRoutes() {
                 val result = terraformService.validate()
                 call.respond(
                     TerraformResponse(
-                        success = result.exitCode == 0,
-                        message = result.message ?: (if (result.exitCode == 0) "Validation successful" else "Validation failed"),
-                        output = result.message,
-                        exitCode = result.exitCode
+                        success = result.exitCode() == 0,
+                        message = result.message() ?: (if (result.exitCode() == 0) "Validation successful" else "Validation failed"),
+                        output = result.message(),
+                        exitCode = result.exitCode()
                     )
                 )
             } catch (e: Exception) {
@@ -141,10 +143,10 @@ fun Route.terraformRoutes() {
                 val result = terraformService.format()
                 call.respond(
                     TerraformResponse(
-                        success = result.exitCode == 0,
-                        message = result.message ?: (if (result.exitCode == 0) "Format successful" else "Format failed"),
-                        output = result.message,
-                        exitCode = result.exitCode
+                        success = result.exitCode() == 0,
+                        message = result.message() ?: (if (result.exitCode() == 0) "Format successful" else "Format failed"),
+                        output = result.message(),
+                        exitCode = result.exitCode()
                     )
                 )
             } catch (e: Exception) {

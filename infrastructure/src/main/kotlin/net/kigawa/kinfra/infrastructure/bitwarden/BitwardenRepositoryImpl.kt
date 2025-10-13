@@ -3,6 +3,7 @@ package net.kigawa.kinfra.infrastructure.bitwarden
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import net.kigawa.kinfra.action.bitwarden.BitwardenRepository
 import net.kigawa.kinfra.infrastructure.process.ProcessExecutor
 import net.kigawa.kinfra.model.BitwardenItem
 import net.kigawa.kinfra.model.conf.FilePaths

@@ -1,13 +1,13 @@
-package net.kigawa.kinfra.commands
+package net.kigawa.kinfra.actions
 
 import net.kigawa.kinfra.action.GitHelper
-import net.kigawa.kinfra.model.Command
-import net.kigawa.kinfra.util.AnsiColors
+import net.kigawa.kinfra.model.Action
+import net.kigawa.kinfra.model.util.AnsiColors
 
-class HelpCommand(
-    private val commands: Map<String, Command>,
+class HelpAction(
+    private val commands: Map<String, Action>,
     private val gitHelper: GitHelper
-) : Command {
+) : Action {
     override fun execute(args: Array<String>): Int {
         // Pull latest changes from git repository
         if (!gitHelper.pullRepository()) {

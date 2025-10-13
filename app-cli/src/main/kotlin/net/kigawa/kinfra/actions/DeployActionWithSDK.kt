@@ -1,26 +1,27 @@
-package net.kigawa.kinfra.commands
+package net.kigawa.kinfra.actions
 
 import net.kigawa.kinfra.action.TerraformService
-import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenSecretManagerRepository
+import net.kigawa.kinfra.action.bitwarden.BitwardenSecretManagerRepository
 import net.kigawa.kinfra.infrastructure.config.EnvFileLoader
-import net.kigawa.kinfra.model.Command
-import net.kigawa.kinfra.infrastructure.logging.Logger
+import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.conf.R2BackendConfig
-import net.kigawa.kinfra.util.AnsiColors
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
+import net.kigawa.kinfra.model.util.AnsiColors
+import net.kigawa.kinfra.model.util.exitCode
+import net.kigawa.kinfra.model.util.isFailure
+import net.kigawa.kinfra.model.util.isSuccess
+import net.kigawa.kinfra.infrastructure.logging.Logger
 import java.io.File
 
 /**
  * Bitwarden Secret Manager SDK を使用したデプロイコマンド
  */
-class DeployCommandWithSDK(
+class DeployActionWithSDK(
     private val terraformService: TerraformService,
-    private val secretManagerRepository: BitwardenSecretManagerRepository
-) : Command, KoinComponent {
-    private val logger: Logger by inject()
+    private val secretManagerRepository: BitwardenSecretManagerRepository,
+    val logger: Logger,
+): Action {
     override fun execute(args: Array<String>): Int {
-        logger.info("DeployCommandWithSDK started with args: ${args.joinToString(" ")}")
+        logger.info("DeployActionWithSDK started with args: ${args.joinToString(" ")}")
 
         val additionalArgs = args.filter { it != "--auto-selected" }.toTypedArray()
 
@@ -38,9 +39,9 @@ class DeployCommandWithSDK(
         logger.info("Step 1: Initializing Terraform")
         println("${AnsiColors.BLUE}Step 1/3: Initializing Terraform${AnsiColors.RESET}")
         val initResult = terraformService.init()
-        if (initResult.isFailure) {
-            logger.error("Terraform init failed with exit code: ${initResult.exitCode}")
-            return initResult.exitCode
+        if (initResult.isFailure()) {
+            logger.error("Terraform init failed with exit code: ${initResult.exitCode()}")
+            return initResult.exitCode()
         }
         logger.info("Terraform init completed successfully")
 
@@ -50,9 +51,9 @@ class DeployCommandWithSDK(
         logger.info("Step 2: Creating execution plan")
         println("${AnsiColors.BLUE}Step 2/3: Creating execution plan${AnsiColors.RESET}")
         val planResult = terraformService.plan(additionalArgs)
-        if (planResult.isFailure) {
-            logger.error("Terraform plan failed with exit code: ${planResult.exitCode}")
-            return planResult.exitCode
+        if (planResult.isFailure()) {
+            logger.error("Terraform plan failed with exit code: ${planResult.exitCode()}")
+            return planResult.exitCode()
         }
         logger.info("Terraform plan completed successfully")
 
@@ -68,7 +69,7 @@ class DeployCommandWithSDK(
         }
         val applyResult = terraformService.apply(additionalArgs = applyArgsWithAutoApprove)
 
-        if (applyResult.isSuccess) {
+        if (applyResult.isSuccess()) {
             logger.info("Deployment completed successfully")
             println()
             println("${AnsiColors.GREEN}✅ Deployment completed successfully!${AnsiColors.RESET}")
@@ -85,10 +86,10 @@ class DeployCommandWithSDK(
                 println("${AnsiColors.YELLOW}⚠${AnsiColors.RESET} Failed to push to remote repository (non-fatal)")
             }
         } else {
-            logger.error("Terraform apply failed with exit code: ${applyResult.exitCode}")
+            logger.error("Terraform apply failed with exit code: ${applyResult.exitCode()}")
         }
 
-        return applyResult.exitCode
+        return applyResult.exitCode()
     }
 
     override fun getDescription(): String {
@@ -120,13 +121,39 @@ class DeployCommandWithSDK(
             println("${AnsiColors.BLUE}Using project ID from .env: ${projectId}${AnsiColors.RESET}")
         }
 
-        // シークレットを取得
-        val secrets = try {
-            logger.debug("Fetching secrets from Bitwarden Secret Manager")
-            secretManagerRepository.listSecrets()
-        } catch (e: Exception) {
-            logger.error("Failed to fetch secrets from Bitwarden", e)
-            println("${AnsiColors.RED}Error:${AnsiColors.RESET} Failed to fetch secrets: ${e.message}")
+        // シークレットを取得（リトライ付き）
+        val maxAttempts = 3
+        var lastError: Exception? = null
+        val secrets = run {
+            var result: List<net.kigawa.kinfra.model.BitwardenSecret>? = null
+            var delayMs = 1000L
+            for (attempt in 1..maxAttempts) {
+                try {
+                    logger.debug("Fetching secrets from Bitwarden Secret Manager (attempt $attempt/$maxAttempts)")
+                    result = secretManagerRepository.listSecrets()
+                    break
+                } catch (e: Exception) {
+                    lastError = e
+                    val message = e.message ?: e::class.simpleName ?: "Unknown error"
+                    println("${AnsiColors.YELLOW}Warn:${AnsiColors.RESET} Failed to fetch secrets (attempt $attempt/$maxAttempts): $message")
+                    if (attempt < maxAttempts) {
+                        try {
+                            Thread.sleep(delayMs)
+                        } catch (_: InterruptedException) { /* ignore */ }
+                        delayMs *= 2
+                    }
+                }
+            }
+            result
+        }
+        if (secrets == null) {
+            val e = lastError
+            if (e != null) {
+                logger.error("Failed to fetch secrets from Bitwarden after $maxAttempts attempts", e)
+            } else {
+                logger.error("Failed to fetch secrets from Bitwarden after $maxAttempts attempts")
+            }
+            println("${AnsiColors.RED}Error:${AnsiColors.RESET} Failed to fetch secrets after $maxAttempts attempts: ${lastError?.message}")
             println()
             println("${AnsiColors.BLUE}Make sure BWS_ACCESS_TOKEN environment variable is set${AnsiColors.RESET}")
             if (projectId != null) {

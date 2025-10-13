@@ -1,6 +1,6 @@
 package net.kigawa.kinfra.model
 
-enum class CommandType(val commandName: String) {
+enum class ActionType(val actionName: String) {
     FMT("fmt"),
     VALIDATE("validate"),
     STATUS("status"),
@@ -18,8 +18,8 @@ enum class CommandType(val commandName: String) {
     SELF_UPDATE("self-update");
 
     companion object {
-        fun fromString(name: String): CommandType? {
-            return entries.find { it.commandName == name }
+        fun fromString(name: String): ActionType? {
+            return entries.find { it.actionName == name }
         }
     }
 }

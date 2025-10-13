@@ -1,21 +1,21 @@
-package net.kigawa.kinfra.commands
+package net.kigawa.kinfra.actions
 
 import net.kigawa.kinfra.action.GitHelper
-import net.kigawa.kinfra.model.Command
+import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.conf.FilePaths
-import net.kigawa.kinfra.infrastructure.config.ConfigRepository
+import net.kigawa.kinfra.action.config.ConfigRepository
 import net.kigawa.kinfra.infrastructure.update.VersionChecker
 import net.kigawa.kinfra.infrastructure.update.AutoUpdater
-import net.kigawa.kinfra.util.AnsiColors
-import net.kigawa.kinfra.util.VersionUtil
+import net.kigawa.kinfra.model.util.AnsiColors
+import net.kigawa.kinfra.model.util.VersionUtil
 
-class SelfUpdateCommand(
+class SelfUpdateAction(
     private val configRepository: ConfigRepository,
     private val versionChecker: VersionChecker,
     private val autoUpdater: AutoUpdater,
     private val gitHelper: GitHelper,
     private val filePaths: FilePaths
-) : Command {
+) : Action {
 
     override fun execute(args: Array<String>): Int {
         // Pull latest changes from git repository

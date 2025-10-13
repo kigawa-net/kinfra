@@ -1,8 +1,8 @@
 package net.kigawa.kinfra.git
 
 import net.kigawa.kinfra.action.GitHelper
-import net.kigawa.kinfra.infrastructure.config.ConfigRepository
-import net.kigawa.kinfra.util.AnsiColors
+import net.kigawa.kinfra.action.config.ConfigRepository
+import net.kigawa.kinfra.model.util.AnsiColors
 import java.io.File
 
 /**
