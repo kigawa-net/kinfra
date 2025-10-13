@@ -16,9 +16,10 @@ interface AutoUpdater {
 }
 
 class AutoUpdaterImpl(
-    private val logger: Logger
+    private val logger: Logger,
+    val filePaths: FilePaths
 ) : AutoUpdater {
-    private val appDir = File(FilePaths.BASE_CONFIG_DIR)
+    private val appDir = File(filePaths.baseConfigDir)
     private val jarPath = File(appDir, "kinfra.jar")
     private val lastCheckFile = File(appDir, ".last_update_check")
 

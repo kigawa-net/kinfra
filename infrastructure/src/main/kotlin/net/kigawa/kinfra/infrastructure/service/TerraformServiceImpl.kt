@@ -12,7 +12,8 @@ import net.kigawa.kinfra.infrastructure.terraform.TerraformRepository
  */
 class TerraformServiceImpl(
     private val processExecutor: ProcessExecutor,
-    private val terraformRepository: TerraformRepository
+    private val terraformRepository: TerraformRepository,
+    val filePaths: FilePaths,
 ) : TerraformService {
 
     override fun init(additionalArgs: Array<String>, quiet: Boolean): CommandResult {
@@ -34,7 +35,7 @@ class TerraformServiceImpl(
     }
 
     private fun findBackendConfigFile(): String? {
-        val backendConfig = java.io.File(FilePaths.BACKEND_TFVARS_FILE)
+        val backendConfig = java.io.File(filePaths.BACKEND_TFVARS_FILE)
         if (backendConfig.exists()) {
             return backendConfig.absolutePath
         }

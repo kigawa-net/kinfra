@@ -5,7 +5,7 @@ package net.kigawa.kinfra.model
  *
  * アプリケーション全体で使用するファイルパスを一箇所で管理します。
  */
-object FilePaths {
+class FilePaths {
     /**
      * ユーザーホームディレクトリを取得
      */
@@ -15,28 +15,28 @@ object FilePaths {
      * ベース設定ディレクトリ
      * デフォルト: ~/.local/kinfra
      */
-    const val BASE_CONFIG_DIR_NAME = ".local/kinfra"
-    val BASE_CONFIG_DIR: String = "$userHome/$BASE_CONFIG_DIR_NAME"
+     val baseConfigDirName = ".local/kinfra"
+    val baseConfigDir: String = "$userHome/$baseConfigDirName"
 
     /**
      * 設定ファイル名
      */
-    const val PROJECT_CONFIG_FILE = "project.yaml"
-    const val KINFRA_CONFIG_FILE = "kinfra.yaml"
+     val PROJECT_CONFIG_FILE = "project.yaml"
+     val KINFRA_CONFIG_FILE = "kinfra.yaml"
 
     /**
      * Terraformバックエンド設定ファイル
      */
-    const val BACKEND_TFVARS_FILE = "backend.tfvars"
+     val BACKEND_TFVARS_FILE = "backend.tfvars"
 
     /**
      * Bitwarden関連ファイル
      */
-    const val BW_SESSION_FILE = ".bw_session"
-    const val BWS_TOKEN_FILE = ".bws_token"
+     val BW_SESSION_FILE = ".bw_session"
+     val BWS_TOKEN_FILE = ".bws_token"
 
     /**
      * リポジトリディレクトリ名
      */
-    const val REPOS_DIR = "repos"
+     val REPOS_DIR = "repos"
 }

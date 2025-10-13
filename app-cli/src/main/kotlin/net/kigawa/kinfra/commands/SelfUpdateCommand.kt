@@ -2,6 +2,7 @@ package net.kigawa.kinfra.commands
 
 import net.kigawa.kinfra.action.GitHelper
 import net.kigawa.kinfra.model.Command
+import net.kigawa.kinfra.model.FilePaths
 import net.kigawa.kinfra.infrastructure.config.ConfigRepository
 import net.kigawa.kinfra.infrastructure.update.VersionChecker
 import net.kigawa.kinfra.infrastructure.update.AutoUpdater
@@ -12,7 +13,8 @@ class SelfUpdateCommand(
     private val configRepository: ConfigRepository,
     private val versionChecker: VersionChecker,
     private val autoUpdater: AutoUpdater,
-    private val gitHelper: GitHelper
+    private val gitHelper: GitHelper,
+    private val filePaths: FilePaths
 ) : Command {
 
     override fun execute(args: Array<String>): Int {
@@ -31,7 +33,7 @@ class SelfUpdateCommand(
 
         // Load config to get GitHub repo
         val config = try {
-            configRepository.loadKinfraConfig()
+            configRepository.loadKinfraConfig(filePaths.KINFRA_CONFIG_FILE)
         } catch (e: Exception) {
             println("${AnsiColors.RED}Error:${AnsiColors.RESET} Failed to load configuration: ${e.message}")
             return 1

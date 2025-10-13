@@ -1,37 +1,37 @@
 package net.kigawa.kinfra.infrastructure.config
 
 import com.charleskorn.kaml.Yaml
+import net.kigawa.kinfra.model.FilePaths
 import net.kigawa.kinfra.model.GlobalConfig
 import net.kigawa.kinfra.model.KinfraConfig
-import net.kigawa.kinfra.model.FilePaths
-import net.kigawa.kinfra.infrastructure.git.GitRepository
-import net.kigawa.kinfra.model.err.ErrScope
 import java.io.File
 
 class ConfigRepositoryImpl(
-    private val baseConfigDir: String = FilePaths.BASE_CONFIG_DIR,
+    val filePaths: FilePaths,
     val globalConfig: GlobalConfig,
-) : ConfigRepository {
+): ConfigRepository {
 
     /**
      * リポジトリ固有の設定ディレクトリを取得
      * リポジトリ名が取得できない場合は、baseConfigDirを返す（後方互換性）
      */
-    context(err: ErrScope<Exception>)
-    private fun getRepoConfigDir(): String {
-        val repoName = globalConfig.githubRepository
-        return if (repoName != null) {
-            "$baseConfigDir/$repoName"
+
+    private fun
+        getRepoConfigDir(): String {
+        val repo = loginConfig?.repo
+        return if (repo != null) {
+            "${filePaths.baseConfigDir}/${repo}"
         } else {
-            baseConfigDir
+            filePaths.baseConfigDir
         }
     }
 
+    val loginConfig get() = globalConfig.login
     private val configDir: String
         get() = getRepoConfigDir()
 
     private val projectConfigFile: File
-        get() = File(configDir, FilePaths.PROJECT_CONFIG_FILE)
+        get() = File(configDir, filePaths.PROJECT_CONFIG_FILE)
 
     init {
         // 設定ディレクトリが存在しない場合は作成

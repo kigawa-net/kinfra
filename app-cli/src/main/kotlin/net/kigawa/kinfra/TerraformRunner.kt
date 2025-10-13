@@ -113,10 +113,11 @@ class TerraformRunner : KoinComponent {
             val configRepository: ConfigRepository by inject()
             val versionChecker: VersionChecker by inject()
             val autoUpdater: AutoUpdater by inject()
+            val filePaths: net.kigawa.kinfra.model.FilePaths by inject()
 
             // Load config to check if auto-update is enabled
             val config = runCatching {
-                configRepository.loadKinfraConfig()
+                configRepository.loadKinfraConfig(filePaths.KINFRA_CONFIG_FILE)
             }.getOrNull()
 
             // Skip update check if auto-update is disabled

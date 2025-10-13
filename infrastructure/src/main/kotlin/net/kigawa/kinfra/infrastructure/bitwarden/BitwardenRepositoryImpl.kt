@@ -9,7 +9,8 @@ import net.kigawa.kinfra.model.FilePaths
 import java.io.File
 
 class BitwardenRepositoryImpl(
-    private val processExecutor: ProcessExecutor
+    private val processExecutor: ProcessExecutor,
+    val filePaths: FilePaths
 ) : BitwardenRepository {
 
     private val gson = Gson()
@@ -90,7 +91,7 @@ class BitwardenRepositoryImpl(
 
     override fun getSessionFromFile(): String? {
         return try {
-            val sessionFile = File(FilePaths.BW_SESSION_FILE)
+            val sessionFile = File(filePaths.BW_SESSION_FILE)
             if (sessionFile.exists() && sessionFile.canRead()) {
                 sessionFile.readText().trim().takeIf { it.isNotBlank() }
             } else {
