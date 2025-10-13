@@ -1,25 +1,29 @@
-package net.kigawa.kinfra.commands
+package net.kigawa.kinfra.actions
+import net.kigawa.kinfra.model.util.exitCode
+import net.kigawa.kinfra.model.util.isSuccess
+import net.kigawa.kinfra.model.util.isFailure
+import net.kigawa.kinfra.model.util.message
 
 import net.kigawa.kinfra.action.GitHelper
 import net.kigawa.kinfra.action.TerraformService
-import net.kigawa.kinfra.model.Command
-import net.kigawa.kinfra.util.AnsiColors
+import net.kigawa.kinfra.model.Action
+import net.kigawa.kinfra.model.util.AnsiColors
 
-class StatusCommand(
+class DestroyAction(
     private val terraformService: TerraformService,
     private val gitHelper: GitHelper
-) : Command {
+) : Action {
     override fun execute(args: Array<String>): Int {
         // Pull latest changes from git repository
         if (!gitHelper.pullRepository()) {
             println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Failed to pull from git repository, continuing anyway...")
         }
 
-        val result = terraformService.show(args, quiet = false)
-        return result.exitCode
+        val result = terraformService.destroy(args)
+        return result.exitCode()
     }
 
     override fun getDescription(): String {
-        return "Show the current state or plan"
+        return "Destroy the Terraform-managed infrastructure"
     }
 }

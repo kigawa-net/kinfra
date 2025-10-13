@@ -1,14 +1,18 @@
-package net.kigawa.kinfra.commands
+package net.kigawa.kinfra.actions
+import net.kigawa.kinfra.model.util.exitCode
+import net.kigawa.kinfra.model.util.isSuccess
+import net.kigawa.kinfra.model.util.isFailure
+import net.kigawa.kinfra.model.util.message
 
 import net.kigawa.kinfra.action.GitHelper
 import net.kigawa.kinfra.action.TerraformService
-import net.kigawa.kinfra.model.Command
-import net.kigawa.kinfra.util.AnsiColors
+import net.kigawa.kinfra.model.Action
+import net.kigawa.kinfra.model.util.AnsiColors
 
-class PlanCommand(
+class PlanAction(
     private val terraformService: TerraformService,
     private val gitHelper: GitHelper
-) : Command {
+) : Action {
     override fun execute(args: Array<String>): Int {
         // Pull latest changes from git repository
         if (!gitHelper.pullRepository()) {
@@ -16,7 +20,7 @@ class PlanCommand(
         }
 
         val result = terraformService.plan(args)
-        return result.exitCode
+        return result.exitCode()
     }
 
     override fun getDescription(): String {

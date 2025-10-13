@@ -1,20 +1,21 @@
-package net.kigawa.kinfra.commands
+package net.kigawa.kinfra.actions
 
 import net.kigawa.kinfra.action.GitHelper
 import net.kigawa.kinfra.action.TerraformService
-import net.kigawa.kinfra.infrastructure.config.ConfigRepository
+import net.kigawa.kinfra.action.config.ConfigRepository
 import net.kigawa.kinfra.infrastructure.logging.Logger
 import net.kigawa.kinfra.infrastructure.process.ProcessExecutor
-import net.kigawa.kinfra.model.Command
-import net.kigawa.kinfra.util.AnsiColors
+import net.kigawa.kinfra.model.Action
+import net.kigawa.kinfra.model.util.AnsiColors
+import net.kigawa.kinfra.model.util.isSuccess
+import net.kigawa.kinfra.model.util.message
 
-class HelloCommand(
-    private val configRepository: ConfigRepository,
+class HelloAction(
     private val processExecutor: ProcessExecutor,
     private val terraformService: TerraformService,
     private val logger: Logger,
     private val gitHelper: GitHelper
-) : Command {
+) : Action {
 
     override fun execute(args: Array<String>): Int {
         // Pull latest changes from git repository
@@ -97,13 +98,13 @@ class HelloCommand(
 
         val result = terraformService.init(quiet = false)
 
-        if (result.isSuccess) {
+        if (result.isSuccess()) {
             println()
             println("${AnsiColors.GREEN}✓ Terraform init completed successfully${AnsiColors.RESET}")
         } else {
             println()
             println("${AnsiColors.RED}✗ Terraform init failed${AnsiColors.RESET}")
-            result.message?.let { println("${AnsiColors.RED}Error: $it${AnsiColors.RESET}") }
+            result.message()?.let { println("${AnsiColors.RED}Error: $it${AnsiColors.RESET}") }
         }
     }
 
@@ -125,13 +126,13 @@ class HelloCommand(
 
         val result = terraformService.plan(quiet = false)
 
-        if (result.isSuccess) {
+        if (result.isSuccess()) {
             println()
             println("${AnsiColors.GREEN}✓ Terraform plan completed successfully${AnsiColors.RESET}")
         } else {
             println()
             println("${AnsiColors.RED}✗ Terraform plan failed${AnsiColors.RESET}")
-            result.message?.let { println("${AnsiColors.RED}Error: $it${AnsiColors.RESET}") }
+            result.message()?.let { println("${AnsiColors.RED}Error: $it${AnsiColors.RESET}") }
         }
     }
 
@@ -153,10 +154,10 @@ class HelloCommand(
 
         val initResult = terraformService.init(quiet = false)
 
-        if (!initResult.isSuccess) {
+        if (!initResult.isSuccess()) {
             println()
             println("${AnsiColors.RED}✗ Terraform init failed${AnsiColors.RESET}")
-            initResult.message?.let { println("${AnsiColors.RED}Error: $it${AnsiColors.RESET}") }
+            initResult.message()?.let { println("${AnsiColors.RED}Error: $it${AnsiColors.RESET}") }
             return
         }
 
@@ -167,13 +168,13 @@ class HelloCommand(
 
         val planResult = terraformService.plan(quiet = false)
 
-        if (planResult.isSuccess) {
+        if (planResult.isSuccess()) {
             println()
             println("${AnsiColors.GREEN}✓ Terraform init + plan completed successfully${AnsiColors.RESET}")
         } else {
             println()
             println("${AnsiColors.RED}✗ Terraform plan failed${AnsiColors.RESET}")
-            planResult.message?.let { println("${AnsiColors.RED}Error: $it${AnsiColors.RESET}") }
+            planResult.message()?.let { println("${AnsiColors.RED}Error: $it${AnsiColors.RESET}") }
         }
     }
 
@@ -196,13 +197,13 @@ class HelloCommand(
 
         val result = terraformService.apply(quiet = false)
 
-        if (result.isSuccess) {
+        if (result.isSuccess()) {
             println()
             println("${AnsiColors.GREEN}✓ Terraform apply completed successfully${AnsiColors.RESET}")
         } else {
             println()
             println("${AnsiColors.RED}✗ Terraform apply failed${AnsiColors.RESET}")
-            result.message?.let { println("${AnsiColors.RED}Error: $it${AnsiColors.RESET}") }
+            result.message()?.let { println("${AnsiColors.RED}Error: $it${AnsiColors.RESET}") }
         }
     }
 
@@ -231,17 +232,24 @@ class HelloCommand(
 
         val repoDir = java.io.File(System.getProperty("user.dir"))
 
-        // まず、現在のブランチを確認
+        // まず、現在のブランチを確認（rev-parseの方が互換性が高い）
         val branchResult = processExecutor.executeWithOutput(
-            arrayOf("git", "branch", "--show-current"),
+            arrayOf("git", "rev-parse", "--abbrev-ref", "HEAD"),
             workingDir = repoDir
         )
         if (branchResult.exitCode != 0) {
             println("${AnsiColors.RED}Error: Could not determine current branch${AnsiColors.RESET}")
+            println("${AnsiColors.RED}Details: ${branchResult.error}${AnsiColors.RESET}")
+            logger.error("git rev-parse failed: ${branchResult.error}")
             return
         }
 
         val currentBranch = branchResult.output.trim()
+        if (currentBranch.isEmpty()) {
+            println("${AnsiColors.RED}Error: Branch name is empty${AnsiColors.RESET}")
+            logger.error("git rev-parse returned empty output")
+            return
+        }
         println("${AnsiColors.BLUE}Current branch: ${AnsiColors.CYAN}$currentBranch${AnsiColors.RESET}")
         println()
 

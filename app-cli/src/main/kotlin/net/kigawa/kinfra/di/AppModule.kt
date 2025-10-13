@@ -3,35 +3,35 @@ package net.kigawa.kinfra.di
 import net.kigawa.kinfra.TerraformRunner
 import net.kigawa.kinfra.action.GitHelper
 import net.kigawa.kinfra.action.TerraformService
-import net.kigawa.kinfra.commands.*
+import net.kigawa.kinfra.action.bitwarden.BitwardenRepository
+import net.kigawa.kinfra.action.bitwarden.BitwardenSecretManagerRepository
+import net.kigawa.kinfra.actions.*
+import net.kigawa.kinfra.action.config.ConfigRepository
 import net.kigawa.kinfra.git.GitHelperImpl
-import net.kigawa.kinfra.model.Command
-import net.kigawa.kinfra.model.CommandType
-import net.kigawa.kinfra.model.conf.FilePaths
-import net.kigawa.kinfra.model.conf.HomeDirGetter
-import net.kigawa.kinfra.model.conf.SystemHomeDirGetter
-import net.kigawa.kinfra.model.conf.GlobalConfig
+import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenRepositoryImpl
+import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenSecretManagerRepositoryImpl
+import net.kigawa.kinfra.infrastructure.config.ConfigRepositoryImpl
+import net.kigawa.kinfra.infrastructure.config.EnvFileLoader
 import net.kigawa.kinfra.infrastructure.file.FileRepository
 import net.kigawa.kinfra.infrastructure.file.FileRepositoryImpl
+import net.kigawa.kinfra.infrastructure.logging.FileLogger
+import net.kigawa.kinfra.infrastructure.logging.LogLevel
+import net.kigawa.kinfra.infrastructure.logging.Logger
 import net.kigawa.kinfra.infrastructure.process.ProcessExecutor
 import net.kigawa.kinfra.infrastructure.process.ProcessExecutorImpl
 import net.kigawa.kinfra.infrastructure.service.TerraformServiceImpl
 import net.kigawa.kinfra.infrastructure.terraform.TerraformRepository
 import net.kigawa.kinfra.infrastructure.terraform.TerraformRepositoryImpl
-import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenRepository
-import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenRepositoryImpl
-import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenSecretManagerRepository
-import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenSecretManagerRepositoryImpl
-import net.kigawa.kinfra.infrastructure.config.EnvFileLoader
-import net.kigawa.kinfra.infrastructure.config.ConfigRepository
-import net.kigawa.kinfra.infrastructure.config.ConfigRepositoryImpl
-import net.kigawa.kinfra.infrastructure.logging.Logger
-import net.kigawa.kinfra.infrastructure.logging.FileLogger
-import net.kigawa.kinfra.infrastructure.logging.LogLevel
-import net.kigawa.kinfra.infrastructure.update.VersionChecker
-import net.kigawa.kinfra.infrastructure.update.VersionCheckerImpl
 import net.kigawa.kinfra.infrastructure.update.AutoUpdater
 import net.kigawa.kinfra.infrastructure.update.AutoUpdaterImpl
+import net.kigawa.kinfra.infrastructure.update.VersionChecker
+import net.kigawa.kinfra.infrastructure.update.VersionCheckerImpl
+import net.kigawa.kinfra.model.Action
+import net.kigawa.kinfra.model.ActionType
+import net.kigawa.kinfra.model.conf.FilePaths
+import net.kigawa.kinfra.model.conf.GlobalConfig
+import net.kigawa.kinfra.model.conf.HomeDirGetter
+import net.kigawa.kinfra.model.conf.SystemHomeDirGetter
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
@@ -97,38 +97,38 @@ val appModule = module {
     // Presentation layer
     single<TerraformRunner> { TerraformRunner() }
 
-    // Commands
-    single<Command>(named(CommandType.FMT.commandName)) { FormatCommand(get(), get()) }
-    single<Command>(named(CommandType.VALIDATE.commandName)) { ValidateCommand(get(), get()) }
-    single<Command>(named(CommandType.STATUS.commandName)) { StatusCommand(get(), get()) }
-    single<Command>(named(CommandType.LOGIN.commandName)) { LoginCommand(get(), get(), get(), get()) }
-    single<Command>(named(CommandType.SETUP_R2.commandName)) { SetupR2Command(get(), get()) }
-    single<Command>(named(CommandType.HELLO.commandName)) { HelloCommand(get(), get(), get(), get(), get()) }
-    single<Command>(named(CommandType.INIT.commandName)) { InitCommand(get(), get()) }
-    single<Command>(named(CommandType.PLAN.commandName)) { PlanCommand(get(), get()) }
-    single<Command>(named(CommandType.APPLY.commandName)) { ApplyCommand(get()) }
-    single<Command>(named(CommandType.DESTROY.commandName)) { DestroyCommand(get(), get()) }
-    single<Command>(named(CommandType.DEPLOY.commandName)) { DeployCommand(get(), get()) }
-    single<Command>(named(CommandType.SELF_UPDATE.commandName)) { SelfUpdateCommand(get(), get(), get(), get(), get()) }
+    // Actions
+    single<Action>(named(ActionType.FMT.actionName)) { FormatAction(get(), get()) }
+    single<Action>(named(ActionType.VALIDATE.actionName)) { ValidateAction(get(), get()) }
+    single<Action>(named(ActionType.STATUS.actionName)) { StatusAction(get(), get()) }
+    single<Action>(named(ActionType.LOGIN.actionName)) { LoginAction(get(), get(), get(), get()) }
+    single<Action>(named(ActionType.SETUP_R2.actionName)) { SetupR2Action(get(), get()) }
+    single<Action>(named(ActionType.HELLO.actionName)) { HelloAction(get(), get(), get(), get()) }
+    single<Action>(named(ActionType.INIT.actionName)) { InitAction(get(), get()) }
+    single<Action>(named(ActionType.PLAN.actionName)) { PlanAction(get(), get()) }
+    single<Action>(named(ActionType.APPLY.actionName)) { ApplyAction(get()) }
+    single<Action>(named(ActionType.DESTROY.actionName)) { DestroyAction(get(), get()) }
+    single<Action>(named(ActionType.DEPLOY.actionName)) { DeployAction(get(), get()) }
+    single<Action>(named(ActionType.SELF_UPDATE.actionName)) { SelfUpdateAction(get(), get(), get(), get(), get()) }
 
-    // SDK-based commands (only if BWS_ACCESS_TOKEN is available)
+    // SDK-based actions (only if BWS_ACCESS_TOKEN is available)
     if (hasBwsToken) {
-        single<Command>(named(CommandType.SETUP_R2_SDK.commandName)) { SetupR2CommandWithSDK(get(), get()) }
-        single<Command>(named(CommandType.DEPLOY_SDK.commandName)) { DeployCommandWithSDK(get(), get()) }
+        single<Action>(named(ActionType.SETUP_R2_SDK.actionName)) { SetupR2ActionWithSDK(get(), get()) }
+        single<Action>(named(ActionType.DEPLOY_SDK.actionName)) { DeployActionWithSDK(get(), get(), get()) }
     }
 
-    // Help command needs access to all commands
-    single<Command>(named(CommandType.HELP.commandName)) {
-        val commandMap = buildMap<String, Command> {
-            CommandType.entries.forEach { commandType ->
-                if (commandType != CommandType.HELP) {
+    // Help action needs access to all actions
+    single<Action>(named(ActionType.HELP.actionName)) {
+        val actionMap = buildMap<String, Action> {
+            ActionType.entries.forEach { actionType ->
+                if (actionType != ActionType.HELP) {
                     runCatching {
-                        put(commandType.commandName, get<Command>(named(commandType.commandName)))
+                        put(actionType.actionName, get<Action>(named(actionType.actionName)))
                     }
                 }
             }
         }
 
-        HelpCommand(commandMap, get())
+        HelpAction(actionMap, get())
     }
 }

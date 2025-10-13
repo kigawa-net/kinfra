@@ -1,27 +1,27 @@
 package net.kigawa.kinfra.di
 
 import net.kigawa.kinfra.action.TerraformService
-import net.kigawa.kinfra.model.conf.FilePaths
-import net.kigawa.kinfra.model.conf.HomeDirGetter
-import net.kigawa.kinfra.model.conf.SystemHomeDirGetter
-import net.kigawa.kinfra.model.conf.GlobalConfig
+import net.kigawa.kinfra.action.bitwarden.BitwardenRepository
+import net.kigawa.kinfra.action.bitwarden.BitwardenSecretManagerRepository
+import net.kigawa.kinfra.action.config.ConfigRepository
+import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenRepositoryImpl
+import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenSecretManagerRepositoryImpl
+import net.kigawa.kinfra.infrastructure.config.ConfigRepositoryImpl
+import net.kigawa.kinfra.infrastructure.config.EnvFileLoader
 import net.kigawa.kinfra.infrastructure.file.FileRepository
 import net.kigawa.kinfra.infrastructure.file.FileRepositoryImpl
+import net.kigawa.kinfra.infrastructure.logging.FileLogger
+import net.kigawa.kinfra.infrastructure.logging.LogLevel
+import net.kigawa.kinfra.infrastructure.logging.Logger
 import net.kigawa.kinfra.infrastructure.process.ProcessExecutor
 import net.kigawa.kinfra.infrastructure.process.ProcessExecutorImpl
 import net.kigawa.kinfra.infrastructure.service.TerraformServiceImpl
 import net.kigawa.kinfra.infrastructure.terraform.TerraformRepository
 import net.kigawa.kinfra.infrastructure.terraform.TerraformRepositoryImpl
-import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenRepository
-import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenRepositoryImpl
-import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenSecretManagerRepository
-import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenSecretManagerRepositoryImpl
-import net.kigawa.kinfra.infrastructure.config.EnvFileLoader
-import net.kigawa.kinfra.infrastructure.config.ConfigRepository
-import net.kigawa.kinfra.infrastructure.config.ConfigRepositoryImpl
-import net.kigawa.kinfra.infrastructure.logging.Logger
-import net.kigawa.kinfra.infrastructure.logging.FileLogger
-import net.kigawa.kinfra.infrastructure.logging.LogLevel
+import net.kigawa.kinfra.model.conf.FilePaths
+import net.kigawa.kinfra.model.conf.GlobalConfig
+import net.kigawa.kinfra.model.conf.HomeDirGetter
+import net.kigawa.kinfra.model.conf.SystemHomeDirGetter
 import org.koin.dsl.module
 
 val webModule = module {

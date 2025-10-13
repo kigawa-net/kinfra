@@ -1,4 +1,4 @@
-package net.kigawa.kinfra.util
+package net.kigawa.kinfra.model.util
 
 import net.kigawa.kinfra.model.LogCategory
 

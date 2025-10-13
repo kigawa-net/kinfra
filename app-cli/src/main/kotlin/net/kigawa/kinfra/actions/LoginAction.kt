@@ -1,23 +1,23 @@
-package net.kigawa.kinfra.commands
+package net.kigawa.kinfra.actions
 
 import net.kigawa.kinfra.action.GitHelper
-import net.kigawa.kinfra.model.Command
+import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.conf.FilePaths
-import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenRepository
-import net.kigawa.kinfra.infrastructure.config.ConfigRepository
+import net.kigawa.kinfra.action.bitwarden.BitwardenRepository
+import net.kigawa.kinfra.action.config.ConfigRepository
 import net.kigawa.kinfra.model.conf.GlobalConfig
 import net.kigawa.kinfra.model.conf.LoginConfig
 import net.kigawa.kinfra.model.conf.KinfraConfig
 import net.kigawa.kinfra.model.conf.ProjectInfo
-import net.kigawa.kinfra.util.AnsiColors
+import net.kigawa.kinfra.model.util.AnsiColors
 import java.io.File
 
-class LoginCommand(
+class LoginAction(
     private val bitwardenRepository: BitwardenRepository,
     private val configRepository: ConfigRepository,
     private val gitHelper: GitHelper,
     private val filePaths: FilePaths
-) : Command {
+) : Action {
 
     override fun execute(args: Array<String>): Int {
         // GitHubリポジトリ引数が指定されている場合はクローンまたはpull

@@ -1,16 +1,16 @@
-package net.kigawa.kinfra.commands
+package net.kigawa.kinfra.actions
 
 import net.kigawa.kinfra.action.GitHelper
-import net.kigawa.kinfra.model.Command
+import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.conf.R2BackendConfig
-import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenRepository
-import net.kigawa.kinfra.util.AnsiColors
+import net.kigawa.kinfra.action.bitwarden.BitwardenRepository
+import net.kigawa.kinfra.model.util.AnsiColors
 import java.io.File
 
-class SetupR2Command(
+class SetupR2Action(
     private val bitwardenRepository: BitwardenRepository,
     private val gitHelper: GitHelper
-) : Command {
+) : Action {
 
     override fun execute(args: Array<String>): Int {
         // Pull latest changes from git repository

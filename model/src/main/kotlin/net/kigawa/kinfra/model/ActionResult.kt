@@ -3,7 +3,7 @@ package net.kigawa.kinfra.model
 /**
  * コマンド実行結果を表すドメインモデル
  */
-data class CommandResult(
+data class ActionResult(
     val exitCode: Int,
     val message: String? = null
 ) {
@@ -14,6 +14,6 @@ data class CommandResult(
         get() = exitCode != 0
 
     companion object {
-        fun failure(exitCode: Int = 1, message: String? = null) = CommandResult(exitCode, message)
+        fun failure(exitCode: Int = 1, message: String? = null) = ActionResult(exitCode, message)
     }
 }

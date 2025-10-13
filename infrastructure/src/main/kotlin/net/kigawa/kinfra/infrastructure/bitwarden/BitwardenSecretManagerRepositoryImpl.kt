@@ -2,8 +2,9 @@ package net.kigawa.kinfra.infrastructure.bitwarden
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import net.kigawa.kinfra.model.BitwardenSecret
+import net.kigawa.kinfra.action.bitwarden.BitwardenSecretManagerRepository
 import net.kigawa.kinfra.infrastructure.process.ProcessExecutor
+import net.kigawa.kinfra.model.BitwardenSecret
 import java.io.File
 import java.net.URL
 import java.nio.file.Files
@@ -33,7 +34,7 @@ class BitwardenSecretManagerRepositoryImpl(
      */
     private fun ensureBwsInstalled(): String {
         // まず PATH から bws を探す
-        val checkResult = processExecutor.execute(arrayOf("command", "-v", "bws"), null)
+        val checkResult = processExecutor.executeWithOutput(arrayOf("command", "-v", "bws"), null)
         if (checkResult.exitCode == 0) {
             return "bws"
         }
@@ -79,7 +80,7 @@ class BitwardenSecretManagerRepositoryImpl(
 
             // zipファイルを展開
             println("Extracting bws...")
-            val unzipResult = processExecutor.execute(
+            val unzipResult = processExecutor.executeWithOutput(
                 arrayOf("unzip", "-o", zipFile.absolutePath, "-d", binDir.absolutePath),
                 null
             )
