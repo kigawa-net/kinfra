@@ -1,8 +1,7 @@
 package net.kigawa.kinfra.infrastructure.config
 
-import net.kigawa.kinfra.model.GlobalConfig
-import net.kigawa.kinfra.model.KinfraConfig
-import net.kigawa.kinfra.model.FilePaths
+import net.kigawa.kinfra.model.conf.GlobalConfig
+import net.kigawa.kinfra.model.conf.KinfraConfig
 
 interface ConfigRepository {
     fun loadGlobalConfig(): GlobalConfig

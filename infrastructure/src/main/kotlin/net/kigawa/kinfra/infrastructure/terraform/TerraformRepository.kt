@@ -1,6 +1,6 @@
 package net.kigawa.kinfra.infrastructure.terraform
 
-import net.kigawa.kinfra.model.TerraformConfig
+import net.kigawa.kinfra.model.conf.TerraformConfig
 import net.kigawa.kinfra.infrastructure.file.FileRepository
 import java.io.File
 

@@ -5,7 +5,7 @@ import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenSecretManagerReposito
 import net.kigawa.kinfra.infrastructure.config.EnvFileLoader
 import net.kigawa.kinfra.model.Command
 import net.kigawa.kinfra.infrastructure.logging.Logger
-import net.kigawa.kinfra.model.R2BackendConfig
+import net.kigawa.kinfra.model.conf.R2BackendConfig
 import net.kigawa.kinfra.util.AnsiColors
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject

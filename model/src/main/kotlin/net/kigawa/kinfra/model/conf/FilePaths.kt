@@ -1,15 +1,19 @@
-package net.kigawa.kinfra.model
+package net.kigawa.kinfra.model.conf
 
 /**
  * ファイルパス定数
  *
  * アプリケーション全体で使用するファイルパスを一箇所で管理します。
+ *
+ * @param homeDirGetter ホームディレクトリを取得するための実装
  */
-class FilePaths {
+class FilePaths(
+    private val homeDirGetter: HomeDirGetter
+) {
     /**
      * ユーザーホームディレクトリを取得
      */
-    private val userHome: String = System.getProperty("user.home")
+    private val userHome: String get() = homeDirGetter.getHomeDir()
 
     /**
      * ベース設定ディレクトリ

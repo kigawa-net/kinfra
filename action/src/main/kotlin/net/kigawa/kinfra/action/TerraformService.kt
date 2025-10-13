@@ -1,7 +1,7 @@
 package net.kigawa.kinfra.action
 
 import net.kigawa.kinfra.model.CommandResult
-import net.kigawa.kinfra.model.TerraformConfig
+import net.kigawa.kinfra.model.conf.TerraformConfig
 
 /**
  * Terraformコマンドの実行を管理するサービス

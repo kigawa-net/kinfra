@@ -2,13 +2,13 @@ package net.kigawa.kinfra.commands
 
 import net.kigawa.kinfra.action.GitHelper
 import net.kigawa.kinfra.model.Command
-import net.kigawa.kinfra.model.FilePaths
+import net.kigawa.kinfra.model.conf.FilePaths
 import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenRepository
 import net.kigawa.kinfra.infrastructure.config.ConfigRepository
-import net.kigawa.kinfra.model.GlobalConfig
-import net.kigawa.kinfra.model.LoginConfig
-import net.kigawa.kinfra.model.KinfraConfig
-import net.kigawa.kinfra.model.ProjectInfo
+import net.kigawa.kinfra.model.conf.GlobalConfig
+import net.kigawa.kinfra.model.conf.LoginConfig
+import net.kigawa.kinfra.model.conf.KinfraConfig
+import net.kigawa.kinfra.model.conf.ProjectInfo
 import net.kigawa.kinfra.util.AnsiColors
 import java.io.File
 

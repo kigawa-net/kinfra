@@ -3,7 +3,7 @@ package net.kigawa.kinfra.commands
 import net.kigawa.kinfra.action.TerraformService
 import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenRepository
 import net.kigawa.kinfra.model.Command
-import net.kigawa.kinfra.model.R2BackendConfig
+import net.kigawa.kinfra.model.conf.R2BackendConfig
 import net.kigawa.kinfra.util.AnsiColors
 import java.io.File
 

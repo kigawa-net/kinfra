@@ -1,4 +1,4 @@
-package net.kigawa.kinfra.model
+package net.kigawa.kinfra.model.conf
 
 data class R2BackendConfig(
     val bucket: String,
