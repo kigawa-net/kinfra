@@ -1,12 +1,11 @@
 package net.kigawa.kinfra.infrastructure.service
 
 import net.kigawa.kinfra.action.TerraformService
-import net.kigawa.kinfra.model.conf.TerraformConfig
-import net.kigawa.kinfra.model.conf.FilePaths
-import net.kigawa.kinfra.model.err.ActionException
-import net.kigawa.kinfra.model.err.Res
 import net.kigawa.kinfra.infrastructure.process.ProcessExecutor
 import net.kigawa.kinfra.infrastructure.terraform.TerraformRepository
+import net.kigawa.kinfra.model.conf.TerraformConfig
+import net.kigawa.kinfra.model.err.ActionException
+import net.kigawa.kinfra.model.err.Res
 
 /**
  * TerraformServiceの実装
@@ -14,18 +13,12 @@ import net.kigawa.kinfra.infrastructure.terraform.TerraformRepository
 class TerraformServiceImpl(
     private val processExecutor: ProcessExecutor,
     private val terraformRepository: TerraformRepository,
-    val filePaths: FilePaths,
-) : TerraformService {
+): TerraformService {
 
     override fun init(additionalArgs: Array<String>, quiet: Boolean): Res<Int, ActionException> {
         val config = terraformRepository.getTerraformConfig()
 
-        // Check for backend config file
-        val backendConfigArgs = findBackendConfigFile()?.let {
-            arrayOf("-backend-config=$it")
-        } ?: emptyArray()
-
-        val args = arrayOf("terraform", "init") + backendConfigArgs + additionalArgs
+        val args = arrayOf("terraform", "init") + additionalArgs
 
         return processExecutor.execute(
             args = args,
@@ -33,15 +26,6 @@ class TerraformServiceImpl(
             environment = mapOf("SSH_CONFIG" to config.sshConfigPath),
             quiet = quiet
         )
-    }
-
-    private fun findBackendConfigFile(): String? {
-        val backendConfig = java.io.File(filePaths.BACKEND_TFVARS_FILE)
-        if (backendConfig.exists()) {
-            return backendConfig.absolutePath
-        }
-
-        return null
     }
 
     override fun plan(additionalArgs: Array<String>, quiet: Boolean): Res<Int, ActionException> {

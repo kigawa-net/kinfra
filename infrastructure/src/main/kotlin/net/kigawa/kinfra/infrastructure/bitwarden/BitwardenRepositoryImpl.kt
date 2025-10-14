@@ -92,7 +92,7 @@ class BitwardenRepositoryImpl(
 
     override fun getSessionFromFile(): String? {
         return try {
-            val sessionFile = File(filePaths.BW_SESSION_FILE)
+            val sessionFile = File(filePaths.bwSessionFileName)
             if (sessionFile.exists() && sessionFile.canRead()) {
                 sessionFile.readText().trim().takeIf { it.isNotBlank() }
             } else {

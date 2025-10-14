@@ -1,11 +1,12 @@
-package net.kigawa.kinfra.actions
+package net.kigawa.kinfra.action.actions
 
 import net.kigawa.kinfra.action.GitHelper
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.conf.FilePaths
 import net.kigawa.kinfra.action.config.ConfigRepository
-import net.kigawa.kinfra.infrastructure.update.VersionChecker
-import net.kigawa.kinfra.infrastructure.update.AutoUpdater
+import net.kigawa.kinfra.action.update.VersionChecker
+import net.kigawa.kinfra.action.update.AutoUpdater
+import net.kigawa.kinfra.model.LoginRepo
 import net.kigawa.kinfra.model.util.AnsiColors
 import net.kigawa.kinfra.model.util.VersionUtil
 
@@ -14,7 +15,8 @@ class SelfUpdateAction(
     private val versionChecker: VersionChecker,
     private val autoUpdater: AutoUpdater,
     private val gitHelper: GitHelper,
-    private val filePaths: FilePaths
+    private val filePaths: FilePaths,
+    val loginRepo: LoginRepo
 ) : Action {
 
     override fun execute(args: Array<String>): Int {
@@ -33,7 +35,7 @@ class SelfUpdateAction(
 
         // Load config to get GitHub repo
         val config = try {
-            configRepository.loadKinfraConfig(filePaths.KINFRA_CONFIG_FILE)
+            loginRepo.loadKinfraConfig()
         } catch (e: Exception) {
             println("${AnsiColors.RED}Error:${AnsiColors.RESET} Failed to load configuration: ${e.message}")
             return 1

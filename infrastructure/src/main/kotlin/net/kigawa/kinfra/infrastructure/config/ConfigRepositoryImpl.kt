@@ -11,12 +11,11 @@ class ConfigRepositoryImpl(
     val filePaths: FilePaths,
     val globalConfigScheme: GlobalConfig,
 ): ConfigRepository {
-    val loginConfig get() = globalConfigScheme.login
     private val configDir: File
         get() = filePaths.baseConfigDir?.toFile() ?: throw IllegalStateException("Config directory not available")
 
     private val projectFile: File
-        get() = File(configDir, filePaths.PROJECT_CONFIG_FILE)
+        get() = File(configDir, filePaths.projectConfigFileName)
 
     init {
         // 設定ディレクトリが存在しない場合は作成

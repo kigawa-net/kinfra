@@ -1,12 +1,11 @@
 package net.kigawa.kinfra
 
-import net.kigawa.kinfra.action.config.ConfigRepository
-import net.kigawa.kinfra.infrastructure.logging.Logger
-import net.kigawa.kinfra.infrastructure.update.AutoUpdater
-import net.kigawa.kinfra.infrastructure.update.VersionChecker
+import net.kigawa.kinfra.action.logging.Logger
+import net.kigawa.kinfra.action.update.AutoUpdater
+import net.kigawa.kinfra.action.update.VersionChecker
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.ActionType
-import net.kigawa.kinfra.model.conf.FilePaths
+import net.kigawa.kinfra.model.LoginRepo
 import net.kigawa.kinfra.model.util.AnsiColors
 import net.kigawa.kinfra.model.util.VersionUtil
 import org.koin.core.component.KoinComponent
@@ -14,7 +13,9 @@ import org.koin.core.component.inject
 import org.koin.core.qualifier.named
 import kotlin.system.exitProcess
 
-class TerraformRunner : KoinComponent {
+class TerraformRunner(
+    val loginRepo: LoginRepo
+) : KoinComponent {
     private val logger: Logger by inject()
 
     private val actions: Map<String, Action> by lazy {
@@ -85,13 +86,14 @@ class TerraformRunner : KoinComponent {
             exitProcess(1)
         }
 
-        // Skip Terraform check for help, login, hello, setup-r2 and self-update actions
+        // Skip Terraform check for help, login, hello, setup-r2, self-update and push actions
         val skipTerraformCheck = actionName == ActionType.HELP.actionName
             || actionName == ActionType.LOGIN.actionName
             || actionName == ActionType.HELLO.actionName
             || actionName == ActionType.SETUP_R2.actionName
             || actionName == ActionType.SETUP_R2_SDK.actionName
             || actionName == ActionType.SELF_UPDATE.actionName
+            || actionName == ActionType.PUSH.actionName
         if (!skipTerraformCheck && !isTerraformInstalled()) {
             logger.error("Terraform is not installed")
             println("${AnsiColors.RED}Error:${AnsiColors.RESET} Terraform is not installed or not found in PATH.")
@@ -119,14 +121,12 @@ class TerraformRunner : KoinComponent {
 
     private fun checkForUpdates() {
         try {
-            val configRepository: ConfigRepository by inject()
             val versionChecker: VersionChecker by inject()
             val autoUpdater: AutoUpdater by inject()
-            val filePaths: FilePaths by inject()
 
             // Load config to check if auto-update is enabled
             val config = runCatching {
-                configRepository.loadKinfraConfig(filePaths.KINFRA_CONFIG_FILE)
+                loginRepo.loadKinfraConfig()
             }.getOrNull()
 
             // Skip update check if auto-update is disabled

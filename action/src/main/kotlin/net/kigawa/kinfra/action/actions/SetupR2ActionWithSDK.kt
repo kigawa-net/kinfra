@@ -1,10 +1,10 @@
-package net.kigawa.kinfra.actions
+package net.kigawa.kinfra.action.actions
 
 import net.kigawa.kinfra.action.GitHelper
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.conf.R2BackendConfig
 import net.kigawa.kinfra.action.bitwarden.BitwardenSecretManagerRepository
-import net.kigawa.kinfra.infrastructure.config.EnvFileLoader
+import net.kigawa.kinfra.action.config.EnvFileLoader
 import net.kigawa.kinfra.model.util.AnsiColors
 import java.io.File
 
@@ -13,7 +13,8 @@ import java.io.File
  */
 class SetupR2ActionWithSDK(
     private val secretManagerRepository: BitwardenSecretManagerRepository,
-    private val gitHelper: GitHelper
+    private val gitHelper: GitHelper,
+    private val envFileLoader: EnvFileLoader
 ) : Action {
 
     override fun execute(args: Array<String>): Int {
@@ -29,7 +30,7 @@ class SetupR2ActionWithSDK(
         val projectId = if (args.isNotEmpty()) {
             args[0]
         } else {
-            EnvFileLoader.get("BW_PROJECT") ?: System.getenv("BW_PROJECT_ID")
+            envFileLoader.get("BW_PROJECT") ?: System.getenv("BW_PROJECT_ID")
         }
 
         if (projectId != null) {

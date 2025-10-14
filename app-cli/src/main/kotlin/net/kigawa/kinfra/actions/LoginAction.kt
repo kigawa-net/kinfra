@@ -1,14 +1,13 @@
 package net.kigawa.kinfra.actions
 
 import net.kigawa.kinfra.action.GitHelper
-import net.kigawa.kinfra.model.Action
-import net.kigawa.kinfra.model.conf.FilePaths
 import net.kigawa.kinfra.action.bitwarden.BitwardenRepository
 import net.kigawa.kinfra.action.config.ConfigRepository
 import net.kigawa.kinfra.infrastructure.config.GlobalConfigScheme
 import net.kigawa.kinfra.infrastructure.config.LoginConfigScheme
-import net.kigawa.kinfra.model.conf.KinfraConfig
-import net.kigawa.kinfra.model.conf.ProjectInfo
+import net.kigawa.kinfra.model.Action
+import net.kigawa.kinfra.model.LoginRepo
+import net.kigawa.kinfra.model.conf.FilePaths
 import net.kigawa.kinfra.model.util.AnsiColors
 import java.io.File
 
@@ -16,8 +15,9 @@ class LoginAction(
     private val bitwardenRepository: BitwardenRepository,
     private val configRepository: ConfigRepository,
     private val gitHelper: GitHelper,
-    private val filePaths: FilePaths
-) : Action {
+    private val filePaths: FilePaths,
+    val loginRepo: LoginRepo,
+): Action {
 
     override fun execute(args: Array<String>): Int {
         // GitHubリポジトリ引数が指定されている場合はクローンまたはpull
@@ -31,7 +31,9 @@ class LoginAction(
             val repoPath = parseGitHubRepoPath(githubRepo)
             if (repoPath == null) {
                 println("${AnsiColors.RED}Error:${AnsiColors.RESET} Invalid GitHub repository format: $githubRepo")
-                println("${AnsiColors.BLUE}Expected format:${AnsiColors.RESET} user/repo or https://github.com/user/repo.git")
+                println(
+                    "${AnsiColors.BLUE}Expected format:${AnsiColors.RESET} user/repo or https://github.com/user/repo.git"
+                )
                 return 1
             }
 
@@ -50,7 +52,9 @@ class LoginAction(
             if (targetDir.exists() && gitHelper.isGitRepository(targetDir)) {
                 println("${AnsiColors.BLUE}Repository already exists, pulling latest changes...${AnsiColors.RESET}")
                 if (!gitHelper.pullRepository()) {
-                    println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Failed to pull from git repository, continuing anyway...")
+                    println(
+                        "${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Failed to pull from git repository, continuing anyway..."
+                    )
                 }
             } else {
                 // Clone the repository
@@ -69,7 +73,9 @@ class LoginAction(
         } else {
             // Pull latest changes from git repository (if configured)
             if (!gitHelper.pullRepository()) {
-                println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Failed to pull from git repository, continuing anyway...")
+                println(
+                    "${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Failed to pull from git repository, continuing anyway..."
+                )
             }
         }
 
@@ -102,7 +108,7 @@ class LoginAction(
         println()
 
         // Check if token already exists
-        val tokenFile = File(filePaths.BWS_TOKEN_FILE)
+        val tokenFile = File(filePaths.bwsTokenFileName)
         if (tokenFile.exists()) {
             println("${AnsiColors.YELLOW}BWS_ACCESS_TOKEN file already exists${AnsiColors.RESET}")
             print("Overwrite? (y/N): ")
@@ -114,7 +120,9 @@ class LoginAction(
         }
 
         println("${AnsiColors.BLUE}Enter your BWS_ACCESS_TOKEN:${AnsiColors.RESET}")
-        println("${AnsiColors.YELLOW}(You can generate this from Bitwarden Web Vault > Secret Manager)${AnsiColors.RESET}")
+        println(
+            "${AnsiColors.YELLOW}(You can generate this from Bitwarden Web Vault > Secret Manager)${AnsiColors.RESET}"
+        )
         print("Token: ")
 
         val token = System.console()?.readPassword()?.let { String(it) } ?: run {
@@ -139,7 +147,7 @@ class LoginAction(
             println()
             println("${AnsiColors.BLUE}The token will be automatically loaded on next run.${AnsiColors.RESET}")
             println("${AnsiColors.BLUE}You can also set it manually:${AnsiColors.RESET}")
-            println("  export BWS_ACCESS_TOKEN=\$(cat ${filePaths.BWS_TOKEN_FILE})")
+            println("  export BWS_ACCESS_TOKEN=\$(cat ${filePaths.bwsTokenFileName})")
 
             return 0
         } catch (e: Exception) {
@@ -151,10 +159,10 @@ class LoginAction(
     private fun setupKinfraConfig() {
         println("${AnsiColors.BLUE}=== Kinfra Configuration ===${AnsiColors.RESET}")
 
-        if (configRepository.kinfraConfigExists(filePaths.KINFRA_CONFIG_FILE)) {
+        if (loginRepo.kinfraConfigExists()) {
             println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Found kinfra.yaml")
             try {
-                val config = configRepository.loadKinfraConfig(filePaths.KINFRA_CONFIG_FILE)
+                val config = loginRepo.loadKinfraConfig()
                 if (config != null) {
                     println("${AnsiColors.BLUE}Project:${AnsiColors.RESET} ${config.project.name}")
                     println()
@@ -175,7 +183,7 @@ class LoginAction(
             )
 
             try {
-                configRepository.saveKinfraConfig(defaultConfig, filePaths.KINFRA_CONFIG_FILE)
+                loginRepo.saveKinfraConfig(defaultConfig)
                 println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Created kinfra.yaml")
                 println("${AnsiColors.BLUE}You can customize it later by editing the file${AnsiColors.RESET}")
                 println()
@@ -220,7 +228,7 @@ class LoginAction(
 
             // Save session to file
             try {
-                val sessionFile = File(filePaths.BW_SESSION_FILE)
+                val sessionFile = File(filePaths.bwSessionFileName)
                 sessionFile.writeText(session)
                 sessionFile.setReadable(false, false)
                 sessionFile.setReadable(true, true)
@@ -230,7 +238,7 @@ class LoginAction(
                 println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Session saved to ${sessionFile.absolutePath}")
                 println()
                 println("${AnsiColors.BLUE}To use the session, run:${AnsiColors.RESET}")
-                println("  export BW_SESSION=\$(cat ${filePaths.BW_SESSION_FILE})")
+                println("  export BW_SESSION=\$(cat ${filePaths.bwSessionFileName})")
             } catch (e: Exception) {
                 println("${AnsiColors.RED}Error:${AnsiColors.RESET} Failed to save session: ${e.message}")
                 return 1
@@ -268,6 +276,7 @@ class LoginAction(
             githubRepo.matches(Regex("^[a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+$")) -> {
                 githubRepo
             }
+
             else -> return null
         }
 
@@ -275,7 +284,7 @@ class LoginAction(
         val repoDirName = repoName.substringAfterLast('/')
 
         // Default local path: ~/.local/kinfra/repos/{repo}
-        val localPath = "${filePaths.baseConfigDir}/${filePaths.REPOS_DIR}/$repoDirName"
+        val localPath = "${filePaths.baseConfigDir}/${filePaths.reposDir}/$repoDirName"
 
         return Pair(repoName, localPath)
     }

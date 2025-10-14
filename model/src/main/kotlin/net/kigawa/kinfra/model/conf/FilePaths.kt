@@ -27,22 +27,17 @@ class FilePaths(
     /**
      * 設定ファイル名
      */
-     val PROJECT_CONFIG_FILE = "project.yaml"
-     val KINFRA_CONFIG_FILE = "kinfra.yaml"
-
-    /**
-     * Terraformバックエンド設定ファイル
-     */
-     val BACKEND_TFVARS_FILE = "backend.tfvars"
+     val projectConfigFileName = "project.yaml"
+     val kinfraConfigFileName = "kinfra.yaml"
 
     /**
      * Bitwarden関連ファイル
      */
-     val BW_SESSION_FILE = ".bw_session"
-     val BWS_TOKEN_FILE = ".bws_token"
+     val bwSessionFileName = ".bw_session"
+     val bwsTokenFileName = ".bws_token"
 
     /**
      * リポジトリディレクトリ名
      */
-     val REPOS_DIR = "repos"
+     val reposDir = "repos"
 }
