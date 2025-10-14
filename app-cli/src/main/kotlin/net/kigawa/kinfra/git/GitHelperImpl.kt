@@ -190,11 +190,98 @@ class GitHelperImpl(
         }
     }
 
-    /**
-     * Push changes to remote repository
-     * @return true if push was successful, false if failed
-     */
-    override fun pushToRemote(): Boolean {
+     /**
+      * Add all changes to staging area
+      * @return true if add was successful, false if failed
+      */
+     override fun addChanges(): Boolean {
+         val repoDir = getRepositoryPath() ?: return false
+
+         if (!repoDir.exists() || !isGitRepository(repoDir)) {
+             println("${AnsiColors.RED}Error:${AnsiColors.RESET} Repository not found or not a git repository: ${repoDir.absolutePath}")
+             return false
+         }
+
+         return try {
+             println("${AnsiColors.BLUE}Adding all changes...${AnsiColors.RESET}")
+             val process = ProcessBuilder("git", "add", ".")
+                 .directory(repoDir)
+                 .redirectOutput(ProcessBuilder.Redirect.PIPE)
+                 .redirectError(ProcessBuilder.Redirect.PIPE)
+                 .start()
+
+             val exitCode = process.waitFor()
+             val output = process.inputStream.bufferedReader().readText()
+             val errorOutput = process.errorStream.bufferedReader().readText()
+
+             if (exitCode == 0) {
+                 println("${AnsiColors.GREEN}✓ Successfully added changes${AnsiColors.RESET}")
+                 true
+             } else {
+                 println("${AnsiColors.RED}Error adding changes:${AnsiColors.RESET}")
+                 if (errorOutput.isNotBlank()) {
+                     println(errorOutput.trim())
+                 }
+                 false
+             }
+         } catch (e: Exception) {
+             println("${AnsiColors.RED}Error:${AnsiColors.RESET} Failed to execute git add: ${e.message}")
+             false
+         }
+     }
+
+     /**
+      * Commit staged changes with a message
+      * @param message Commit message
+      * @return true if commit was successful, false if failed
+      */
+     override fun commitChanges(message: String): Boolean {
+         val repoDir = getRepositoryPath() ?: return false
+
+         if (!repoDir.exists() || !isGitRepository(repoDir)) {
+             println("${AnsiColors.RED}Error:${AnsiColors.RESET} Repository not found or not a git repository: ${repoDir.absolutePath}")
+             return false
+         }
+
+         return try {
+             println("${AnsiColors.BLUE}Committing changes with message: $message${AnsiColors.RESET}")
+             val process = ProcessBuilder("git", "commit", "-m", message)
+                 .directory(repoDir)
+                 .redirectOutput(ProcessBuilder.Redirect.PIPE)
+                 .redirectError(ProcessBuilder.Redirect.PIPE)
+                 .start()
+
+             val exitCode = process.waitFor()
+             val output = process.inputStream.bufferedReader().readText()
+             val errorOutput = process.errorStream.bufferedReader().readText()
+
+             if (exitCode == 0) {
+                 println("${AnsiColors.GREEN}✓ Successfully committed changes${AnsiColors.RESET}")
+                 if (output.isNotBlank()) {
+                     println(output.trim())
+                 }
+                 true
+             } else if (errorOutput.contains("nothing to commit")) {
+                 println("${AnsiColors.YELLOW}Nothing to commit${AnsiColors.RESET}")
+                 true // Not an error
+             } else {
+                 println("${AnsiColors.RED}Error committing changes:${AnsiColors.RESET}")
+                 if (errorOutput.isNotBlank()) {
+                     println(errorOutput.trim())
+                 }
+                 false
+             }
+         } catch (e: Exception) {
+             println("${AnsiColors.RED}Error:${AnsiColors.RESET} Failed to execute git commit: ${e.message}")
+             false
+         }
+     }
+
+     /**
+      * Push changes to remote repository
+      * @return true if push was successful, false if failed
+      */
+     override fun pushToRemote(): Boolean {
         val repoDir = getRepositoryPath()
 
         if (repoDir == null) {

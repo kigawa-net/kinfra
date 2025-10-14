@@ -8,8 +8,6 @@
 
 ## ツールリスト
 
-## ツールリスト
-
 | ツール名   | 説明 |
 |----------|------|
 | **read** | 指定したファイルの内容を読み取る |
@@ -34,4 +32,7 @@
 | general            | 一般的なタスクを実行するエージェント（検索、実行、情報収集）。 |
 | code-reviewer      | コードレビューを自動で行うエージェント             |
 | greeting-responder | ユーザーの挨拶に対して適切な返答を行うエージェント       |
-| todo-maintainer    | タスク管理を自動化するエージェント               |
+| todo-maintainer    | タスク管理を自動化するエージェント |
+
+## 変更履歴
+- 2025-10-14: PushAction.ktをKotlinで実装し、add, commit, push機能を追加。GitHelperにaddChangesとcommitChangesメソッドを追加。
