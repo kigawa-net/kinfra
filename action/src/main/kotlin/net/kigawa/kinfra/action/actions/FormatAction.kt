@@ -19,7 +19,7 @@ class FormatAction(
             println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Failed to pull from git repository, continuing anyway...")
         }
 
-        val result = terraformService.format(recursive = true)
+        val result = terraformService.format(recursive = true, quiet = false)
         return result.exitCode()
     }
 

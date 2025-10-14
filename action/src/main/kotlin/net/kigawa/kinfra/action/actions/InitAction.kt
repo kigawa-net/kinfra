@@ -22,7 +22,7 @@ class InitAction(
         val config = terraformService.getTerraformConfig()
         ColorLogger.info("Working directory: ${config.workingDirectory.absolutePath}")
 
-        val result = terraformService.init(args)
+        val result = terraformService.init(args, quiet = false)
         return result.exitCode()
     }
 

@@ -36,3 +36,4 @@
 
 ## 変更履歴
 - 2025-10-14: PushAction.ktをKotlinで実装し、add, commit, push機能を追加。GitHelperにaddChangesとcommitChangesメソッドを追加。
+- 2025-10-14: Terraformアクションでログを表示するように変更。各アクションでquiet=falseを設定。

@@ -18,7 +18,7 @@ class ApplyAction(
 
         val argsWithoutPlan = if (planFile != null) args.drop(1).toTypedArray() else args
 
-        val result = terraformService.apply(planFile, argsWithoutPlan)
+        val result = terraformService.apply(planFile, argsWithoutPlan, quiet = false)
         return result.exitCode()
     }
 

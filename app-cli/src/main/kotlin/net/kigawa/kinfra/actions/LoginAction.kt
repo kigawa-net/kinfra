@@ -164,7 +164,7 @@ class LoginAction(
             try {
                 val config = loginRepo.loadKinfraConfig()
                 if (config != null) {
-                    println("${AnsiColors.BLUE}Project:${AnsiColors.RESET} ${config.project.name}")
+                    println("${AnsiColors.BLUE}Project:${AnsiColors.RESET} ${config.rootProject.projectId}")
                     println()
                 } else {
                     println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Failed to parse kinfra.yaml")
@@ -179,7 +179,7 @@ class LoginAction(
             println("${AnsiColors.BLUE}Creating default kinfra.yaml...${AnsiColors.RESET}")
 
             val defaultConfig = net.kigawa.kinfra.infrastructure.config.KinfraConfigScheme(
-                project = net.kigawa.kinfra.infrastructure.config.ProjectInfoScheme()
+                rootProject = net.kigawa.kinfra.infrastructure.config.ProjectInfoScheme()
             )
 
             try {

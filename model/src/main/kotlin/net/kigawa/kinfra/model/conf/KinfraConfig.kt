@@ -1,15 +1,16 @@
 package net.kigawa.kinfra.model.conf
 
 interface KinfraConfig {
-    val project: ProjectInfo
-    val terraform: TerraformSettings
-    val bitwarden: BitwardenSettings
-    val update: UpdateSettings
-}
+     val rootProject: ProjectInfo
+     val bitwarden: BitwardenSettings?
+     val subProjects: List<ProjectInfo>
+     val update: UpdateSettings?
+ }
 
 interface ProjectInfo {
-    val name: String
-    val description: String
+    val projectId: String
+    val description: String?
+    val terraform: TerraformSettings?
 }
 
 interface TerraformSettings {
@@ -18,12 +19,11 @@ interface TerraformSettings {
 }
 
 interface BitwardenSettings {
-    val projectId: String
-    val useSecretManager: Boolean
-}
+     val projectId: String
+ }
 
 interface UpdateSettings {
-    val autoUpdate: Boolean
-    val checkInterval: Long
-    val githubRepo: String
-}
+     val autoUpdate: Boolean
+     val checkInterval: Long
+     val githubRepo: String
+ }

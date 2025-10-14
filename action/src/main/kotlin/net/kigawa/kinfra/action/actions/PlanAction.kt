@@ -19,7 +19,7 @@ class PlanAction(
             println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Failed to pull from git repository, continuing anyway...")
         }
 
-        val result = terraformService.plan(args)
+        val result = terraformService.plan(args, quiet = false)
         return result.exitCode()
     }
 

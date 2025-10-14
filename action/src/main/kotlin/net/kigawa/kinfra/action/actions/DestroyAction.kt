@@ -19,7 +19,7 @@ class DestroyAction(
             println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Failed to pull from git repository, continuing anyway...")
         }
 
-        val result = terraformService.destroy(args)
+        val result = terraformService.destroy(args, quiet = false)
         return result.exitCode()
     }
 

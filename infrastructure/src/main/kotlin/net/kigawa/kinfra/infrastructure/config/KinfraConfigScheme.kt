@@ -5,7 +5,7 @@ import net.kigawa.kinfra.model.conf.*
 
 @Serializable
 data class ProjectInfoScheme(
-    override val name: String = "",
+    override val projectId: String = "",
     override val description: String = ""
 ) : ProjectInfo
 
@@ -30,7 +30,7 @@ data class UpdateSettingsScheme(
 
 @Serializable
 data class KinfraConfigScheme(
-    override val project: ProjectInfoScheme = ProjectInfoScheme(),
+    override val rootProject: ProjectInfoScheme = ProjectInfoScheme(),
     override val terraform: TerraformSettingsScheme = TerraformSettingsScheme(),
     override val bitwarden: BitwardenSettingsScheme = BitwardenSettingsScheme(),
     override val update: UpdateSettingsScheme = UpdateSettingsScheme()

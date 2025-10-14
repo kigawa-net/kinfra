@@ -19,7 +19,7 @@ class ValidateAction(
             println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Failed to pull from git repository, continuing anyway...")
         }
 
-        val result = terraformService.validate()
+        val result = terraformService.validate(quiet = false)
         return result.exitCode()
     }
 
