@@ -1,12 +1,31 @@
 # AGENTS
 
-This file will hold agent descriptions used by the GitHub repo.
+このファイルは GitHub リポジトリで使用されるエージェントの説明を保持します。
 
-## file path
+## ファイルパス
 
-* root: /tank/var/user/dev/kigawa-net/kinfra
+* ルート: /tank/var/user/dev/kigawa-net/kinfra
 
-## Tool list
+## ツールリスト
+
+## ツールリスト
+
+| ツール名   | 説明 |
+|----------|------|
+| **read** | 指定したファイルの内容を読み取る |
+| **edit** | ファイル内の文字列を置換して保存する |
+| **write** | 新規ファイルを作成または上書きする |
+| **todowrite** | TODOリストを更新する |
+| **todoread** | TODOリストを取得する |
+| **task** | エージェントへタスクを委譲する |
+| **todowrite** | TODOリストを更新する |
+| **todoread** | TODOリストを読む |
+| **task** | エージェントで複雑タスクを実行する |
+| **todo-maintainer** | タスク管理を自動化するエージェント |
+| **code-reviewer** | コードレビューを自動で行う |
+| **greeting-responder** | 挨拶に対する返答をする |
+| **general** | 一般的なタスクを実行する |
+
 
 ## エージェント一覧
 
