@@ -6,7 +6,8 @@ import net.kigawa.kinfra.model.conf.*
 @Serializable
 data class ProjectInfoScheme(
     override val projectId: String = "",
-    override val description: String = ""
+    override val description: String = "",
+    override val terraform: TerraformSettingsScheme? = null
 ) : ProjectInfo
 
 @Serializable
@@ -17,8 +18,7 @@ data class TerraformSettingsScheme(
 
 @Serializable
 data class BitwardenSettingsScheme(
-    override val projectId: String = "",
-    override val useSecretManager: Boolean = true
+    override val projectId: String = ""
 ) : BitwardenSettings
 
 @Serializable
@@ -31,9 +31,9 @@ data class UpdateSettingsScheme(
 @Serializable
 data class KinfraConfigScheme(
     override val rootProject: ProjectInfoScheme = ProjectInfoScheme(),
-    override val terraform: TerraformSettingsScheme = TerraformSettingsScheme(),
-    override val bitwarden: BitwardenSettingsScheme = BitwardenSettingsScheme(),
-    override val update: UpdateSettingsScheme = UpdateSettingsScheme()
+    override val bitwarden: BitwardenSettingsScheme? = null,
+    override val subProjects: List<ProjectInfoScheme> = emptyList(),
+    override val update: UpdateSettingsScheme? = null
 ) : KinfraConfig {
     companion object {
         fun from(kinfraConfig: KinfraConfig): KinfraConfigScheme {

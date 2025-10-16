@@ -7,6 +7,7 @@ import net.kigawa.kinfra.model.conf.LoginConfig
 @Serializable
 data class LoginConfigScheme(
     override val repo: String,
+    override val enabledProjects: List<String> = emptyList()
 ): LoginConfig
 
 @Serializable
