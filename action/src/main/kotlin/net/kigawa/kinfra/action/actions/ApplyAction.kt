@@ -1,4 +1,4 @@
-package net.kigawa.kinfra.actions
+package net.kigawa.kinfra.action.actions
 
 import net.kigawa.kinfra.action.TerraformService
 import net.kigawa.kinfra.model.Action
@@ -18,7 +18,7 @@ class ApplyAction(
 
         val argsWithoutPlan = if (planFile != null) args.drop(1).toTypedArray() else args
 
-        val result = terraformService.apply(planFile, argsWithoutPlan)
+        val result = terraformService.apply(planFile, argsWithoutPlan, quiet = false)
         return result.exitCode()
     }
 

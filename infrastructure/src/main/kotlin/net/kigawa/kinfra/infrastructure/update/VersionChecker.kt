@@ -2,21 +2,11 @@ package net.kigawa.kinfra.infrastructure.update
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import net.kigawa.kinfra.infrastructure.logging.Logger
+import net.kigawa.kinfra.action.logging.Logger
+import net.kigawa.kinfra.action.update.VersionChecker
+import net.kigawa.kinfra.action.update.VersionInfo
 import java.net.HttpURLConnection
 import java.net.URL
-
-data class VersionInfo(
-    val currentVersion: String,
-    val latestVersion: String,
-    val updateAvailable: Boolean,
-    val downloadUrl: String = ""
-)
-
-interface VersionChecker {
-    fun checkForUpdates(currentVersion: String, githubRepo: String): VersionInfo
-    fun shouldCheckForUpdate(lastCheckTime: Long, checkInterval: Long): Boolean
-}
 
 class VersionCheckerImpl(
     private val logger: Logger

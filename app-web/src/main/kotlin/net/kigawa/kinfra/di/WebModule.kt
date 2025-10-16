@@ -7,7 +7,8 @@ import net.kigawa.kinfra.action.config.ConfigRepository
 import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenRepositoryImpl
 import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenSecretManagerRepositoryImpl
 import net.kigawa.kinfra.infrastructure.config.ConfigRepositoryImpl
-import net.kigawa.kinfra.infrastructure.config.EnvFileLoader
+import net.kigawa.kinfra.action.config.EnvFileLoader
+import net.kigawa.kinfra.infrastructure.config.EnvFileLoaderImpl
 import net.kigawa.kinfra.infrastructure.file.FileRepository
 import net.kigawa.kinfra.infrastructure.file.FileRepositoryImpl
 import net.kigawa.kinfra.infrastructure.logging.FileLogger
@@ -18,10 +19,11 @@ import net.kigawa.kinfra.infrastructure.process.ProcessExecutorImpl
 import net.kigawa.kinfra.infrastructure.service.TerraformServiceImpl
 import net.kigawa.kinfra.infrastructure.terraform.TerraformRepository
 import net.kigawa.kinfra.infrastructure.terraform.TerraformRepositoryImpl
+import net.kigawa.kinfra.infrastructure.config.GlobalConfigScheme
+import net.kigawa.kinfra.infrastructure.file.SystemHomeDirGetter
 import net.kigawa.kinfra.model.conf.FilePaths
 import net.kigawa.kinfra.model.conf.GlobalConfig
 import net.kigawa.kinfra.model.conf.HomeDirGetter
-import net.kigawa.kinfra.model.conf.SystemHomeDirGetter
 import org.koin.dsl.module
 
 val webModule = module {
@@ -30,8 +32,8 @@ val webModule = module {
     single<FilePaths> { FilePaths(get()) }
     // GlobalConfig: Load from file, or use default empty config
     single<GlobalConfig> {
-        val configRepo = ConfigRepositoryImpl(get(), GlobalConfig())
-        runCatching { configRepo.loadGlobalConfig() }.getOrElse { GlobalConfig() }
+        val configRepo = ConfigRepositoryImpl(get(), GlobalConfigScheme())
+        runCatching { configRepo.loadGlobalConfig() }.getOrElse { GlobalConfigScheme() }
     }
     single<Logger> {
         val logDir = System.getenv("KINFRA_LOG_DIR") ?: "logs"
@@ -43,10 +45,11 @@ val webModule = module {
         }
         FileLogger(logDir, logLevel)
     }
+    single<EnvFileLoader> { EnvFileLoaderImpl() }
     single<FileRepository> { FileRepositoryImpl() }
     single<ProcessExecutor> { ProcessExecutorImpl() }
     single<TerraformRepository> { TerraformRepositoryImpl(get()) }
-    single<TerraformService> { TerraformServiceImpl(get(), get(),get()) }
+    single<TerraformService> { TerraformServiceImpl(get(), get()) }
     single<BitwardenRepository> { BitwardenRepositoryImpl(get(),get()) }
     single<ConfigRepository> { ConfigRepositoryImpl(get(),get()) }
 
@@ -57,7 +60,7 @@ val webModule = module {
         println("✓ Using BWS_ACCESS_TOKEN from environment variable")
     } ?: run {
         // ファイルから読み込み
-        val tokenFile = java.io.File(filePathsInstance.BWS_TOKEN_FILE)
+        val tokenFile = java.io.File(filePathsInstance.bwsTokenFileName)
         if (tokenFile.exists() && tokenFile.canRead()) {
             tokenFile.readText().trim().takeIf { it.isNotBlank() }?.also {
                 println("✓ Loaded BWS_ACCESS_TOKEN from .bws_token file")
@@ -75,7 +78,8 @@ val webModule = module {
     if (hasBwsToken) {
         single<BitwardenSecretManagerRepository>(createdAtStart = true) {
             // .env から BW_PROJECT を読み込む
-            val projectId = EnvFileLoader.get("BW_PROJECT")
+            val envFileLoader = EnvFileLoaderImpl()
+            val projectId = envFileLoader.get("BW_PROJECT")
             BitwardenSecretManagerRepositoryImpl(bwsAccessToken!!, get(), projectId)
         }
     }

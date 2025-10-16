@@ -1,18 +1,19 @@
 package net.kigawa.kinfra.infrastructure.config
 
+import net.kigawa.kinfra.action.config.EnvFileLoader
 import java.io.File
 
 /**
- * .env ファイルを読み込むユーティリティ
+ * .env ファイルを読み込む実装
  */
-object EnvFileLoader {
+class EnvFileLoaderImpl : EnvFileLoader {
 
     /**
      * .env ファイルから環境変数を読み込む
      * @param envFilePath .env ファイルのパス（デフォルト: カレントディレクトリの .env）
      * @return 環境変数のマップ
      */
-    fun load(envFilePath: String = ".env"): Map<String, String> {
+    override fun load(envFilePath: String): Map<String, String> {
         val envFile = File(envFilePath)
         if (!envFile.exists() || !envFile.canRead()) {
             return emptyMap()
@@ -47,7 +48,7 @@ object EnvFileLoader {
      * @param envFilePath .env ファイルのパス（デフォルト: カレントディレクトリの .env）
      * @return 環境変数の値、存在しない場合は null
      */
-    fun get(key: String, envFilePath: String = ".env"): String? {
+    override fun get(key: String, envFilePath: String): String? {
         // 環境変数を優先
         System.getenv(key)?.let { return it }
 

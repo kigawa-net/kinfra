@@ -1,8 +1,8 @@
-package net.kigawa.kinfra.actions
+package net.kigawa.kinfra.action.actions
 
 import net.kigawa.kinfra.action.GitHelper
 import net.kigawa.kinfra.action.TerraformService
-import net.kigawa.kinfra.infrastructure.logging.Logger
+import net.kigawa.kinfra.action.logging.Logger
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.util.AnsiColors
 import net.kigawa.kinfra.model.util.isSuccess

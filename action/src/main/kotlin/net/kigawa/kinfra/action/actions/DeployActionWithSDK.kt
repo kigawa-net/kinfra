@@ -1,15 +1,16 @@
-package net.kigawa.kinfra.actions
+package net.kigawa.kinfra.action.actions
 
 import net.kigawa.kinfra.action.TerraformService
 import net.kigawa.kinfra.action.bitwarden.BitwardenSecretManagerRepository
-import net.kigawa.kinfra.infrastructure.config.EnvFileLoader
+import net.kigawa.kinfra.action.config.EnvFileLoader
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.conf.R2BackendConfig
 import net.kigawa.kinfra.model.util.AnsiColors
 import net.kigawa.kinfra.model.util.exitCode
 import net.kigawa.kinfra.model.util.isFailure
 import net.kigawa.kinfra.model.util.isSuccess
-import net.kigawa.kinfra.infrastructure.logging.Logger
+import net.kigawa.kinfra.action.logging.Logger
+import net.kigawa.kinfra.model.BitwardenSecret
 import java.io.File
 
 /**
@@ -18,7 +19,8 @@ import java.io.File
 class DeployActionWithSDK(
     private val terraformService: TerraformService,
     private val secretManagerRepository: BitwardenSecretManagerRepository,
-    val logger: Logger,
+    private val logger: Logger,
+    private val envFileLoader: EnvFileLoader
 ): Action {
     override fun execute(args: Array<String>): Int {
         logger.info("DeployActionWithSDK started with args: ${args.joinToString(" ")}")
@@ -115,7 +117,7 @@ class DeployActionWithSDK(
         println("${AnsiColors.BLUE}Fetching credentials from Bitwarden Secret Manager...${AnsiColors.RESET}")
 
         // プロジェクトIDを.envまたは環境変数から取得
-        val projectId = EnvFileLoader.get("BW_PROJECT")
+        val projectId = envFileLoader.get("BW_PROJECT")
         if (projectId != null) {
             logger.info("Using project ID from .env: $projectId")
             println("${AnsiColors.BLUE}Using project ID from .env: ${projectId}${AnsiColors.RESET}")
@@ -125,7 +127,7 @@ class DeployActionWithSDK(
         val maxAttempts = 3
         var lastError: Exception? = null
         val secrets = run {
-            var result: List<net.kigawa.kinfra.model.BitwardenSecret>? = null
+            var result: List<BitwardenSecret>? = null
             var delayMs = 1000L
             for (attempt in 1..maxAttempts) {
                 try {

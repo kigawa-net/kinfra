@@ -1,4 +1,4 @@
-package net.kigawa.kinfra.actions
+package net.kigawa.kinfra.action.actions
 import net.kigawa.kinfra.model.util.exitCode
 import net.kigawa.kinfra.model.util.isSuccess
 import net.kigawa.kinfra.model.util.isFailure
@@ -9,7 +9,7 @@ import net.kigawa.kinfra.action.TerraformService
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.util.AnsiColors
 
-class StatusAction(
+class ValidateAction(
     private val terraformService: TerraformService,
     private val gitHelper: GitHelper
 ) : Action {
@@ -19,11 +19,11 @@ class StatusAction(
             println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Failed to pull from git repository, continuing anyway...")
         }
 
-        val result = terraformService.show(args, quiet = false)
+        val result = terraformService.validate(quiet = false)
         return result.exitCode()
     }
 
     override fun getDescription(): String {
-        return "Show the current state or plan"
+        return "Validate the configuration files"
     }
 }

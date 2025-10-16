@@ -1,4 +1,4 @@
-package net.kigawa.kinfra.actions
+package net.kigawa.kinfra.action.actions
 import net.kigawa.kinfra.model.util.exitCode
 import net.kigawa.kinfra.model.util.isSuccess
 import net.kigawa.kinfra.model.util.isFailure

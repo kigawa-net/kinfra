@@ -8,7 +8,7 @@ interface ConfigRepository {
     fun saveGlobalConfig(config: GlobalConfig)
     fun getProjectConfigFilePath(): String
 
-    fun loadKinfraConfig(filePath: String ): KinfraConfig?
+    fun loadKinfraConfig(filePath: String): KinfraConfig?
     fun saveKinfraConfig(config: KinfraConfig, filePath: String)
-    fun kinfraConfigExists(filePath: String ): Boolean
+    fun kinfraConfigExists(filePath: String): Boolean
 }

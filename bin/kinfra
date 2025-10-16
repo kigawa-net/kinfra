@@ -1,0 +1,14 @@
+#!/bin/bash
+##################################################
+set -ue
+BIN_DIR=$(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)
+##################################################
+
+bash "$BIN_DIR"/common
+
+main() {
+  cd "$BIN_DIR/.."
+  java -jar app-cli/build/libs/kinfra-cli-dev.jar "$@"
+}
+main "$@"
+

@@ -1,36 +1,29 @@
 package net.kigawa.kinfra.model.conf
 
-import kotlinx.serialization.Serializable
+interface KinfraConfig {
+     val rootProject: ProjectInfo
+     val bitwarden: BitwardenSettings?
+     val subProjects: List<ProjectInfo>
+     val update: UpdateSettings?
+ }
 
-@Serializable
-data class KinfraConfig(
-    val project: ProjectInfo = ProjectInfo(),
-    val terraform: TerraformSettings = TerraformSettings(),
-    val bitwarden: BitwardenSettings = BitwardenSettings(),
-    val update: UpdateSettings = UpdateSettings()
-)
+interface ProjectInfo {
+    val projectId: String
+    val description: String?
+    val terraform: TerraformSettings?
+}
 
-@Serializable
-data class ProjectInfo(
-    val name: String = "",
-    val description: String = ""
-)
+interface TerraformSettings {
+    val version: String
+    val workingDirectory: String
+}
 
-@Serializable
-data class TerraformSettings(
-    val version: String = "",
-    val workingDirectory: String = "terraform"
-)
+interface BitwardenSettings {
+     val projectId: String
+ }
 
-@Serializable
-data class BitwardenSettings(
-    val projectId: String = "",
-    val useSecretManager: Boolean = true
-)
-
-@Serializable
-data class UpdateSettings(
-    val autoUpdate: Boolean = true,
-    val checkInterval: Long = 86400000, // 24 hours in milliseconds
-    val githubRepo: String = "kigawa-net/kinfra"
-)
+interface UpdateSettings {
+     val autoUpdate: Boolean
+     val checkInterval: Long
+     val githubRepo: String
+ }

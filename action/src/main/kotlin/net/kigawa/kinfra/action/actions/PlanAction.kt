@@ -1,4 +1,4 @@
-package net.kigawa.kinfra.actions
+package net.kigawa.kinfra.action.actions
 import net.kigawa.kinfra.model.util.exitCode
 import net.kigawa.kinfra.model.util.isSuccess
 import net.kigawa.kinfra.model.util.isFailure
@@ -9,7 +9,7 @@ import net.kigawa.kinfra.action.TerraformService
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.util.AnsiColors
 
-class DestroyAction(
+class PlanAction(
     private val terraformService: TerraformService,
     private val gitHelper: GitHelper
 ) : Action {
@@ -19,11 +19,11 @@ class DestroyAction(
             println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Failed to pull from git repository, continuing anyway...")
         }
 
-        val result = terraformService.destroy(args)
+        val result = terraformService.plan(args, quiet = false)
         return result.exitCode()
     }
 
     override fun getDescription(): String {
-        return "Destroy the Terraform-managed infrastructure"
+        return "Create an execution plan"
     }
 }

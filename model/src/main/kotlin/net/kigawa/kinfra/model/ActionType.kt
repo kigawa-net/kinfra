@@ -15,7 +15,8 @@ enum class ActionType(val actionName: String) {
     DEPLOY_SDK("deploy-sdk"),
     HELP("help"),
     HELLO("hello"),
-    SELF_UPDATE("self-update");
+    SELF_UPDATE("self-update"),
+    PUSH("push");
 
     companion object {
         fun fromString(name: String): ActionType? {

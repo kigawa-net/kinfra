@@ -1,13 +1,10 @@
 package net.kigawa.kinfra.model.conf
 
-import kotlinx.serialization.Serializable
+interface GlobalConfig {
+    val login: LoginConfig?
+}
 
-@Serializable
-data class GlobalConfig(
-    val login: LoginConfig? = null,
-)
-
-@Serializable
-data class LoginConfig(
-    val repo: String,
-)
+interface LoginConfig {
+    val repo: String
+    val enabledProjects: List<String>
+}
