@@ -1,9 +1,10 @@
 package net.kigawa.kinfra.action.actions
 
 import net.kigawa.kinfra.action.config.ConfigRepository
-import net.kigawa.kinfra.infrastructure.config.KinfraParentConfigScheme
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.conf.FilePaths
+import net.kigawa.kinfra.model.conf.KinfraParentConfig
+import net.kigawa.kinfra.model.conf.KinfraParentConfigData
 import net.kigawa.kinfra.model.util.AnsiColors
 import java.io.File
 
@@ -29,13 +30,13 @@ class AddSubProjectAction(
         val configFile = File(currentDir, filePaths.kinfraParentConfigFileName)
 
         // Load or create parent config
-        val parentConfig = if (configFile.exists()) {
+        val parentConfig: KinfraParentConfig = if (configFile.exists()) {
             val loaded = configRepository.loadKinfraParentConfig(configFile.absolutePath)
             if (loaded == null) {
                 println("${AnsiColors.RED}Error:${AnsiColors.RESET} Failed to load parent configuration")
                 return 1
             }
-            loaded as KinfraParentConfigScheme
+            loaded
         } else {
             println("${AnsiColors.YELLOW}Parent configuration not found. Creating new parent config...${AnsiColors.RESET}")
             print("${AnsiColors.GREEN}Enter parent project name:${AnsiColors.RESET} ")
@@ -44,7 +45,7 @@ class AddSubProjectAction(
             print("${AnsiColors.GREEN}Enter project description (optional):${AnsiColors.RESET} ")
             val description = readlnOrNull()?.trim()?.takeIf { it.isNotEmpty() }
 
-            KinfraParentConfigScheme(
+            KinfraParentConfigData(
                 projectName = projectName,
                 description = description,
                 subProjects = emptyList()
@@ -58,8 +59,13 @@ class AddSubProjectAction(
         }
 
         // Add sub-project
-        val updatedConfig = parentConfig.copy(
-            subProjects = parentConfig.subProjects + subProjectName
+        val updatedConfig = KinfraParentConfigData(
+            projectName = parentConfig.projectName,
+            description = parentConfig.description,
+            terraform = parentConfig.terraform,
+            subProjects = parentConfig.subProjects + subProjectName,
+            bitwarden = parentConfig.bitwarden,
+            update = parentConfig.update
         )
 
         // Save config
