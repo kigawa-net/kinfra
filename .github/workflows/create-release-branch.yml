@@ -1,6 +1,9 @@
 name: Create Release Branch
 
 on:
+  push:
+    branches:
+      - dev
   workflow_dispatch:
     inputs:
       version_type:
@@ -64,7 +67,11 @@ jobs:
       - name: Calculate new version
         id: calculate_version
         run: |
-          VERSION_TYPE="${{ github.event.inputs.version_type }}"
+          if [ "${{ github.event_name }}" == "push" ]; then
+            VERSION_TYPE="patch"
+          else
+            VERSION_TYPE="${{ github.event.inputs.version_type }}"
+          fi
           LATEST_VERSION="${{ steps.get_latest_version.outputs.LATEST_VERSION }}"
 
           if [ "$VERSION_TYPE" == "custom" ]; then
@@ -99,6 +106,7 @@ jobs:
             esac
 
             VERSION="${MAJOR}.${MINOR}.${PATCH}"
+          fi
           fi
 
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
@@ -156,13 +164,13 @@ jobs:
           echo "Merged dev into existing branch: $BRANCH_NAME"
 
       - name: Create or Update Pull Request
-        if: github.event.inputs.create_pr == 'true'
+        if: github.event_name == 'push' || github.event.inputs.create_pr == 'true'
         uses: actions/github-script@v7
         with:
           script: |
             const version = '${{ steps.calculate_version.outputs.VERSION }}';
             const branchName = '${{ steps.calculate_version.outputs.BRANCH_NAME }}';
-            const versionType = '${{ github.event.inputs.version_type }}';
+            const versionType = '${{ github.event_name }}' === 'push' ? 'patch' : '${{ github.event.inputs.version_type }}';
             const latestVersion = '${{ steps.get_latest_version.outputs.LATEST_VERSION }}';
             const branchExists = '${{ steps.check_branch.outputs.exists }}' === 'true';
 
@@ -248,7 +256,7 @@ jobs:
             }
 
       - name: Auto-merge Pull Request
-        if: github.event.inputs.create_pr == 'true' && github.event.inputs.auto_merge == 'true'
+        if: github.event_name == 'push' || (github.event.inputs.create_pr == 'true' && github.event.inputs.auto_merge == 'true')
         id: auto_merge
         uses: actions/github-script@v7
         with:
@@ -303,18 +311,18 @@ jobs:
             }
 
       - name: Wait for merge to complete
-        if: github.event.inputs.create_pr == 'true' && github.event.inputs.auto_merge == 'true' && steps.auto_merge.outputs.merged == 'true'
+        if: steps.auto_merge.outputs.merged == 'true'
         run: sleep 10
 
       - name: Checkout main branch
-        if: github.event.inputs.create_pr == 'true' && github.event.inputs.auto_merge == 'true' && steps.auto_merge.outputs.merged == 'true'
+        if: steps.auto_merge.outputs.merged == 'true'
         uses: actions/checkout@v4
         with:
           ref: main
           fetch-depth: 0
 
       - name: Set up JDK 21
-        if: github.event.inputs.create_pr == 'true' && github.event.inputs.auto_merge == 'true' && steps.auto_merge.outputs.merged == 'true'
+        if: steps.auto_merge.outputs.merged == 'true'
         uses: actions/setup-java@v4
         with:
           java-version: '21'
@@ -322,35 +330,35 @@ jobs:
           cache: 'gradle'
 
       - name: Setup Gradle
-        if: github.event.inputs.create_pr == 'true' && github.event.inputs.auto_merge == 'true' && steps.auto_merge.outputs.merged == 'true'
+        if: steps.auto_merge.outputs.merged == 'true'
         uses: gradle/actions/setup-gradle@v3
         with:
           cache-read-only: false
 
       - name: Make gradlew executable
-        if: github.event.inputs.create_pr == 'true' && github.event.inputs.auto_merge == 'true' && steps.auto_merge.outputs.merged == 'true'
+        if: steps.auto_merge.outputs.merged == 'true'
         run: chmod +x gradlew
 
       - name: Run tests
-        if: github.event.inputs.create_pr == 'true' && github.event.inputs.auto_merge == 'true' && steps.auto_merge.outputs.merged == 'true'
+        if: steps.auto_merge.outputs.merged == 'true'
         run: ./gradlew test
         env:
           VERSION: ${{ steps.calculate_version.outputs.VERSION }}
 
       - name: Build CLI Shadow JAR
-        if: github.event.inputs.create_pr == 'true' && github.event.inputs.auto_merge == 'true' && steps.auto_merge.outputs.merged == 'true'
+        if: steps.auto_merge.outputs.merged == 'true'
         run: ./gradlew :app-cli:shadowJar
         env:
           VERSION: ${{ steps.calculate_version.outputs.VERSION }}
 
       - name: Build Web Shadow JAR
-        if: github.event.inputs.create_pr == 'true' && github.event.inputs.auto_merge == 'true' && steps.auto_merge.outputs.merged == 'true'
+        if: steps.auto_merge.outputs.merged == 'true'
         run: ./gradlew :app-web:shadowJar
         env:
           VERSION: ${{ steps.calculate_version.outputs.VERSION }}
 
       - name: Create GitHub Release
-        if: github.event.inputs.create_pr == 'true' && github.event.inputs.auto_merge == 'true' && steps.auto_merge.outputs.merged == 'true'
+        if: steps.auto_merge.outputs.merged == 'true'
         run: |
           VERSION="${{ steps.calculate_version.outputs.VERSION }}"
 
@@ -372,21 +380,3 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Summary
-        if: github.event.inputs.create_pr == 'false'
-        run: |
-          VERSION="${{ steps.calculate_version.outputs.VERSION }}"
-          BRANCH_NAME="${{ steps.calculate_version.outputs.BRANCH_NAME }}"
-          LATEST_VERSION="${{ steps.get_latest_version.outputs.LATEST_VERSION }}"
-          VERSION_TYPE="${{ github.event.inputs.version_type }}"
-
-          echo "## Release Branch Created" >> $GITHUB_STEP_SUMMARY
-          echo "- **Previous Version**: $LATEST_VERSION" >> $GITHUB_STEP_SUMMARY
-          echo "- **New Version**: $VERSION" >> $GITHUB_STEP_SUMMARY
-          echo "- **Increment Type**: $VERSION_TYPE" >> $GITHUB_STEP_SUMMARY
-          echo "- **Branch**: $BRANCH_NAME" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Next steps:" >> $GITHUB_STEP_SUMMARY
-          echo "1. Make any final changes to the release branch" >> $GITHUB_STEP_SUMMARY
-          echo "2. Create a PR to merge into main" >> $GITHUB_STEP_SUMMARY
-          echo "3. After merge, tag will be created automatically" >> $GITHUB_STEP_SUMMARY
