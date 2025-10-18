@@ -1,6 +1,9 @@
 package net.kigawa.kinfra.infrastructure.update
 
-import net.kigawa.kinfra.infrastructure.logging.Logger
+import net.kigawa.kinfra.action.logging.Logger
+import net.kigawa.kinfra.action.update.AutoUpdater
+import net.kigawa.kinfra.action.update.VersionInfo
+import net.kigawa.kinfra.model.conf.FilePaths
 import java.io.File
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
@@ -8,18 +11,16 @@ import java.net.URL
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 
-interface AutoUpdater {
-    fun performUpdate(versionInfo: VersionInfo): Boolean
-    fun getLastCheckTime(): Long
-    fun updateLastCheckTime()
-}
-
 class AutoUpdaterImpl(
-    private val logger: Logger
+    private val logger: Logger,
+    val filePaths: FilePaths
 ) : AutoUpdater {
-    private val appDir = File(System.getProperty("user.home"), ".local/kinfra")
-    private val jarPath = File(appDir, "kinfra.jar")
-    private val lastCheckFile = File(appDir, ".last_update_check")
+    private val appDir: File
+        get() = filePaths.baseConfigDir?.toFile() ?: throw IllegalStateException("Config directory not available")
+    private val jarPath: File
+        get() = File(appDir, "kinfra.jar")
+    private val lastCheckFile: File
+        get() = File(appDir, ".last_update_check")
 
     override fun performUpdate(versionInfo: VersionInfo): Boolean {
         if (!versionInfo.updateAvailable) {

@@ -1,0 +1,232 @@
+package net.kigawa.kinfra.action.actions
+
+import net.kigawa.kinfra.action.GitHelper
+import net.kigawa.kinfra.action.TerraformService
+import net.kigawa.kinfra.action.logging.Logger
+import net.kigawa.kinfra.model.Action
+import net.kigawa.kinfra.model.util.AnsiColors
+import net.kigawa.kinfra.model.util.isSuccess
+import net.kigawa.kinfra.model.util.message
+
+class HelloAction(
+    private val terraformService: TerraformService,
+    private val logger: Logger,
+    private val gitHelper: GitHelper
+) : Action {
+
+    override fun execute(args: Array<String>): Int {
+        // Pull latest changes from git repository
+        if (!gitHelper.pullRepository()) {
+            println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Failed to pull from git repository, continuing anyway...")
+        }
+
+        println("${AnsiColors.CYAN}${AnsiColors.BOLD}Welcome to kinfra interactive manager!${AnsiColors.RESET}")
+        println()
+
+        while (true) {
+            val menuItems = buildMenuItems()
+            showMainMenu(menuItems)
+            print("${AnsiColors.GREEN}Select an option (1-${menuItems.size}):${AnsiColors.RESET} ")
+            val choice = readLine()?.trim() ?: ""
+
+            println()
+            when (choice) {
+                "0", "q", "quit", "exit" -> {
+                    println("${AnsiColors.CYAN}Goodbye!${AnsiColors.RESET}")
+                    return 0
+                }
+                else -> {
+                    val index = choice.toIntOrNull()?.minus(1)
+                    if (index != null && index in menuItems.indices) {
+                        menuItems[index].action()
+                    } else {
+                        println("${AnsiColors.RED}Invalid option. Please try again.${AnsiColors.RESET}")
+                    }
+                }
+            }
+            println()
+        }
+    }
+
+    private data class MenuItem(
+        val label: String,
+        val action: () -> Unit
+    )
+
+    private fun buildMenuItems(): List<MenuItem> {
+        return listOf(
+            MenuItem("Check Git status") { gitStatus() },
+            MenuItem("Push to Git repository") { gitPush() },
+            MenuItem("Run Terraform init") { terraformInit() },
+            MenuItem("Run Terraform plan") { terraformPlan() },
+            MenuItem("Run Terraform init + plan") { terraformInitAndPlan() },
+            MenuItem("Run Terraform apply") { terraformApply() }
+        )
+    }
+
+    override fun getDescription(): String {
+        return "Interactive management tool for Terraform directories and Git operations"
+    }
+
+    private fun showMainMenu(menuItems: List<MenuItem>) {
+        println("${AnsiColors.BLUE}${AnsiColors.BOLD}=== Main Menu ===${AnsiColors.RESET}")
+        menuItems.forEachIndexed { index, item ->
+            println("  ${AnsiColors.CYAN}${index + 1}.${AnsiColors.RESET} ${item.label}")
+        }
+        println("  ${AnsiColors.CYAN}0.${AnsiColors.RESET} Exit")
+        println()
+    }
+
+    private fun terraformInit() {
+        logger.info("Running terraform init")
+        println("${AnsiColors.BLUE}${AnsiColors.BOLD}Running Terraform Init${AnsiColors.RESET}")
+        println()
+
+        print("${AnsiColors.GREEN}Do you want to continue? (yes/no):${AnsiColors.RESET} ")
+        val confirmation = readLine()?.trim()?.lowercase() ?: ""
+
+        if (confirmation != "yes" && confirmation != "y") {
+            println("${AnsiColors.YELLOW}Init cancelled.${AnsiColors.RESET}")
+            return
+        }
+
+        println()
+        println("${AnsiColors.BLUE}Initializing Terraform...${AnsiColors.RESET}")
+
+        val result = terraformService.init(quiet = false)
+
+        if (result.isSuccess()) {
+            println()
+            println("${AnsiColors.GREEN}✓ Terraform init completed successfully${AnsiColors.RESET}")
+        } else {
+            println()
+            println("${AnsiColors.RED}✗ Terraform init failed${AnsiColors.RESET}")
+            result.message()?.let { println("${AnsiColors.RED}Error: $it${AnsiColors.RESET}") }
+        }
+    }
+
+    private fun terraformPlan() {
+        logger.info("Running terraform plan")
+        println("${AnsiColors.BLUE}${AnsiColors.BOLD}Running Terraform Plan${AnsiColors.RESET}")
+        println()
+
+        print("${AnsiColors.GREEN}Do you want to continue? (yes/no):${AnsiColors.RESET} ")
+        val confirmation = readLine()?.trim()?.lowercase() ?: ""
+
+        if (confirmation != "yes" && confirmation != "y") {
+            println("${AnsiColors.YELLOW}Plan cancelled.${AnsiColors.RESET}")
+            return
+        }
+
+        println()
+        println("${AnsiColors.BLUE}Planning Terraform changes...${AnsiColors.RESET}")
+
+        val result = terraformService.plan(quiet = false)
+
+        if (result.isSuccess()) {
+            println()
+            println("${AnsiColors.GREEN}✓ Terraform plan completed successfully${AnsiColors.RESET}")
+        } else {
+            println()
+            println("${AnsiColors.RED}✗ Terraform plan failed${AnsiColors.RESET}")
+            result.message()?.let { println("${AnsiColors.RED}Error: $it${AnsiColors.RESET}") }
+        }
+    }
+
+    private fun terraformInitAndPlan() {
+        logger.info("Running terraform init + plan")
+        println("${AnsiColors.BLUE}${AnsiColors.BOLD}Running Terraform Init + Plan${AnsiColors.RESET}")
+        println()
+
+        print("${AnsiColors.GREEN}Do you want to continue? (yes/no):${AnsiColors.RESET} ")
+        val confirmation = readLine()?.trim()?.lowercase() ?: ""
+
+        if (confirmation != "yes" && confirmation != "y") {
+            println("${AnsiColors.YELLOW}Init + Plan cancelled.${AnsiColors.RESET}")
+            return
+        }
+
+        println()
+        println("${AnsiColors.BLUE}Step 1/2: Initializing Terraform...${AnsiColors.RESET}")
+
+        val initResult = terraformService.init(quiet = false)
+
+        if (!initResult.isSuccess()) {
+            println()
+            println("${AnsiColors.RED}✗ Terraform init failed${AnsiColors.RESET}")
+            initResult.message()?.let { println("${AnsiColors.RED}Error: $it${AnsiColors.RESET}") }
+            return
+        }
+
+        println()
+        println("${AnsiColors.GREEN}✓ Terraform init completed successfully${AnsiColors.RESET}")
+        println()
+        println("${AnsiColors.BLUE}Step 2/2: Planning Terraform changes...${AnsiColors.RESET}")
+
+        val planResult = terraformService.plan(quiet = false)
+
+        if (planResult.isSuccess()) {
+            println()
+            println("${AnsiColors.GREEN}✓ Terraform init + plan completed successfully${AnsiColors.RESET}")
+        } else {
+            println()
+            println("${AnsiColors.RED}✗ Terraform plan failed${AnsiColors.RESET}")
+            planResult.message()?.let { println("${AnsiColors.RED}Error: $it${AnsiColors.RESET}") }
+        }
+    }
+
+    private fun terraformApply() {
+        logger.info("Running terraform apply")
+        println("${AnsiColors.BLUE}${AnsiColors.BOLD}Running Terraform Apply${AnsiColors.RESET}")
+        println("${AnsiColors.YELLOW}Warning: This will make changes to your infrastructure!${AnsiColors.RESET}")
+        println()
+
+        print("${AnsiColors.GREEN}Do you want to continue? (yes/no):${AnsiColors.RESET} ")
+        val confirmation = readLine()?.trim()?.lowercase() ?: ""
+
+        if (confirmation != "yes" && confirmation != "y") {
+            println("${AnsiColors.YELLOW}Apply cancelled.${AnsiColors.RESET}")
+            return
+        }
+
+        println()
+        println("${AnsiColors.BLUE}Applying Terraform changes...${AnsiColors.RESET}")
+
+        val result = terraformService.apply(quiet = false)
+
+        if (result.isSuccess()) {
+            println()
+            println("${AnsiColors.GREEN}✓ Terraform apply completed successfully${AnsiColors.RESET}")
+        } else {
+            println()
+            println("${AnsiColors.RED}✗ Terraform apply failed${AnsiColors.RESET}")
+            result.message()?.let { println("${AnsiColors.RED}Error: $it${AnsiColors.RESET}") }
+        }
+    }
+
+    private fun gitStatus() {
+        logger.info("Checking git status")
+        println("${AnsiColors.BLUE}${AnsiColors.BOLD}Git Status${AnsiColors.RESET}")
+        println()
+
+        val result = gitHelper.getStatus()
+        if (result == null) {
+            println("${AnsiColors.RED}Error:${AnsiColors.RESET} No repository configured or repository not found")
+            println("${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Run 'kinfra login <github-repo>' to set up a repository")
+            return
+        }
+
+        val (exitCode, output) = result
+        if (exitCode == 0) {
+            println(output)
+        } else {
+            println("${AnsiColors.RED}Error checking git status:${AnsiColors.RESET}")
+            println(output)
+        }
+    }
+
+    private fun gitPush() {
+        logger.info("Pushing to git repository")
+        gitHelper.pushToRemote()
+    }
+}

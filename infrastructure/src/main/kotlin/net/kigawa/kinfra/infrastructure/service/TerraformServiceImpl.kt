@@ -1,28 +1,24 @@
 package net.kigawa.kinfra.infrastructure.service
 
 import net.kigawa.kinfra.action.TerraformService
-import net.kigawa.kinfra.model.CommandResult
-import net.kigawa.kinfra.model.TerraformConfig
 import net.kigawa.kinfra.infrastructure.process.ProcessExecutor
 import net.kigawa.kinfra.infrastructure.terraform.TerraformRepository
+import net.kigawa.kinfra.model.conf.TerraformConfig
+import net.kigawa.kinfra.model.err.ActionException
+import net.kigawa.kinfra.model.err.Res
 
 /**
  * TerraformServiceの実装
  */
 class TerraformServiceImpl(
     private val processExecutor: ProcessExecutor,
-    private val terraformRepository: TerraformRepository
-) : TerraformService {
+    private val terraformRepository: TerraformRepository,
+): TerraformService {
 
-    override fun init(additionalArgs: Array<String>, quiet: Boolean): CommandResult {
+    override fun init(additionalArgs: Array<String>, quiet: Boolean): Res<Int, ActionException> {
         val config = terraformRepository.getTerraformConfig()
 
-        // Check for backend config file
-        val backendConfigArgs = findBackendConfigFile()?.let {
-            arrayOf("-backend-config=$it")
-        } ?: emptyArray()
-
-        val args = arrayOf("terraform", "init") + backendConfigArgs + additionalArgs
+        val args = arrayOf("terraform", "init") + additionalArgs
 
         return processExecutor.execute(
             args = args,
@@ -32,16 +28,7 @@ class TerraformServiceImpl(
         )
     }
 
-    private fun findBackendConfigFile(): String? {
-        val backendConfig = java.io.File("backend.tfvars")
-        if (backendConfig.exists()) {
-            return backendConfig.absolutePath
-        }
-
-        return null
-    }
-
-    override fun plan(additionalArgs: Array<String>, quiet: Boolean): CommandResult {
+    override fun plan(additionalArgs: Array<String>, quiet: Boolean): Res<Int, ActionException> {
         val config = terraformRepository.getTerraformConfig()
         val varFileArgs = if (config.hasVarFile()) {
             arrayOf("-var-file=${config.varFile!!.absolutePath}")
@@ -59,7 +46,7 @@ class TerraformServiceImpl(
         )
     }
 
-    override fun apply(planFile: String?, additionalArgs: Array<String>, quiet: Boolean): CommandResult {
+    override fun apply(planFile: String?, additionalArgs: Array<String>, quiet: Boolean): Res<Int, ActionException> {
         val config = terraformRepository.getTerraformConfig()
 
         val baseArgs = arrayOf("terraform", "apply")
@@ -80,7 +67,7 @@ class TerraformServiceImpl(
         )
     }
 
-    override fun destroy(additionalArgs: Array<String>, quiet: Boolean): CommandResult {
+    override fun destroy(additionalArgs: Array<String>, quiet: Boolean): Res<Int, ActionException> {
         val config = terraformRepository.getTerraformConfig()
         val varFileArgs = if (config.hasVarFile()) {
             arrayOf("-var-file=${config.varFile!!.absolutePath}")
@@ -98,7 +85,7 @@ class TerraformServiceImpl(
         )
     }
 
-    override fun format(recursive: Boolean, quiet: Boolean): CommandResult {
+    override fun format(recursive: Boolean, quiet: Boolean): Res<Int, ActionException> {
         val args = if (recursive) {
             arrayOf("terraform", "fmt", "-recursive")
         } else {
@@ -108,11 +95,11 @@ class TerraformServiceImpl(
         return processExecutor.execute(args = args, quiet = quiet)
     }
 
-    override fun validate(quiet: Boolean): CommandResult {
+    override fun validate(quiet: Boolean): Res<Int, ActionException> {
         return processExecutor.execute(args = arrayOf("terraform", "validate"), quiet = quiet)
     }
 
-    override fun show(additionalArgs: Array<String>, quiet: Boolean): CommandResult {
+    override fun show(additionalArgs: Array<String>, quiet: Boolean): Res<Int, ActionException> {
         val config = terraformRepository.getTerraformConfig()
         val args = arrayOf("terraform", "show") + additionalArgs
 

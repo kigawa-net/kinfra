@@ -1,27 +1,31 @@
 package net.kigawa.kinfra
 
-import net.kigawa.kinfra.infrastructure.logging.Logger
-import net.kigawa.kinfra.infrastructure.update.VersionChecker
-import net.kigawa.kinfra.infrastructure.update.AutoUpdater
-import net.kigawa.kinfra.infrastructure.config.ConfigRepository
-import net.kigawa.kinfra.model.Command
-import net.kigawa.kinfra.model.CommandType
-import net.kigawa.kinfra.util.AnsiColors
-import net.kigawa.kinfra.util.VersionUtil
+import net.kigawa.kinfra.action.logging.Logger
+import net.kigawa.kinfra.action.update.AutoUpdater
+import net.kigawa.kinfra.action.update.VersionChecker
+import net.kigawa.kinfra.model.Action
+import net.kigawa.kinfra.model.ActionType
+import net.kigawa.kinfra.model.LoginRepo
+import net.kigawa.kinfra.model.util.AnsiColors
+import net.kigawa.kinfra.model.util.VersionUtil
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.qualifier.named
 import kotlin.system.exitProcess
 
-class TerraformRunner : KoinComponent {
+class TerraformRunner(
+    val loginRepo: LoginRepo
+) : KoinComponent {
     private val logger: Logger by inject()
 
-    private val commands: Map<String, Command> by lazy {
+    private val actions: Map<String, Action> by lazy {
         buildMap {
-            CommandType.entries.forEach { commandType ->
+            ActionType.entries.forEach { actionType ->
                 runCatching {
-                    val command: Command by inject(named(commandType.commandName))
-                    put(commandType.commandName, command)
+                    val action: Action by inject(named(actionType.actionName))
+                    put(actionType.actionName, action)
+                }.onFailure { e ->
+                    logger.warn("Failed to register action ${actionType.actionName}: ${e.message}")
                 }
             }
         }
@@ -31,35 +35,41 @@ class TerraformRunner : KoinComponent {
         logger.info("Starting Terraform Runner with args: ${args.joinToString(" ")}")
 
         if (args.isEmpty()) {
-            logger.warn("No command provided")
-            commands[CommandType.HELP.commandName]?.execute(emptyArray())
+            logger.warn("No action provided")
+            actions[ActionType.HELP.actionName]?.execute(emptyArray())
             exitProcess(1)
         }
 
-        var commandName = args[0]
-        logger.debug("Original command: $commandName")
+        var actionName = args[0]
+        logger.debug("Original action: $actionName")
 
-        // deploy と setup-r2 コマンドは常に SDK 版を使用
-        when (commandName) {
-            CommandType.DEPLOY.commandName -> {
-                commandName = CommandType.DEPLOY_SDK.commandName
-                logger.info("Command redirected to SDK version: $commandName")
+        // Map --help and -h flags to help action
+        if (actionName == "--help" || actionName == "-h") {
+            actionName = ActionType.HELP.actionName
+            logger.debug("Mapped $actionName to help action")
+        }
+
+        // deploy と setup-r2 アクションは常に SDK 版を使用
+        when (actionName) {
+            ActionType.DEPLOY.actionName -> {
+                actionName = ActionType.DEPLOY_SDK.actionName
+                logger.info("Action redirected to SDK version: $actionName")
             }
-            CommandType.SETUP_R2.commandName -> {
-                commandName = CommandType.SETUP_R2_SDK.commandName
-                logger.info("Command redirected to SDK version: $commandName")
+            ActionType.SETUP_R2.actionName -> {
+                actionName = ActionType.SETUP_R2_SDK.actionName
+                logger.info("Action redirected to SDK version: $actionName")
             }
         }
 
-        val command = commands[commandName]
+        val action = actions[actionName]
 
-        if (command == null) {
-            // SDK版コマンドが見つからない場合、BWS_ACCESS_TOKENの設定を促す
-            if (commandName == CommandType.DEPLOY_SDK.commandName || commandName == CommandType.SETUP_R2_SDK.commandName) {
-                logger.error("BWS_ACCESS_TOKEN is not set for SDK command: $commandName")
+        if (action == null) {
+            // SDK版アクションが見つからない場合、BWS_ACCESS_TOKENの設定を促す
+            if (actionName == ActionType.DEPLOY_SDK.actionName || actionName == ActionType.SETUP_R2_SDK.actionName) {
+                logger.error("BWS_ACCESS_TOKEN is not set for SDK action: $actionName")
                 println("${AnsiColors.RED}Error:${AnsiColors.RESET} BWS_ACCESS_TOKEN is not set.")
                 println()
-                println("${AnsiColors.BLUE}Secret Manager is required for this command.${AnsiColors.RESET}")
+                println("${AnsiColors.BLUE}Secret Manager is required for this action.${AnsiColors.RESET}")
                 println("${AnsiColors.BLUE}Please set the BWS_ACCESS_TOKEN environment variable:${AnsiColors.RESET}")
                 println("  export BWS_ACCESS_TOKEN=\"your-token\"")
                 println()
@@ -70,20 +80,22 @@ class TerraformRunner : KoinComponent {
                 exitProcess(1)
             }
 
-            logger.error("Unknown command: $commandName")
-            println("${AnsiColors.RED}Error:${AnsiColors.RESET} Unknown command: $commandName")
-            commands[CommandType.HELP.commandName]?.execute(emptyArray())
+            logger.error("Unknown action: $actionName")
+            println("${AnsiColors.RED}Error:${AnsiColors.RESET} Unknown action: $actionName")
+            actions[ActionType.HELP.actionName]?.execute(emptyArray())
             exitProcess(1)
         }
 
-        // Skip Terraform check for help, login, config, hello, setup-r2 and self-update commands
-        val skipTerraformCheck = commandName == CommandType.HELP.commandName
-            || commandName == CommandType.LOGIN.commandName
-            || commandName == CommandType.CONFIG.commandName
-            || commandName == CommandType.HELLO.commandName
-            || commandName == CommandType.SETUP_R2.commandName
-            || commandName == CommandType.SETUP_R2_SDK.commandName
-            || commandName == CommandType.SELF_UPDATE.commandName
+        // Skip Terraform check for help, login, hello, setup-r2, self-update, push, config and add-subproject actions
+        val skipTerraformCheck = actionName == ActionType.HELP.actionName
+            || actionName == ActionType.LOGIN.actionName
+            || actionName == ActionType.HELLO.actionName
+            || actionName == ActionType.SETUP_R2.actionName
+            || actionName == ActionType.SETUP_R2_SDK.actionName
+            || actionName == ActionType.SELF_UPDATE.actionName
+            || actionName == ActionType.PUSH.actionName
+            || actionName == ActionType.CONFIG_EDIT.actionName
+            || actionName == ActionType.ADD_SUBPROJECT.actionName
         if (!skipTerraformCheck && !isTerraformInstalled()) {
             logger.error("Terraform is not installed")
             println("${AnsiColors.RED}Error:${AnsiColors.RESET} Terraform is not installed or not found in PATH.")
@@ -94,30 +106,29 @@ class TerraformRunner : KoinComponent {
             exitProcess(1)
         }
 
-        val commandArgs = args.drop(1).toTypedArray()
+        val actionArgs = args.drop(1).toTypedArray()
 
-        logger.info("Executing command: $commandName with args: ${commandArgs.joinToString(" ")}")
-        val exitCode = command.execute(commandArgs)
-        logger.info("Command $commandName finished with exit code: $exitCode")
+        logger.info("Executing action: $actionName with args: ${actionArgs.joinToString(" ")}")
+        val exitCode = action.execute(actionArgs)
+        logger.info("Action $actionName finished with exit code: $exitCode")
 
-        // Check for updates after command execution
+        // Check for updates after action execution
         checkForUpdates()
 
         if (exitCode != 0) {
-            logger.error("Command $commandName failed with exit code: $exitCode")
+            logger.error("Action $actionName failed with exit code: $exitCode")
             exitProcess(exitCode)
         }
     }
 
     private fun checkForUpdates() {
         try {
-            val configRepository: ConfigRepository by inject()
             val versionChecker: VersionChecker by inject()
             val autoUpdater: AutoUpdater by inject()
 
             // Load config to check if auto-update is enabled
             val config = runCatching {
-                configRepository.loadKinfraConfig()
+                loginRepo.loadKinfraConfig()
             }.getOrNull()
 
             // Skip update check if auto-update is disabled

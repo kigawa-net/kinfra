@@ -1,41 +1,22 @@
 package net.kigawa.kinfra.infrastructure.config
 
 import com.charleskorn.kaml.Yaml
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
-import net.kigawa.kinfra.model.HostsConfig
-import net.kigawa.kinfra.model.ProjectConfig
-import net.kigawa.kinfra.model.KinfraConfig
-import net.kigawa.kinfra.infrastructure.git.GitRepository
+import net.kigawa.kinfra.action.config.ConfigRepository
+import net.kigawa.kinfra.model.conf.FilePaths
+import net.kigawa.kinfra.model.conf.GlobalConfig
+import net.kigawa.kinfra.model.conf.KinfraConfig
+import net.kigawa.kinfra.model.conf.KinfraParentConfig
 import java.io.File
 
 class ConfigRepositoryImpl(
-    private val baseConfigDir: String = System.getProperty("user.home") + "/.local/kinfra"
-) : ConfigRepository {
+    val filePaths: FilePaths,
+    val globalConfigScheme: GlobalConfig,
+): ConfigRepository {
+    private val configDir: File
+        get() = filePaths.baseConfigDir?.toFile() ?: throw IllegalStateException("Config directory not available")
 
-    private val gson: Gson = GsonBuilder().setPrettyPrinting().create()
-
-    /**
-     * リポジトリ固有の設定ディレクトリを取得
-     * リポジトリ名が取得できない場合は、baseConfigDirを返す（後方互換性）
-     */
-    private fun getRepoConfigDir(): String {
-        val repoName = GitRepository.getRepositoryName()
-        return if (repoName != null) {
-            "$baseConfigDir/$repoName"
-        } else {
-            baseConfigDir
-        }
-    }
-
-    private val configDir: String
-        get() = getRepoConfigDir()
-
-    private val configFile: File
-        get() = File(configDir, "hosts.json")
-
-    private val projectConfigFile: File
-        get() = File(configDir, "project.json")
+    private val projectFile: File
+        get() = File(configDir, filePaths.projectConfigFileName)
 
     init {
         // 設定ディレクトリが存在しない場合は作成
@@ -43,71 +24,37 @@ class ConfigRepositoryImpl(
     }
 
     private fun ensureConfigDirExists() {
-        val dir = File(configDir)
-        if (!dir.exists()) {
-            dir.mkdirs()
+        if (!configDir.exists()) {
+            configDir.mkdirs()
         }
     }
 
-    override fun loadHostsConfig(): HostsConfig {
+    override fun loadGlobalConfig(): GlobalConfig {
         ensureConfigDirExists()
-        return if (configFile.exists()) {
+        return if (projectFile.exists()) {
             try {
-                val json = configFile.readText()
-                gson.fromJson(json, HostsConfig::class.java)
+                val yamlContent = projectFile.readText()
+                Yaml.default.decodeFromString(GlobalConfigScheme.serializer(), yamlContent)
             } catch (e: Exception) {
                 // ファイルの読み込みに失敗した場合はデフォルト設定を返す
-                HostsConfig(HostsConfig.DEFAULT_HOSTS)
+                GlobalConfigScheme()
             }
         } else {
             // ファイルが存在しない場合はデフォルト設定を返す
-            HostsConfig(HostsConfig.DEFAULT_HOSTS)
+            GlobalConfigScheme()
         }
     }
 
-    override fun saveHostsConfig(config: HostsConfig) {
+    override fun saveGlobalConfig(config: GlobalConfig) {
         ensureConfigDirExists()
-        val json = gson.toJson(config)
-        configFile.writeText(json)
-    }
-
-    override fun getConfigFilePath(): String {
-        return configFile.absolutePath
-    }
-
-    override fun loadProjectConfig(): ProjectConfig {
-        ensureConfigDirExists()
-        return if (projectConfigFile.exists()) {
-            try {
-                val json = projectConfigFile.readText()
-                gson.fromJson(json, ProjectConfig::class.java)
-            } catch (e: Exception) {
-                // ファイルの読み込みに失敗した場合はデフォルト設定を返す
-                ProjectConfig()
-            }
-        } else {
-            // ファイルが存在しない場合はデフォルト設定を返す
-            ProjectConfig()
-        }
-    }
-
-    override fun saveProjectConfig(config: ProjectConfig) {
-        ensureConfigDirExists()
-        val json = gson.toJson(config)
-        projectConfigFile.writeText(json)
+        val yamlContent = Yaml.default.encodeToString(
+            GlobalConfigScheme.serializer(), GlobalConfigScheme.from(config)
+        )
+        projectFile.writeText(yamlContent)
     }
 
     override fun getProjectConfigFilePath(): String {
-        return projectConfigFile.absolutePath
-    }
-
-    /**
-     * ファイルパスを解決する
-     * 相対パスの場合はログインしているリポジトリの設定ディレクトリを基準にする
-     * 絶対パスの場合はそのまま返す
-     */
-    private fun resolveFilePath(filePath: String): File {
-        return File(configDir, filePath)
+        return projectFile.absolutePath
     }
 
     override fun loadKinfraConfig(filePath: String): KinfraConfig? {
@@ -117,16 +64,43 @@ class ConfigRepositoryImpl(
         }
 
         val yamlContent = file.readText()
-        return Yaml.default.decodeFromString(KinfraConfig.serializer(), yamlContent)
+        return Yaml.default.decodeFromString(KinfraConfigScheme.serializer(), yamlContent)
     }
 
     override fun saveKinfraConfig(config: KinfraConfig, filePath: String) {
         val file = resolveFilePath(filePath)
-        val yamlContent = Yaml.default.encodeToString(KinfraConfig.serializer(), config)
+        val yamlContent = Yaml.default.encodeToString(KinfraConfigScheme.serializer(), KinfraConfigScheme.from(config))
         file.writeText(yamlContent)
     }
 
     override fun kinfraConfigExists(filePath: String): Boolean {
         return resolveFilePath(filePath).exists()
+    }
+
+    override fun loadKinfraParentConfig(filePath: String): KinfraParentConfig? {
+        val file = resolveFilePath(filePath)
+        if (!file.exists()) {
+            return null
+        }
+
+        val yamlContent = file.readText()
+        return Yaml.default.decodeFromString(KinfraParentConfigScheme.serializer(), yamlContent)
+    }
+
+    override fun saveKinfraParentConfig(config: KinfraParentConfig, filePath: String) {
+        val file = resolveFilePath(filePath)
+        val yamlContent = Yaml.default.encodeToString(
+            KinfraParentConfigScheme.serializer(),
+            KinfraParentConfigScheme.from(config)
+        )
+        file.writeText(yamlContent)
+    }
+
+    override fun kinfraParentConfigExists(filePath: String): Boolean {
+        return resolveFilePath(filePath).exists()
+    }
+
+    private fun resolveFilePath(filePath: String): File {
+        return File(filePath)
     }
 }

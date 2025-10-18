@@ -135,46 +135,6 @@ environments:
 
 ---
 
-### ~/.local/kinfra/hosts.json
-
-**場所**: `~/.local/kinfra/hosts.json`
-
-**生成方法**: 手動作成
-
-**形式**: JSON
-
-**例**:
-
-```json
-{
-  "hosts": [
-    {
-      "name": "web-server",
-      "address": "192.168.1.10",
-      "port": 22,
-      "user": "admin"
-    },
-    {
-      "name": "db-server",
-      "address": "192.168.1.20",
-      "port": 22,
-      "user": "admin"
-    }
-  ]
-}
-```
-
-**フィールド**:
-
-| フィールド | 型 | 説明 |
-|-----------|-----|------|
-| name | string | ホスト名 |
-| address | string | IPアドレスまたはホスト名 |
-| port | number | SSHポート（任意、デフォルト: 22） |
-| user | string | SSH接続ユーザー（任意） |
-
----
-
 ## Terraform設定
 
 ### Backend設定 (Cloudflare R2)
@@ -243,8 +203,7 @@ export KINFRA_LOG_DIR=/var/log/kinfra
 ```
 ~/.local/kinfra/
 ├── kinfra.jar           # アプリケーション本体
-├── project.json         # プロジェクト設定
-└── hosts.json           # ホスト設定
+└── project.json         # プロジェクト設定
 
 ~/.local/bin/
 └── kinfra               # 実行スクリプト
@@ -283,7 +242,6 @@ chmod 600 ~/.bws_token
 
 # 設定ファイルのパーミッション
 chmod 644 ~/.local/kinfra/project.json
-chmod 644 ~/.local/kinfra/hosts.json
 ```
 
 ---

@@ -1,6 +1,7 @@
 package net.kigawa.kinfra.infrastructure.process
 
-import net.kigawa.kinfra.model.CommandResult
+import net.kigawa.kinfra.model.err.ActionException
+import net.kigawa.kinfra.model.err.Res
 import java.io.File
 import java.io.IOException
 
@@ -13,7 +14,7 @@ interface ProcessExecutor {
         workingDir: File? = null,
         environment: Map<String, String> = emptyMap(),
         quiet: Boolean = true
-    ): CommandResult
+    ): Res<Int, ActionException>
 
     fun executeWithOutput(
         args: Array<String>,
@@ -36,7 +37,7 @@ class ProcessExecutorImpl : ProcessExecutor {
         workingDir: File?,
         environment: Map<String, String>,
         quiet: Boolean
-    ): CommandResult {
+    ): Res<Int, ActionException> {
         return try {
             val processBuilder = ProcessBuilder(*args)
 
@@ -59,9 +60,13 @@ class ProcessExecutorImpl : ProcessExecutor {
             val process = processBuilder.start()
             val exitCode = process.waitFor()
 
-            CommandResult(exitCode)
+            if (exitCode == 0) {
+                Res.Ok(exitCode)
+            } else {
+                Res.Err(ActionException(exitCode))
+            }
         } catch (e: IOException) {
-            CommandResult.failure(message = "Error executing command: ${e.message}")
+            Res.Err(ActionException(1, "Error executing command: ${e.message}"))
         }
     }
 
