@@ -82,6 +82,7 @@ jobs:
 
             ## プロジェクト概要
             このリポジトリはKotlinベースのTerraformラッパーで、Bitwarden Secret Manager統合によりシークレットを安全に管理します。
+            コンテキストの情報をもとに作業を行なってください
 
             ## ビルド環境
             - Gradle 8.10.2
