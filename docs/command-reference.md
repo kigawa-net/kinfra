@@ -52,6 +52,21 @@ kinfra login
 
 ---
 
+## サブプロジェクトコマンド
+
+### sub list
+
+kinfra-parent.yamlに設定されたサブプロジェクトの一覧を表示。
+
+```bash
+kinfra sub list
+```
+
+**実行内容**:
+- kinfra-parent.yamlからサブプロジェクト一覧を取得
+- 番号付きで表示
+
+---
 
 ## Terraformコマンド
 

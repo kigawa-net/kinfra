@@ -6,6 +6,7 @@ import net.kigawa.kinfra.action.update.VersionChecker
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.ActionType
 import net.kigawa.kinfra.model.LoginRepo
+import net.kigawa.kinfra.model.SubActionType
 import net.kigawa.kinfra.model.util.AnsiColors
 import net.kigawa.kinfra.model.util.VersionUtil
 import org.koin.core.component.KoinComponent
@@ -18,17 +19,29 @@ class TerraformRunner(
 ) : KoinComponent {
     private val logger: Logger by inject()
 
-    private val actions: Map<String, Action> by lazy {
-        buildMap {
-            ActionType.entries.forEach { actionType ->
+    private val actions: Map<Pair<String, SubActionType?>, Action> by lazy {
+        val map = mutableMapOf<Pair<String, SubActionType?>, Action>()
+        ActionType.entries.forEach { actionType ->
+            if (actionType == ActionType.SUB) {
+                // Handle subcommands
+                SubActionType.entries.forEach { subActionType ->
+                    runCatching {
+                        val action: Action by inject(named("${actionType.actionName} ${subActionType.actionName}"))
+                        map[Pair(actionType.actionName, subActionType)] = action
+                    }.onFailure { e ->
+                        logger.warn("Failed to register subaction ${actionType.actionName} ${subActionType.actionName}: ${e.message}")
+                    }
+                }
+            } else {
                 runCatching {
                     val action: Action by inject(named(actionType.actionName))
-                    put(actionType.actionName, action)
+                    map[Pair(actionType.actionName, null)] = action
                 }.onFailure { e ->
                     logger.warn("Failed to register action ${actionType.actionName}: ${e.message}")
                 }
             }
         }
+        map
     }
 
     fun run(args: Array<String>) {
@@ -36,12 +49,27 @@ class TerraformRunner(
 
         if (args.isEmpty()) {
             logger.warn("No action provided")
-            actions[ActionType.HELP.actionName]?.execute(emptyArray())
+            actions[Pair(ActionType.HELP.actionName, null)]?.execute(emptyArray())
             exitProcess(1)
         }
 
         var actionName = args[0]
+        var subActionType: SubActionType? = null
         logger.debug("Original action: $actionName")
+
+        // Handle subcommands
+        if (actionName == ActionType.SUB.actionName && args.size > 1) {
+            val subActionName = args[1]
+            subActionType = SubActionType.fromString(subActionName)
+            if (subActionType != null) {
+                logger.debug("Detected subcommand: $actionName $subActionName")
+            } else {
+                logger.error("Unknown subcommand: $actionName $subActionName")
+                println("${AnsiColors.RED}Error:${AnsiColors.RESET} Unknown subcommand: $actionName $subActionName")
+                actions[Pair(ActionType.HELP.actionName, null)]?.execute(emptyArray())
+                exitProcess(1)
+            }
+        }
 
         // Map --help and -h flags to help action
         if (actionName == "--help" || actionName == "-h") {
@@ -57,7 +85,7 @@ class TerraformRunner(
             }
         }
 
-        val action = actions[actionName]
+        val action = actions[Pair(actionName, subActionType)]
 
         if (action == null) {
             // SDK版アクションが見つからない場合、BWS_ACCESS_TOKENの設定を促す
@@ -78,25 +106,26 @@ class TerraformRunner(
 
             logger.error("Unknown action: $actionName")
             println("${AnsiColors.RED}Error:${AnsiColors.RESET} Unknown action: $actionName")
-            actions[ActionType.HELP.actionName]?.execute(emptyArray())
+            actions[Pair(ActionType.HELP.actionName, null)]?.execute(emptyArray())
             exitProcess(1)
         }
 
         // Check if --help or -h is in the arguments (but not the first argument)
-        val actionArgs = args.drop(1).toTypedArray()
+        val actionArgs = if (subActionType != null) args.drop(2).toTypedArray() else args.drop(1).toTypedArray()
         if (actionArgs.isNotEmpty() && (actionArgs[0] == "--help" || actionArgs[0] == "-h")) {
             logger.debug("Showing help for action: $actionName")
             action.showHelp()
             exitProcess(0)
         }
 
-        // Skip Terraform check for help, login, hello, self-update, push and config actions
+        // Skip Terraform check for help, login, hello, self-update, push, config and sub actions
         val skipTerraformCheck = actionName == ActionType.HELP.actionName
             || actionName == ActionType.LOGIN.actionName
             || actionName == ActionType.HELLO.actionName
             || actionName == ActionType.SELF_UPDATE.actionName
             || actionName == ActionType.PUSH.actionName
             || actionName == ActionType.CONFIG_EDIT.actionName
+            || actionName == ActionType.SUB.actionName
         if (!skipTerraformCheck && !isTerraformInstalled()) {
             logger.error("Terraform is not installed")
             println("${AnsiColors.RED}Error:${AnsiColors.RESET} Terraform is not installed or not found in PATH.")

@@ -17,6 +17,7 @@ import net.kigawa.kinfra.action.actions.PlanAction
 import net.kigawa.kinfra.action.actions.PushAction
 import net.kigawa.kinfra.action.actions.SelfUpdateAction
 import net.kigawa.kinfra.action.actions.StatusAction
+import net.kigawa.kinfra.action.actions.SubListAction
 import net.kigawa.kinfra.action.actions.ValidateAction
 import net.kigawa.kinfra.action.bitwarden.BitwardenRepository
 import net.kigawa.kinfra.action.bitwarden.BitwardenSecretManagerRepository
@@ -45,6 +46,7 @@ import net.kigawa.kinfra.infrastructure.update.VersionCheckerImpl
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.ActionType
 import net.kigawa.kinfra.model.LoginRepo
+import net.kigawa.kinfra.model.SubActionType
 import net.kigawa.kinfra.infrastructure.config.GlobalConfigScheme
 import net.kigawa.kinfra.infrastructure.file.SystemHomeDirGetter
 import net.kigawa.kinfra.model.conf.FilePaths
@@ -131,6 +133,7 @@ val appModule = module {
     single<Action>(named(ActionType.DEPLOY.actionName)) { DeployAction(get(), get()) }
     single<Action>(named(ActionType.PUSH.actionName)) { PushAction(get()) }
     single<Action>(named(ActionType.CONFIG_EDIT.actionName)) { ConfigEditAction(get(), get(), get()) }
+    single<Action>(named("${ActionType.SUB.actionName} ${SubActionType.LIST.actionName}")) { SubListAction(get(), get()) }
     single<Action>(named(ActionType.SELF_UPDATE.actionName)) { SelfUpdateAction(get(), get(), get(), get(), get(), get()) }
 
     // SDK-based actions (only if BWS_ACCESS_TOKEN is available)
@@ -142,7 +145,14 @@ val appModule = module {
     single<Action>(named(ActionType.HELP.actionName)) {
         val actionMap = buildMap<String, Action> {
             ActionType.entries.forEach { actionType ->
-                if (actionType != ActionType.HELP) {
+                if (actionType == ActionType.SUB) {
+                    // Add subcommands
+                    SubActionType.entries.forEach { subActionType ->
+                        runCatching {
+                            put("${actionType.actionName} ${subActionType.actionName}", get<Action>(named("${actionType.actionName} ${subActionType.actionName}")))
+                        }
+                    }
+                } else if (actionType != ActionType.HELP) {
                     runCatching {
                         put(actionType.actionName, get<Action>(named(actionType.actionName)))
                     }
