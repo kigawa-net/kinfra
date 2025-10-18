@@ -6,7 +6,7 @@ import net.kigawa.kinfra.model.conf.*
 @Serializable
 data class ProjectInfoScheme(
     override val projectId: String = "",
-    override val description: String = "",
+    override val description: String? = null,
     override val terraform: TerraformSettingsScheme? = null
 ) : ProjectInfo {
     companion object {
