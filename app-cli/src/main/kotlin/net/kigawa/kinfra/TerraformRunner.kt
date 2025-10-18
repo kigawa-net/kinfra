@@ -82,6 +82,14 @@ class TerraformRunner(
             exitProcess(1)
         }
 
+        // Check if --help or -h is in the arguments (but not the first argument)
+        val actionArgs = args.drop(1).toTypedArray()
+        if (actionArgs.isNotEmpty() && (actionArgs[0] == "--help" || actionArgs[0] == "-h")) {
+            logger.debug("Showing help for action: $actionName")
+            action.showHelp()
+            exitProcess(0)
+        }
+
         // Skip Terraform check for help, login, hello, self-update, push and config actions
         val skipTerraformCheck = actionName == ActionType.HELP.actionName
             || actionName == ActionType.LOGIN.actionName
@@ -98,8 +106,6 @@ class TerraformRunner(
             println("  Or download from: https://www.terraform.io/downloads.html")
             exitProcess(1)
         }
-
-        val actionArgs = args.drop(1).toTypedArray()
 
         logger.info("Executing action: $actionName with args: ${actionArgs.joinToString(" ")}")
         val exitCode = action.execute(actionArgs)

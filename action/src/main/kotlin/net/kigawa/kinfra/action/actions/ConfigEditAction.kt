@@ -225,4 +225,25 @@ class ConfigEditAction(
     override fun getDescription(): String {
         return "Edit kinfra configuration files or manage parent project (use --parent to edit parent config, add-subproject to add sub-projects)"
     }
+
+    override fun showHelp() {
+        println("${AnsiColors.BLUE}Description:${AnsiColors.RESET}")
+        println("  Edit kinfra configuration files or manage parent project")
+        println()
+        println("${AnsiColors.BLUE}Usage:${AnsiColors.RESET}")
+        println("  kinfra config [options]")
+        println("  kinfra config add-subproject <project-name>")
+        println()
+        println("${AnsiColors.BLUE}Options:${AnsiColors.RESET}")
+        println("  --parent, -p   Edit parent project configuration (kinfra-parent.yaml)")
+        println()
+        println("${AnsiColors.BLUE}Subcommands:${AnsiColors.RESET}")
+        println("  add-subproject <name>   Add a sub-project to parent configuration")
+        println()
+        println("${AnsiColors.BLUE}Examples:${AnsiColors.RESET}")
+        println("  kinfra config                      Edit project configuration")
+        println("  kinfra config --parent             Edit parent configuration")
+        println("  kinfra config add-subproject app1  Add 'app1' to parent config")
+        println()
+    }
 }
