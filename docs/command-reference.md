@@ -159,22 +159,7 @@ kinfra fmt
 
 ## Bitwardenコマンド
 
-### setup-r2
 
-Cloudflare R2のTerraform Backendを設定（CLIベース）。
-
-```bash
-kinfra setup-r2
-```
-
-**前提条件**:
-- `bw` CLIがインストール済み
-- Bitwardenにログイン済み
-
-**SDKモード**:
-- `BWS_ACCESS_TOKEN`がある場合、自動的に`setup-r2-sdk`にリダイレクト
-
----
 
 ## 環境変数
 
@@ -186,10 +171,9 @@ Bitwarden Secret Managerアクセストークン。
 export BWS_ACCESS_TOKEN="your-token"
 ```
 
-**効果**:
-- SDKベースコマンドを有効化（`deploy-sdk`, `setup-r2-sdk`）
-- `deploy` → `deploy-sdk`に自動リダイレクト
-- `setup-r2` → `setup-r2-sdk`に自動リダイレクト
+ **効果**:
+ - SDKベースコマンドを有効化（`deploy-sdk`）
+ - `deploy` → `deploy-sdk`に自動リダイレクト
 
 または、`.bws_token`ファイルに保存:
 

@@ -22,9 +22,8 @@ export BWS_ACCESS_TOKEN="your-access-token"
 echo "your-token" > ~/.bws_token
 ```
 
-**効果**:
-- `deploy` → `deploy-sdk`に自動リダイレクト
-- `setup-r2` → `setup-r2-sdk`に自動リダイレクト
+ **効果**:
+ - `deploy` → `deploy-sdk`に自動リダイレクト
 
 ---
 
@@ -135,13 +134,7 @@ environments:
 
 ---
 
-## Terraform設定
-
-### Backend設定 (Cloudflare R2)
-
-**設定コマンド**: `kinfra setup-r2`
-
-**生成される設定**:
+ ## Terraform設定
 
 ```hcl
 terraform {
