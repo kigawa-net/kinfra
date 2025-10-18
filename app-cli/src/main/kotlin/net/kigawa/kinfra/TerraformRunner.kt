@@ -86,7 +86,7 @@ class TerraformRunner(
             exitProcess(1)
         }
 
-        // Skip Terraform check for help, login, hello, setup-r2, self-update, push, config and add-subproject actions
+        // Skip Terraform check for help, login, hello, setup-r2, self-update, push and config actions
         val skipTerraformCheck = actionName == ActionType.HELP.actionName
             || actionName == ActionType.LOGIN.actionName
             || actionName == ActionType.HELLO.actionName
@@ -95,7 +95,6 @@ class TerraformRunner(
             || actionName == ActionType.SELF_UPDATE.actionName
             || actionName == ActionType.PUSH.actionName
             || actionName == ActionType.CONFIG_EDIT.actionName
-            || actionName == ActionType.ADD_SUBPROJECT.actionName
         if (!skipTerraformCheck && !isTerraformInstalled()) {
             logger.error("Terraform is not installed")
             println("${AnsiColors.RED}Error:${AnsiColors.RESET} Terraform is not installed or not found in PATH.")
