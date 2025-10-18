@@ -18,6 +18,7 @@ jobs:
       (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
       (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
       contents: write
       pull-requests: write
@@ -28,7 +29,24 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0 # Full history for better context
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'gradle'
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
 
       - name: Run Claude Code
         id: claude
@@ -46,30 +64,41 @@ jobs:
 
           # Optional: Give a custom prompt to Claude. If this is not specified, Claude will perform the instructions specified in the comment that tagged it.
           prompt: |
-            # 作業内容
-            
-            ## Rules
-            * **作業後はコメントを作成する**
-            
-            ## Context
-            ### User who triggered the workflow
-            ${{ github.actor }}
-            ### repository 
-            ${{ github.repository }}
-            ### Base branch for PRs
-            ${{ github.base_ref }} 
-            ### Head branch for PRs
-            ${{ github.head_ref }}  
-            ### PR number
-            ${{ github.event.pull_request.number }} 
-            ### Issue number
-            ${{ github.event.issue.number }} 
-            ### PR title
-            ${{ github.event.pull_request.title }}
-            ### PR description
-            ${{ github.event.pull_request.body }} 
-            ### Comment text
-            ${{ github.event.comment.body }}
+            # KInfraプロジェクトでの作業
+
+            ## プロジェクト概要
+            このリポジトリはKotlinベースのTerraformラッパーで、Bitwarden Secret Manager統合によりシークレットを安全に管理します。
+
+            ## ビルド環境
+            - Gradle 8.10.2
+            - Java 21
+            - Kotlin 2.2.0
+
+            ビルドコマンド:
+            ```bash
+            ./gradlew build                                    # ビルド
+            ./gradlew test                                     # 全テスト
+            ./gradlew :app-cli:run --args="<cmd>"             # CLI実行
+            ./gradlew :app-web:run                             # Web実行
+            ./gradlew test --tests "net.kigawa.kinfra.Foo"    # 単一テスト
+            ```
+
+            ## 重要なルール
+            1. **作業後は必ずコメントを作成する** - 実施した変更内容を日本語で簡潔に報告
+            2. **CLAUDE.mdの指示に従う** - プロジェクトのコーディング規約とアーキテクチャガイドラインを遵守
+            3. **テストを実行する** - 変更後は`./gradlew test`でテストが通ることを確認
+            4. **日本語で応答する** - コメントとコミットメッセージは日本語を使用
+
+            ## コンテキスト情報
+            - **トリガーユーザー**: ${{ github.actor }}
+            - **リポジトリ**: ${{ github.repository }}
+            - **ベースブランチ**: ${{ github.base_ref }}
+            - **ヘッドブランチ**: ${{ github.head_ref }}
+            - **PR番号**: ${{ github.event.pull_request.number }}
+            - **Issue番号**: ${{ github.event.issue.number }}
+            - **PRタイトル**: ${{ github.event.pull_request.title }}
+            - **PR説明**: ${{ github.event.pull_request.body }}
+            - **コメント内容**: ${{ github.event.comment.body }}
             
             
             
