@@ -37,3 +37,5 @@
 ## 変更履歴
 - 2025-10-14: PushAction.ktをKotlinで実装し、add, commit, push機能を追加。GitHelperにaddChangesとcommitChangesメソッドを追加。
 - 2025-10-14: Terraformアクションでログを表示するように変更。各アクションでquiet=falseを設定。
+- 2025-10-18: GitHub Actions実行18615897430が成功。CIワークフローの高速化関連（claude.yml）。
+- 2025-10-18: CIワークフローからアーティファクトアップロード処理を削除（テスト結果、CLI JAR、Web JARのアップロードを除去）。CIの高速化を図る。
