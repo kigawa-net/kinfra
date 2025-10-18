@@ -57,6 +57,7 @@
 | todo-maintainer    | タスク管理を自動化するエージェント |
 
 ## 変更履歴
+- 2025-10-19: Claudeワークフローのプッシュ失敗とPR作成エラーを修正。git push --force-with-leaseを使用し、PR作成失敗時のハンドリングを追加。
 - 2025-10-18: AppModuleを細分化。InfrastructureModule.kt, BitwardenModule.kt, ActionsModule.ktを作成し、AppModule.ktをリファクタリングしてモジュールを組み合わせる。
 - 2025-10-18: サブコマンドの構造を改善。SubActionType enumを作成し、ActionTypeからSUB_LISTを削除してSUBを追加。TerraformRunnerとAppModuleでサブコマンドの解析と登録を更新。
 - 2025-10-18: sub listコマンドを追加。SubListAction.ktを実装し、kinfra-parent.yamlからサブプロジェクト一覧を表示。ActionType.kt, AppModule.kt, ドキュメントに追加。
