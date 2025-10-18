@@ -2,7 +2,7 @@ name: Claude Code
 
 on:
   issue_comment:
-    types: [created]
+    types: [created, edited]
   pull_request_review_comment:
     types: [created]
   issues:
@@ -82,6 +82,7 @@ jobs:
 
             ## プロジェクト概要
             このリポジトリはKotlinベースのTerraformラッパーで、Bitwarden Secret Manager統合によりシークレットを安全に管理します。
+            コンテキストの情報をもとに作業を行なってください
 
             ## ビルド環境
             - Gradle 8.10.2
