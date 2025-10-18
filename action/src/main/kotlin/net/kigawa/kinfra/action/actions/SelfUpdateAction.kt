@@ -6,7 +6,6 @@ import net.kigawa.kinfra.model.conf.FilePaths
 import net.kigawa.kinfra.action.config.ConfigRepository
 import net.kigawa.kinfra.action.update.VersionChecker
 import net.kigawa.kinfra.action.update.AutoUpdater
-import net.kigawa.kinfra.infrastructure.config.*
 import net.kigawa.kinfra.model.LoginRepo
 import net.kigawa.kinfra.model.util.AnsiColors
 import net.kigawa.kinfra.model.util.VersionUtil
@@ -47,7 +46,7 @@ class SelfUpdateAction(
             return 1
         }
 
-        val updateSettings = (config as? KinfraConfigScheme)?.update
+        val updateSettings = config.update
         val githubRepo = updateSettings?.githubRepo ?: "kigawa-net/kinfra"
 
         // Check for updates
