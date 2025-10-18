@@ -38,3 +38,4 @@
 - 2025-10-14: PushAction.ktをKotlinで実装し、add, commit, push機能を追加。GitHelperにaddChangesとcommitChangesメソッドを追加。
 - 2025-10-14: Terraformアクションでログを表示するように変更。各アクションでquiet=falseを設定。
 - 2025-10-14: setup-r2コマンドを削除。関連ファイル（SetupR2Action.kt, SetupR2ActionWithSDK.kt）を削除し、ActionType.kt, AppModule.kt, TerraformRunner.kt, DeployAction.kt, ドキュメントから参照を削除。
+- 2025-10-14: config-editコマンドを追加。ConfigEditAction.ktを実装し、ActionType.kt, AppModule.kt, ドキュメントに追加。
