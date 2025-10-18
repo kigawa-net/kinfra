@@ -15,8 +15,8 @@ enum class ActionType(val actionName: String) {
     HELLO("hello"),
     SELF_UPDATE("self-update"),
     PUSH("push"),
-    CONFIG_EDIT("config"),
-    SUB("sub");
+    CONFIG("config"),
+    CONFIG_EDIT("config-edit");
 
     companion object {
         fun fromString(name: String): ActionType? {
