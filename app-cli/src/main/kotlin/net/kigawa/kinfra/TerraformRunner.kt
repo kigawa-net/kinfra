@@ -49,14 +49,10 @@ class TerraformRunner(
             logger.debug("Mapped $actionName to help action")
         }
 
-        // deploy と setup-r2 アクションは常に SDK 版を使用
+        // deploy アクションは常に SDK 版を使用
         when (actionName) {
             ActionType.DEPLOY.actionName -> {
                 actionName = ActionType.DEPLOY_SDK.actionName
-                logger.info("Action redirected to SDK version: $actionName")
-            }
-            ActionType.SETUP_R2.actionName -> {
-                actionName = ActionType.SETUP_R2_SDK.actionName
                 logger.info("Action redirected to SDK version: $actionName")
             }
         }
@@ -65,7 +61,7 @@ class TerraformRunner(
 
         if (action == null) {
             // SDK版アクションが見つからない場合、BWS_ACCESS_TOKENの設定を促す
-            if (actionName == ActionType.DEPLOY_SDK.actionName || actionName == ActionType.SETUP_R2_SDK.actionName) {
+            if (actionName == ActionType.DEPLOY_SDK.actionName) {
                 logger.error("BWS_ACCESS_TOKEN is not set for SDK action: $actionName")
                 println("${AnsiColors.RED}Error:${AnsiColors.RESET} BWS_ACCESS_TOKEN is not set.")
                 println()
@@ -86,16 +82,21 @@ class TerraformRunner(
             exitProcess(1)
         }
 
-        // Skip Terraform check for help, login, hello, setup-r2, self-update, push, config and add-subproject actions
+        // Check if --help or -h is in the arguments (but not the first argument)
+        val actionArgs = args.drop(1).toTypedArray()
+        if (actionArgs.isNotEmpty() && (actionArgs[0] == "--help" || actionArgs[0] == "-h")) {
+            logger.debug("Showing help for action: $actionName")
+            action.showHelp()
+            exitProcess(0)
+        }
+
+        // Skip Terraform check for help, login, hello, self-update, push and config actions
         val skipTerraformCheck = actionName == ActionType.HELP.actionName
             || actionName == ActionType.LOGIN.actionName
             || actionName == ActionType.HELLO.actionName
-            || actionName == ActionType.SETUP_R2.actionName
-            || actionName == ActionType.SETUP_R2_SDK.actionName
             || actionName == ActionType.SELF_UPDATE.actionName
             || actionName == ActionType.PUSH.actionName
             || actionName == ActionType.CONFIG_EDIT.actionName
-            || actionName == ActionType.ADD_SUBPROJECT.actionName
         if (!skipTerraformCheck && !isTerraformInstalled()) {
             logger.error("Terraform is not installed")
             println("${AnsiColors.RED}Error:${AnsiColors.RESET} Terraform is not installed or not found in PATH.")
@@ -105,8 +106,6 @@ class TerraformRunner(
             println("  Or download from: https://www.terraform.io/downloads.html")
             exitProcess(1)
         }
-
-        val actionArgs = args.drop(1).toTypedArray()
 
         logger.info("Executing action: $actionName with args: ${actionArgs.joinToString(" ")}")
         val exitCode = action.execute(actionArgs)

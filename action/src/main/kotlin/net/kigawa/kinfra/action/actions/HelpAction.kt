@@ -24,22 +24,9 @@ class HelpAction(
         }
 
         println()
-        println("${AnsiColors.BLUE}Environment:${AnsiColors.RESET}")
-        println("  prod       - Production environment (automatically selected)")
-        println()
         println("${AnsiColors.BLUE}Options:${AnsiColors.RESET}")
         println("  -auto-approve  - Skip interactive approval (for apply/destroy)")
         println("  -var-file      - Specify a variable file")
-        println()
-        println("${AnsiColors.BLUE}Examples:${AnsiColors.RESET}")
-        println("  java -jar app.jar init")
-        println("  java -jar app.jar plan")
-        println("  java -jar app.jar apply")
-        println("  java -jar app.jar deploy")
-        println("  java -jar app.jar deploy -auto-approve")
-        println("  java -jar app.jar destroy -auto-approve")
-        println("  java -jar app.jar fmt")
-        println("  java -jar app.jar validate")
 
         return 0
     }
