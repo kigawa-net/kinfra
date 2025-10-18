@@ -20,8 +20,13 @@ data class KinfraParentConfigScheme(
             if (config is KinfraParentConfigScheme) {
                 return config
             }
-            throw IllegalArgumentException(
-                "KinfraParentConfig cannot be converted to a ${KinfraParentConfigScheme::class.simpleName}"
+            return KinfraParentConfigScheme(
+                projectName = config.projectName,
+                description = config.description,
+                terraform = config.terraform?.let { TerraformSettingsScheme.from(it) },
+                subProjects = config.subProjects,
+                bitwarden = config.bitwarden?.let { BitwardenSettingsScheme.from(it) },
+                update = config.update?.let { UpdateSettingsScheme.from(it) }
             )
         }
     }

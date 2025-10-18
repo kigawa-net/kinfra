@@ -57,6 +57,8 @@
 | todo-maintainer    | タスク管理を自動化するエージェント |
 
 ## 変更履歴
+- 2025-10-19: PR #56 を作成。kigawaブランチからdevブランチに向けて、kinfra sub addコマンドの実装。タイトルと本文を日本語に変更。
+- 2025-10-19: kinfra sub addコマンドを追加。SubActionTypeにADDを追加、SubAddActionを実装、ActionsModuleに登録、ドキュメント更新。kinfra-parent.yamlにサブプロジェクトを追加できるようにする。
 - 2025-10-19: CIワークフローを高速化。testとlintジョブを統合、Gradle並列実行・ビルドキャッシュ有効化、条件付き実行を追加。
 - 2025-10-19: CIワークフローでgradle/actionsの無効なパラメータbuild-cacheを削除して警告を解決。
 - 2025-10-19: CIテスト失敗を修正。ActionTypeにSUBを追加し、AppModule.ktとActionsModule.ktのimportを修正してコンパイルエラーを解決。
