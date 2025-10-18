@@ -120,25 +120,30 @@ jobs:
 
           claude_args: '--allowed-tools Bash(gh pr:*) Edit --dangerously-skip-permissions'
 
-      - name: Create Pull Request Or Comment
-        run: |
-          git add . -A
-          if git diff --cached --quiet; then
-            echo "変更はありません。コメントを投稿します。"
-            TARGET_NUM="${{ github.event.issue.number || github.event.pull_request.number }}"
-            if [ -n "$TARGET_NUM" ]; then
-              gh issue comment "$TARGET_NUM" --body "Claude Code: 変更はありませんでした。"
-            fi
-          else
-            git commit -m "Claude Code Result"
-            git push
-            echo "Pull Requestを作成または更新します..."
-            gh pr create \
-              --base main \
-              --head claude-code-action-${{ github.run_id }} \
-              --title "Claude Code実行結果" \
-              --body "Claude Codeによる自動修正結果です。" \
-              || echo "既存PRの更新を試みます..." && gh pr edit --body "Claude Codeが変更を更新しました。"
-          fi
+       - name: Create Pull Request Or Comment
+         run: |
+           git add . -A
+           if git diff --cached --quiet; then
+             echo "変更はありません。コメントを投稿します。"
+             TARGET_NUM="${{ github.event.issue.number || github.event.pull_request.number }}"
+             if [ -n "$TARGET_NUM" ]; then
+               gh issue comment "$TARGET_NUM" --body "Claude Code: 変更はありませんでした。"
+             fi
+           else
+             git commit -m "Claude Code Result"
+             git push --force-with-lease
+             echo "Pull Requestを作成または更新します..."
+             if ! gh pr create \
+               --base main \
+               --head claude-code-action-${{ github.run_id }} \
+               --title "Claude Code実行結果" \
+               --body "Claude Codeによる自動修正結果です."; then
+               echo "PR作成に失敗しました。既存PRを更新します..."
+               EXISTING_PR=$(gh pr list --head claude-code-action-${{ github.run_id }} --json number -q '.[0].number')
+               if [ -n "$EXISTING_PR" ]; then
+                 gh pr edit "$EXISTING_PR" --body "Claude Codeが変更を更新しました。"
+               fi
+             fi
+           fi
         env:
           GH_TOKEN: ${{ github.token }}
