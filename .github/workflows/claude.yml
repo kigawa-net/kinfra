@@ -30,10 +30,6 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: check out new git branch
-        run: |
-          git switch -c "claude-code"
-          git push --set-upstream origin claude-code
       - name: Run Claude Code
         id: claude
         uses: anthropics/claude-code-action@v1
