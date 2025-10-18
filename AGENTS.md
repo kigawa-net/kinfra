@@ -40,3 +40,7 @@
 - 2025-10-18: GitHub Actions実行18615897430が成功。CIワークフローの高速化関連（claude.yml）。
 - 2025-10-18: CIワークフローからアーティファクトアップロード処理を削除（テスト結果、CLI JAR、Web JARのアップロードを除去）。CIの高速化を図る。
 - 2025-10-18: GitHub Actions実行18616218199が成功。Claudeワークフローでissueコメントによりトリガーされ、30秒で完了。
+- 2025-10-14: setup-r2コマンドを削除。関連ファイル（SetupR2Action.kt, SetupR2ActionWithSDK.kt）を削除し、ActionType.kt, AppModule.kt, TerraformRunner.kt, DeployAction.kt, ドキュメントから参照を削除。
+- 2025-10-14: config-editコマンドを追加。ConfigEditAction.ktを実装し、ActionType.kt, AppModule.kt, ドキュメントに追加。
+- 2025-10-14: setup-r2コマンドの残存参照を完全に削除。TerraformRunner.kt, DeployAction.kt, ドキュメントから参照を削除。
+- 2025-10-14: origin/devをmainにマージ。プルリクエストを作成。
