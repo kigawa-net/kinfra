@@ -47,6 +47,19 @@ jobs:
           # Optional: Give a custom prompt to Claude. If this is not specified, Claude will perform the instructions specified in the comment that tagged it.
           prompt: |
             devに対してPull Requestを作成する
+            githubでユーザーに返答する
+            
+            ## Context
+            ${{ github.repository }} - The repository name
+            ${{ github.event.pull_request.number }} - PR number
+            ${{ github.event.issue.number }} - Issue number
+            ${{ github.event.pull_request.title }} - PR title
+            ${{ github.event.pull_request.body }} - PR description
+            ${{ github.event.comment.body }} - Comment text
+            ${{ github.actor }} - User who triggered the workflow
+            ${{ github.base_ref }} - Base branch for PRs
+            ${{ github.head_ref }} - Head branch for PRs
+            
 
           # Optional: Add claude_args to customize behavior and configuration
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
