@@ -41,12 +41,29 @@ class TerraformRunner(
         }
 
         var actionName = args[0]
+        var actionArgs = args.drop(1).toTypedArray()
         logger.debug("Original action: $actionName")
 
         // Map --help and -h flags to help action
         if (actionName == "--help" || actionName == "-h") {
             actionName = ActionType.HELP.actionName
             logger.debug("Mapped $actionName to help action")
+        }
+
+        // Handle config subcommands
+        if (actionName == ActionType.CONFIG.actionName && actionArgs.isNotEmpty()) {
+            when (actionArgs[0]) {
+                "edit" -> {
+                    actionName = ActionType.CONFIG_EDIT.actionName
+                    actionArgs = actionArgs.drop(1).toTypedArray()
+                    logger.info("Mapped 'config edit' to config-edit action")
+                }
+                "add-subproject" -> {
+                    // Keep as CONFIG_EDIT but don't remove the subcommand
+                    actionName = ActionType.CONFIG_EDIT.actionName
+                    logger.info("Mapped 'config add-subproject' to config-edit action")
+                }
+            }
         }
 
         // deploy アクションは常に SDK 版を使用
@@ -83,7 +100,6 @@ class TerraformRunner(
         }
 
         // Check if --help or -h is in the arguments (but not the first argument)
-        val actionArgs = args.drop(1).toTypedArray()
         if (actionArgs.isNotEmpty() && (actionArgs[0] == "--help" || actionArgs[0] == "-h")) {
             logger.debug("Showing help for action: $actionName")
             action.showHelp()
@@ -96,6 +112,7 @@ class TerraformRunner(
             || actionName == ActionType.HELLO.actionName
             || actionName == ActionType.SELF_UPDATE.actionName
             || actionName == ActionType.PUSH.actionName
+            || actionName == ActionType.CONFIG.actionName
             || actionName == ActionType.CONFIG_EDIT.actionName
         if (!skipTerraformCheck && !isTerraformInstalled()) {
             logger.error("Terraform is not installed")
