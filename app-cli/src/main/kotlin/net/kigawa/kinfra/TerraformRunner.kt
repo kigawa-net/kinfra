@@ -49,14 +49,10 @@ class TerraformRunner(
             logger.debug("Mapped $actionName to help action")
         }
 
-        // deploy と setup-r2 アクションは常に SDK 版を使用
+        // deploy アクションは常に SDK 版を使用
         when (actionName) {
             ActionType.DEPLOY.actionName -> {
                 actionName = ActionType.DEPLOY_SDK.actionName
-                logger.info("Action redirected to SDK version: $actionName")
-            }
-            ActionType.SETUP_R2.actionName -> {
-                actionName = ActionType.SETUP_R2_SDK.actionName
                 logger.info("Action redirected to SDK version: $actionName")
             }
         }
@@ -65,7 +61,7 @@ class TerraformRunner(
 
         if (action == null) {
             // SDK版アクションが見つからない場合、BWS_ACCESS_TOKENの設定を促す
-            if (actionName == ActionType.DEPLOY_SDK.actionName || actionName == ActionType.SETUP_R2_SDK.actionName) {
+            if (actionName == ActionType.DEPLOY_SDK.actionName) {
                 logger.error("BWS_ACCESS_TOKEN is not set for SDK action: $actionName")
                 println("${AnsiColors.RED}Error:${AnsiColors.RESET} BWS_ACCESS_TOKEN is not set.")
                 println()
@@ -86,12 +82,10 @@ class TerraformRunner(
             exitProcess(1)
         }
 
-        // Skip Terraform check for help, login, hello, setup-r2, self-update, push and config actions
+        // Skip Terraform check for help, login, hello, self-update, push and config actions
         val skipTerraformCheck = actionName == ActionType.HELP.actionName
             || actionName == ActionType.LOGIN.actionName
             || actionName == ActionType.HELLO.actionName
-            || actionName == ActionType.SETUP_R2.actionName
-            || actionName == ActionType.SETUP_R2_SDK.actionName
             || actionName == ActionType.SELF_UPDATE.actionName
             || actionName == ActionType.PUSH.actionName
             || actionName == ActionType.CONFIG_EDIT.actionName

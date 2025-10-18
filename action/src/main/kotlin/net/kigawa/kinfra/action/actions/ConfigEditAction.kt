@@ -111,33 +111,69 @@ class ConfigEditAction(
     }
 
     private fun openInEditor(file: File): Int {
-        val editor = System.getenv("EDITOR") ?: "vim"
-
-        println("${AnsiColors.BLUE}Opening configuration file in $editor...${AnsiColors.RESET}")
-        println("${AnsiColors.CYAN}File:${AnsiColors.RESET} ${file.absolutePath}")
-        println()
-
-        return try {
-            val process = ProcessBuilder(editor, file.absolutePath)
-                .inheritIO()
-                .start()
-
-            val exitCode = process.waitFor()
-
-            println()
-            if (exitCode == 0) {
-                println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Configuration file edited successfully")
-                0
-            } else {
-                println("${AnsiColors.YELLOW}Editor exited with code $exitCode${AnsiColors.RESET}")
-                exitCode
-            }
-        } catch (e: Exception) {
-            println("${AnsiColors.RED}Error:${AnsiColors.RESET} Failed to open editor: ${e.message}")
-            println("${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Set the EDITOR environment variable to your preferred editor")
-            println("  Example: export EDITOR=nano")
-            1
+        // Try EDITOR environment variable first, then fallback to common editors
+        val preferredEditor = System.getenv("EDITOR")
+        val editorsToTry = if (preferredEditor != null) {
+            listOf(preferredEditor)
+        } else {
+            listOf("nano", "vi", "vim", "emacs", "gedit")
         }
+
+        var lastError: Exception? = null
+
+        for (editor in editorsToTry) {
+            try {
+                // Check if editor exists
+                val checkProcess = ProcessBuilder("which", editor)
+                    .redirectOutput(ProcessBuilder.Redirect.PIPE)
+                    .redirectError(ProcessBuilder.Redirect.PIPE)
+                    .start()
+
+                if (checkProcess.waitFor() != 0) {
+                    // Editor not found, try next one
+                    continue
+                }
+
+                println("${AnsiColors.BLUE}Opening configuration file in $editor...${AnsiColors.RESET}")
+                println("${AnsiColors.CYAN}File:${AnsiColors.RESET} ${file.absolutePath}")
+                println()
+
+                val process = ProcessBuilder(editor, file.absolutePath)
+                    .inheritIO()
+                    .start()
+
+                val exitCode = process.waitFor()
+
+                println()
+                if (exitCode == 0) {
+                    println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Configuration file edited successfully")
+                    return 0
+                } else {
+                    println("${AnsiColors.YELLOW}Editor exited with code $exitCode${AnsiColors.RESET}")
+                    return exitCode
+                }
+            } catch (e: Exception) {
+                lastError = e
+                // Try next editor
+                continue
+            }
+        }
+
+        // No editor found
+        println("${AnsiColors.RED}Error:${AnsiColors.RESET} No suitable editor found")
+        println("${AnsiColors.BLUE}Please install one of the following editors:${AnsiColors.RESET}")
+        println("  - nano (recommended for beginners)")
+        println("  - vim")
+        println("  - vi")
+        println("  - emacs")
+        println()
+        println("${AnsiColors.BLUE}Or set the EDITOR environment variable:${AnsiColors.RESET}")
+        println("  export EDITOR=nano")
+        println()
+        println("${AnsiColors.BLUE}Configuration file location:${AnsiColors.RESET}")
+        println("  ${file.absolutePath}")
+
+        return 1
     }
 
     override fun getDescription(): String {
