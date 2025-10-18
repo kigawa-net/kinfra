@@ -136,9 +136,7 @@ class DeployAction(
             println("   - Name: $itemName")
             println("   - Fields: access_key, secret_key, account_id, bucket_name")
             println()
-            println("2. Run the setup command:")
-            println("   ${AnsiColors.BLUE}./gradlew run --args=\"setup-r2\"${AnsiColors.RESET}")
-            println()
+
             println("3. Or use the SDK-based deploy command (recommended if using BW_PROJECT):")
             println("   ${AnsiColors.BLUE}export BWS_ACCESS_TOKEN=<your-token>${AnsiColors.RESET}")
             println("   ${AnsiColors.BLUE}./gradlew run --args=\"deploy-sdk\"${AnsiColors.RESET}")

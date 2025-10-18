@@ -2,13 +2,13 @@ name: Claude Code
 
 on:
   issue_comment:
-    types: [created, edited]
+    types: [ created, edited ]
   pull_request_review_comment:
-    types: [created]
+    types: [ created ]
   issues:
-    types: [opened, assigned]
+    types: [ opened, assigned ]
   pull_request_review:
-    types: [submitted]
+    types: [ submitted ]
 
 jobs:
   claude:
@@ -131,14 +131,26 @@ jobs:
             fi
           else
             git commit -m "Claude Code Result"
+            git pull
             git push
             echo "Pull Requestを作成または更新します..."
-            gh pr create \
+            if ! gh pr create \
               --base main \
               --head claude-code-action-${{ github.run_id }} \
               --title "Claude Code実行結果" \
-              --body "Claude Codeによる自動修正結果です。" \
-              || echo "既存PRの更新を試みます..." && gh pr edit --body "Claude Codeが変更を更新しました。"
+              --body "Claude Codeによる自動修正結果です."; then
+              echo "PR作成に失敗しました。既存PRを更新します..."
+               EXISTING_PR=$(gh pr list --head claude-code-action-${{ github.run_id }} --json number -q '.[0].number')
+               if [ -n "$EXISTING_PR" ]; then
+                 CURRENT_BODY=$(gh pr view "$EXISTING_PR" --json body -q '.body')
+                 NEW_BODY="$CURRENT_BODY
+
+          ---
+          
+          Claude Codeが変更を更新しました。"
+                 gh pr edit "$EXISTING_PR" --body "$NEW_BODY"
+               fi
+            fi
           fi
         env:
           GH_TOKEN: ${{ github.token }}

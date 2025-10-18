@@ -2,6 +2,28 @@
 
 このファイルは GitHub リポジトリで使用されるエージェントの説明を保持します。
 
+## ビルド/テスト/リントコマンド
+
+- **ビルド**: `./gradlew build`
+- **テスト実行**: `./gradlew test`
+- **単一テスト実行**: `./gradlew test --tests "TestClass.testMethod"`
+- **リント**: `./gradlew ktlintCheck`
+- **フォーマット**: `./gradlew ktlintFormat`
+
+## コードスタイルガイドライン
+
+- **言語**: Kotlin (JVM)
+- **インデント**: 4スペース
+- **命名規則**:
+  - クラス/インターフェース: PascalCase
+  - メソッド/変数: camelCase
+  - 定数: UPPER_SNAKE_CASE
+- **インポート**: アルファベット順、ワイルドカードインポート禁止
+- **エラーハンドリング**: Res<T, E>型を使用（Result型）
+- **依存注入**: Koinを使用
+- **ログ**: Loggerインターフェースを使用
+- **出力**: AnsiColorsを使用した色付き出力
+
 ## ファイルパス
 
 * ルート: /tank/var/user/dev/kigawa-net/kinfra
@@ -35,8 +57,18 @@
 | todo-maintainer    | タスク管理を自動化するエージェント |
 
 ## 変更履歴
+- 2025-10-19: CIワークフローを高速化。testとlintジョブを統合、Gradle並列実行・ビルドキャッシュ有効化、条件付き実行を追加。
+- 2025-10-19: CIテスト失敗を修正。ActionTypeにSUBを追加し、AppModule.ktとActionsModule.ktのimportを修正してコンパイルエラーを解決。
+- 2025-10-19: ClaudeワークフローのPR編集を上書きから追記に変更。既存PR本文を取得して追記するように修正。
+- 2025-10-18: AppModuleを細分化。InfrastructureModule.kt, BitwardenModule.kt, ActionsModule.ktを作成し、AppModule.ktをリファクタリングしてモジュールを組み合わせる。
+- 2025-10-18: サブコマンドの構造を改善。SubActionType enumを作成し、ActionTypeからSUB_LISTを削除してSUBを追加。TerraformRunnerとAppModuleでサブコマンドの解析と登録を更新。
+- 2025-10-18: sub listコマンドを追加。SubListAction.ktを実装し、kinfra-parent.yamlからサブプロジェクト一覧を表示。ActionType.kt, AppModule.kt, ドキュメントに追加。
 - 2025-10-14: PushAction.ktをKotlinで実装し、add, commit, push機能を追加。GitHelperにaddChangesとcommitChangesメソッドを追加。
 - 2025-10-14: Terraformアクションでログを表示するように変更。各アクションでquiet=falseを設定。
 - 2025-10-18: GitHub Actions実行18615897430が成功。CIワークフローの高速化関連（claude.yml）。
 - 2025-10-18: CIワークフローからアーティファクトアップロード処理を削除（テスト結果、CLI JAR、Web JARのアップロードを除去）。CIの高速化を図る。
 - 2025-10-18: GitHub Actions実行18616218199が成功。Claudeワークフローでissueコメントによりトリガーされ、30秒で完了。
+- 2025-10-14: setup-r2コマンドを削除。関連ファイル（SetupR2Action.kt, SetupR2ActionWithSDK.kt）を削除し、ActionType.kt, AppModule.kt, TerraformRunner.kt, DeployAction.kt, ドキュメントから参照を削除。
+- 2025-10-14: config-editコマンドを追加。ConfigEditAction.ktを実装し、ActionType.kt, AppModule.kt, ドキュメントに追加。
+- 2025-10-14: setup-r2コマンドの残存参照を完全に削除。TerraformRunner.kt, DeployAction.kt, ドキュメントから参照を削除。
+- 2025-10-14: origin/devをmainにマージ。プルリクエストを作成。
