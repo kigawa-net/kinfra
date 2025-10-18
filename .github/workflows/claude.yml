@@ -99,7 +99,7 @@ jobs:
             ```
 
             ## 重要なルール
-            1. **作業後は必ずコメントを作成する** - 実施した変更内容を日本語で簡潔に報告
+            1. **作業後は必ずissueやPRにコメントを作成する** - 実施した変更内容を日本語で簡潔に報告
             2. **CLAUDE.mdの指示に従う** - プロジェクトのコーディング規約とアーキテクチャガイドラインを遵守
             3. **テストを実行する** - 変更後は`./gradlew test`でテストが通ることを確認
             4. **日本語で応答する** - コメントとコミットメッセージは日本語を使用
@@ -121,5 +121,5 @@ jobs:
           # Optional: Add claude_args to customize behavior and configuration
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
           # or https://docs.claude.com/en/docs/claude-code/cli-reference for available options
-          claude_args: '--allowed-tools Bash(gh pr:*)'
+          claude_args: '--allowed-tools Bash(gh pr:*) Edit'
 
