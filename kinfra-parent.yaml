@@ -1,0 +1,25 @@
+# Kinfra Parent Project Configuration
+
+projectName: "my-infrastructure"
+description: "Parent project for managing multiple infrastructure components"
+
+# Common Terraform settings for all sub-projects
+terraform:
+  version: "1.5.0"
+  workingDirectory: "terraform"
+
+# List of sub-project paths or identifiers
+subProjects:
+  - "project-a"
+  - "project-b"
+  - "project-c"
+
+# Optional Bitwarden settings
+# bitwarden:
+#   projectId: "your-bitwarden-project-id"
+
+# Optional update settings
+# update:
+#   autoUpdate: true
+#   checkInterval: 86400000
+#   githubRepo: "kigawa-net/kinfra"
