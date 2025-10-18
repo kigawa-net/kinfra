@@ -2,6 +2,32 @@
 
 このドキュメントは Terraform インフラストラクチャリポジトリの構造と組織化について説明します。
 
+## 親プロジェクト構造
+
+kinfraは親プロジェクトとサブプロジェクトの階層構造をサポートしています。
+
+### kinfra-parent.yaml
+
+親プロジェクトのルートに配置される設定ファイル：
+
+```yaml
+projectName: "my-infrastructure"
+description: "Parent project for managing multiple infrastructure components"
+
+# List of sub-project paths or identifiers
+subProjects:
+  - "network"
+  - "compute"
+  - "storage"
+```
+
+### サブプロジェクト管理
+
+- `kinfra sub list`: 設定されたサブプロジェクトの一覧表示
+- `kinfra sub add <name>`: 新しいサブプロジェクトの追加
+
+サブプロジェクトは個別のディレクトリまたはリポジトリとして管理できます。
+
 ## ディレクトリ構造
 
 ```
