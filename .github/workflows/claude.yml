@@ -28,16 +28,18 @@ jobs:
     steps:
       - name: Comment with GitHub Actions URL
         run: |
-           RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-           if [ "${{ github.event_name }}" = "issue_comment" ]; then
-             gh issue comment ${{ github.event.issue.number }} --body "Claude Code実行開始: $RUN_URL"
-           elif [ "${{ github.event_name }}" = "issues" ]; then
-             gh issue comment ${{ github.event.issue.number }} --body "Claude Code実行開始: $RUN_URL"
-           elif [ "${{ github.event_name }}" = "pull_request_review_comment" ]; then
-             gh pr comment ${{ github.event.pull_request.number }} --body "Claude Code実行開始: $RUN_URL"
-           elif [ "${{ github.event_name }}" = "pull_request_review" ]; then
-             gh pr comment ${{ github.event.pull_request.number }} --body "Claude Code実行開始: $RUN_URL"
-           fi
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          if [ "${{ github.event_name }}" = "issue_comment" ]; then
+            gh issue comment ${{ github.event.issue.number }} --body "Claude Code実行開始: $RUN_URL"
+          elif [ "${{ github.event_name }}" = "issues" ]; then
+            gh issue comment ${{ github.event.issue.number }} --body "Claude Code実行開始: $RUN_URL"
+          elif [ "${{ github.event_name }}" = "pull_request_review_comment" ]; then
+            gh pr comment ${{ github.event.pull_request.number }} --body "Claude Code実行開始: $RUN_URL"
+          elif [ "${{ github.event_name }}" = "pull_request_review" ]; then
+            gh pr comment ${{ github.event.pull_request.number }} --body "Claude Code実行開始: $RUN_URL"
+          fi
+        env:
+         GH_TOKEN: ${{ github.token }}
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
