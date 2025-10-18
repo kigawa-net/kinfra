@@ -49,7 +49,7 @@ jobs:
             # 作業内容
             
             ## Rules
-            * githubでユーザーに返答する
+            * **作業後はコメントを作成する**
             
             ## Context
             ### User who triggered the workflow
