@@ -145,9 +145,9 @@ jobs:
                  CURRENT_BODY=$(gh pr view "$EXISTING_PR" --json body -q '.body')
                  NEW_BODY="$CURRENT_BODY
 
----
-
-Claude Codeが変更を更新しました。"
+          ---
+          
+          Claude Codeが変更を更新しました。"
                  gh pr edit "$EXISTING_PR" --body "$NEW_BODY"
                fi
             fi
