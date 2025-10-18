@@ -57,6 +57,7 @@
 | todo-maintainer    | タスク管理を自動化するエージェント |
 
 ## 変更履歴
+- 2025-10-19: CIワークフローを高速化。testとlintジョブを統合、Gradle並列実行・ビルドキャッシュ有効化、条件付き実行を追加。
 - 2025-10-19: ClaudeワークフローのPR編集を上書きから追記に変更。既存PR本文を取得して追記するように修正。
 - 2025-10-18: AppModuleを細分化。InfrastructureModule.kt, BitwardenModule.kt, ActionsModule.ktを作成し、AppModule.ktをリファクタリングしてモジュールを組み合わせる。
 - 2025-10-18: サブコマンドの構造を改善。SubActionType enumを作成し、ActionTypeからSUB_LISTを削除してSUBを追加。TerraformRunnerとAppModuleでサブコマンドの解析と登録を更新。
