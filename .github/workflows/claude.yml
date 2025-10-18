@@ -49,7 +49,6 @@ jobs:
             # 作業内容
             
             ## Rules
-            * devに対してPull Requestを作成する
             * githubでユーザーに返答する
             
             ## Context
