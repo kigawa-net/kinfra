@@ -68,6 +68,25 @@ kinfra sub list
 
 ---
 
+### sub add
+
+kinfra-parent.yamlに新しいサブプロジェクトを追加。
+
+```bash
+kinfra sub add <project-name>
+```
+
+**実行内容**:
+- 指定したプロジェクト名をkinfra-parent.yamlのsubProjectsに追加
+- 設定ファイルが存在しない場合は新規作成
+
+**例**:
+```bash
+kinfra sub add my-new-project
+```
+
+---
+
 ## Terraformコマンド
 
 ### init

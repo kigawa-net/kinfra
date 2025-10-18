@@ -48,8 +48,6 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
         with:
           cache-read-only: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/dev' }}
-          build-cache: true
-          gradle-home-cache-strict-match: true
 
       - name: Make gradlew executable
         run: chmod +x gradlew
