@@ -120,7 +120,16 @@ class ConfigEditAction(
     }
 
     private fun openInEditor(file: File): Int {
-        val editor = System.getenv("EDITOR") ?: "vim"
+        val editor = findAvailableEditor()
+
+        if (editor == null) {
+            println("${AnsiColors.RED}Error:${AnsiColors.RESET} No suitable editor found")
+            println("${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Set the EDITOR environment variable to your preferred editor")
+            println("  Example: export EDITOR=nano")
+            println()
+            println("${AnsiColors.BLUE}Or install one of:${AnsiColors.RESET} nano, vim, vi, emacs")
+            return 1
+        }
 
         println("${AnsiColors.BLUE}Opening configuration file in $editor...${AnsiColors.RESET}")
         println("${AnsiColors.CYAN}File:${AnsiColors.RESET} ${file.absolutePath}")
@@ -146,6 +155,38 @@ class ConfigEditAction(
             println("${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Set the EDITOR environment variable to your preferred editor")
             println("  Example: export EDITOR=nano")
             1
+        }
+    }
+
+    private fun findAvailableEditor(): String? {
+        // First check EDITOR environment variable
+        val editorEnv = System.getenv("EDITOR")
+        if (editorEnv != null && isCommandAvailable(editorEnv)) {
+            return editorEnv
+        }
+
+        // Try common editors in order of preference
+        val commonEditors = listOf("nano", "vim", "vi", "emacs", "pico")
+        for (editor in commonEditors) {
+            if (isCommandAvailable(editor)) {
+                return editor
+            }
+        }
+
+        return null
+    }
+
+    private fun isCommandAvailable(command: String): Boolean {
+        return try {
+            val process = ProcessBuilder("which", command)
+                .redirectOutput(ProcessBuilder.Redirect.PIPE)
+                .redirectError(ProcessBuilder.Redirect.PIPE)
+                .start()
+
+            val exitCode = process.waitFor()
+            exitCode == 0
+        } catch (e: Exception) {
+            false
         }
     }
 
