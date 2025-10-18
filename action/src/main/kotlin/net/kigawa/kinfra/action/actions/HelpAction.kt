@@ -24,9 +24,6 @@ class HelpAction(
         }
 
         println()
-        println("${AnsiColors.BLUE}Environment:${AnsiColors.RESET}")
-        println("  prod       - Production environment (automatically selected)")
-        println()
         println("${AnsiColors.BLUE}Options:${AnsiColors.RESET}")
         println("  -auto-approve  - Skip interactive approval (for apply/destroy)")
         println("  -var-file      - Specify a variable file")

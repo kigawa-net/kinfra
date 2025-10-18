@@ -16,8 +16,6 @@ import net.kigawa.kinfra.actions.LoginAction
 import net.kigawa.kinfra.action.actions.PlanAction
 import net.kigawa.kinfra.action.actions.PushAction
 import net.kigawa.kinfra.action.actions.SelfUpdateAction
-import net.kigawa.kinfra.action.actions.SetupR2Action
-import net.kigawa.kinfra.action.actions.SetupR2ActionWithSDK
 import net.kigawa.kinfra.action.actions.StatusAction
 import net.kigawa.kinfra.action.actions.ValidateAction
 import net.kigawa.kinfra.action.bitwarden.BitwardenRepository
@@ -125,7 +123,6 @@ val appModule = module {
     single<Action>(named(ActionType.VALIDATE.actionName)) { ValidateAction(get(), get()) }
     single<Action>(named(ActionType.STATUS.actionName)) { StatusAction(get(), get()) }
     single<Action>(named(ActionType.LOGIN.actionName)) { LoginAction(get(), get(), get(), get(), get()) }
-    single<Action>(named(ActionType.SETUP_R2.actionName)) { SetupR2Action(get(), get()) }
     single<Action>(named(ActionType.HELLO.actionName)) { HelloAction(get(), get(), get()) }
     single<Action>(named(ActionType.INIT.actionName)) { InitAction(get(), get()) }
     single<Action>(named(ActionType.PLAN.actionName)) { PlanAction(get(), get()) }
@@ -138,7 +135,6 @@ val appModule = module {
 
     // SDK-based actions (only if BWS_ACCESS_TOKEN is available)
     if (hasBwsToken) {
-        single<Action>(named(ActionType.SETUP_R2_SDK.actionName)) { SetupR2ActionWithSDK(get(), get(), get()) }
         single<Action>(named(ActionType.DEPLOY_SDK.actionName)) { DeployActionWithSDK(get(), get(), get(), get()) }
     }
 
