@@ -1,6 +1,8 @@
 package net.kigawa.kinfra.model
 
 import net.kigawa.kinfra.model.conf.KinfraConfig
+import net.kigawa.kinfra.model.conf.KinfraParentConfig
+import net.kigawa.kinfra.model.conf.KinfraParentConfigData
 import net.kigawa.kinfra.model.conf.LoginConfig
 import java.nio.file.Path
 
@@ -10,4 +12,7 @@ interface LoginRepo {
     fun loadKinfraConfig(): KinfraConfig?
     fun saveKinfraConfig(config: KinfraConfig)
     fun kinfraConfigExists(): Boolean
+    fun loadKinfraParentConfig(): KinfraParentConfig?
+    fun createKinfraParentConfig(kinfraParentConfigData: KinfraParentConfigData): KinfraParentConfig
+    fun kinfraParentConfigPath(): Path
 }

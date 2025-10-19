@@ -55,7 +55,7 @@ model (依存なし) → action (契約) → infrastructure (実装) → app-cli
 3. `di/AppModule.kt`で登録
 4. Terraformチェック不要なら`TerraformRunner.kt`の`skipTerraformCheck`に追加
 
-**重要**: `deploy`/`setup-r2`はSDK版に自動リダイレクト。
+ **重要**: `deploy`はSDK版に自動リダイレクト。
 
 ### UI: ANSIカラー
 

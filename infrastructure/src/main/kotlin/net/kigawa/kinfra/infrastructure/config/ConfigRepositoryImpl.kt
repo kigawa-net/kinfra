@@ -6,101 +6,143 @@ import net.kigawa.kinfra.model.conf.FilePaths
 import net.kigawa.kinfra.model.conf.GlobalConfig
 import net.kigawa.kinfra.model.conf.KinfraConfig
 import net.kigawa.kinfra.model.conf.KinfraParentConfig
+import net.kigawa.kinfra.infrastructure.config.GlobalConfigImpl
+import net.kigawa.kinfra.infrastructure.config.KinfraParentConfigImpl
+import net.kigawa.kinfra.infrastructure.logging.Logger
+
 import java.io.File
+import java.nio.file.Path
+import java.util.Scanner
 
+/**
+ * 設定ファイルを操作する実装です。
+ */
 class ConfigRepositoryImpl(
-    val filePaths: FilePaths,
-    val globalConfigScheme: GlobalConfig,
-): ConfigRepository {
-    private val configDir: File
-        get() = filePaths.baseConfigDir?.toFile() ?: throw IllegalStateException("Config directory not available")
+    private val filePaths: FilePaths,
+    private val logger: Logger,
+) : ConfigRepository {
+    // 基本設定ディレクトリ
+    private val configDir get() = filePaths.baseConfigDir?.toFile()
+        ?: throw IllegalStateException("Config directory not available")
 
-    private val projectFile: File
-        get() = File(configDir, filePaths.projectConfigFileName)
+    // project.yaml の場所
+    private val projectFile get() = File(configDir, filePaths.projectConfigFileName)
 
-    init {
-        // 設定ディレクトリが存在しない場合は作成
-        ensureConfigDirExists()
-    }
+    init { ensureConfigDirExists() }
 
-    private fun ensureConfigDirExists() {
-        if (!configDir.exists()) {
-            configDir.mkdirs()
-        }
-    }
+    private fun ensureConfigDirExists() { if (!configDir.exists()) configDir.mkdirs() }
 
     override fun loadGlobalConfig(): GlobalConfig {
-        ensureConfigDirExists()
+        val reposPath = filePaths.baseConfigDir?.resolve(filePaths.reposDir)
+            ?: throw IllegalStateException("Config directory not available")
         return if (projectFile.exists()) {
             try {
-                val yamlContent = projectFile.readText()
-                Yaml.default.decodeFromString(GlobalConfigScheme.serializer(), yamlContent)
+                val yaml = projectFile.readText()
+                val scheme = Yaml.default.decodeFromString(GlobalConfigScheme.serializer(), yaml)
+                
+                // repoPathが不足している場合に対話形式で補完
+                val completedScheme = completeMissingLoginConfig(scheme)
+                
+                // 設定が変更された場合は保存
+                if (completedScheme != scheme) {
+                    saveGlobalConfig(GlobalConfigImpl(completedScheme, reposPath))
+                    logger.info("設定ファイルを更新しました")
+                }
+                
+                GlobalConfigImpl(completedScheme, reposPath)
             } catch (e: Exception) {
-                // ファイルの読み込みに失敗した場合はデフォルト設定を返す
-                GlobalConfigScheme()
+                logger.debug("設定ファイルの読み込みに失敗: ${e.message}")
+                GlobalConfigImpl(GlobalConfigScheme(), reposPath)
             }
         } else {
-            // ファイルが存在しない場合はデフォルト設定を返す
-            GlobalConfigScheme()
+            GlobalConfigImpl(GlobalConfigScheme(), reposPath)
+        }
+    }
+    
+    /**
+     * 不足しているLoginConfigの項目を対話形式で補完する
+     */
+    private fun completeMissingLoginConfig(scheme: GlobalConfigScheme): GlobalConfigScheme {
+        val login = scheme.login ?: return scheme
+        
+        val scanner = Scanner(System.`in`)
+        var modified = false
+        var repo = login.repo
+        var repoPath = login.repoPath
+        var enabledProjects = login.enabledProjects
+        
+        // repoが不足している場合
+        if (repo.isBlank()) {
+            print("リポジトリURLを入力してください (例: https://github.com/user/repo.git): ")
+            repo = scanner.nextLine().trim()
+            modified = true
+        }
+        
+        // repoPathが不足している場合
+        if (repoPath.toString().isBlank()) {
+            val defaultPath = filePaths.baseConfigDir?.resolve("repos") ?: Path.of("./repos")
+            print("リポジトリのローカルパスを入力してください (デフォルト: $defaultPath): ")
+            val input = scanner.nextLine().trim()
+            repoPath = if (input.isBlank()) defaultPath else Path.of(input)
+            modified = true
+        }
+        
+        // enabledProjectsが空の場合
+        if (enabledProjects.isEmpty()) {
+            print("有効なプロジェクト名をカンマ区切りで入力してください (例: project1,project2): ")
+            val input = scanner.nextLine().trim()
+            if (input.isNotBlank()) {
+                enabledProjects = input.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+                modified = true
+            }
+        }
+        
+        scanner.close()
+        
+        return if (modified) {
+            val completedLogin = LoginConfigScheme(
+                repo = repo,
+                repoPath = repoPath,
+                enabledProjects = enabledProjects
+            )
+            scheme.copy(login = completedLogin)
+        } else {
+            scheme
         }
     }
 
     override fun saveGlobalConfig(config: GlobalConfig) {
-        ensureConfigDirExists()
-        val yamlContent = Yaml.default.encodeToString(
-            GlobalConfigScheme.serializer(), GlobalConfigScheme.from(config)
-        )
-        projectFile.writeText(yamlContent)
+        val yaml = Yaml.default.encodeToString(GlobalConfigScheme.serializer(), GlobalConfigScheme.from(config))
+        projectFile.writeText(yaml)
     }
 
-    override fun getProjectConfigFilePath(): String {
-        return projectFile.absolutePath
-    }
+    override fun getProjectConfigFilePath() = projectFile.absolutePath
 
-    override fun loadKinfraConfig(filePath: String): KinfraConfig? {
-        val file = resolveFilePath(filePath)
-        if (!file.exists()) {
-            return null
-        }
-
-        val yamlContent = file.readText()
-        return Yaml.default.decodeFromString(KinfraConfigScheme.serializer(), yamlContent)
+    override fun loadKinfraConfig(filePath: Path): KinfraConfig? {
+        val file = filePath.toFile()
+        return if (file.exists()) Yaml.default.decodeFromString(KinfraConfigScheme.serializer(), file.readText()) else null
     }
 
     override fun saveKinfraConfig(config: KinfraConfig, filePath: String) {
-        val file = resolveFilePath(filePath)
-        val yamlContent = Yaml.default.encodeToString(KinfraConfigScheme.serializer(), KinfraConfigScheme.from(config))
-        file.writeText(yamlContent)
+        val file = File(filePath)
+        val yaml = Yaml.default.encodeToString(KinfraConfigScheme.serializer(), KinfraConfigScheme.from(config))
+        file.writeText(yaml)
     }
 
-    override fun kinfraConfigExists(filePath: String): Boolean {
-        return resolveFilePath(filePath).exists()
+    override fun kinfraConfigExists(filePath: String) = File(filePath).exists()
+
+    override fun saveKinfraParentConfig(config: KinfraParentConfig, filePath: String) {
+        val file = File(filePath)
+        val yaml = Yaml.default.encodeToString(KinfraParentConfigScheme.serializer(), KinfraParentConfigScheme.from(config))
+        file.writeText(yaml)
     }
 
     override fun loadKinfraParentConfig(filePath: String): KinfraParentConfig? {
-        val file = resolveFilePath(filePath)
-        if (!file.exists()) {
-            return null
-        }
-
-        val yamlContent = file.readText()
-        return Yaml.default.decodeFromString(KinfraParentConfigScheme.serializer(), yamlContent)
+        val file = File(filePath)
+        return if (file.exists()) {
+            KinfraParentConfigImpl.fromFile(file)
+        } else null
     }
 
-    override fun saveKinfraParentConfig(config: KinfraParentConfig, filePath: String) {
-        val file = resolveFilePath(filePath)
-        val yamlContent = Yaml.default.encodeToString(
-            KinfraParentConfigScheme.serializer(),
-            KinfraParentConfigScheme.from(config)
-        )
-        file.writeText(yamlContent)
-    }
-
-    override fun kinfraParentConfigExists(filePath: String): Boolean {
-        return resolveFilePath(filePath).exists()
-    }
-
-    private fun resolveFilePath(filePath: String): File {
-        return File(filePath)
-    }
+    override fun kinfraParentConfigExists(filePath: String) = File(filePath).exists()
 }

@@ -5,6 +5,7 @@ import net.kigawa.kinfra.action.bitwarden.BitwardenRepository
 import net.kigawa.kinfra.action.config.ConfigRepository
 import net.kigawa.kinfra.infrastructure.config.GlobalConfigScheme
 import net.kigawa.kinfra.infrastructure.config.LoginConfigScheme
+import net.kigawa.kinfra.infrastructure.config.GlobalConfigImpl
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.LoginRepo
 import net.kigawa.kinfra.model.conf.FilePaths
@@ -19,7 +20,7 @@ class LoginAction(
     val loginRepo: LoginRepo,
 ): Action {
 
-    override fun execute(args: Array<String>): Int {
+    override fun execute(args: List<String>): Int {
         // GitHubリポジトリ引数が指定されている場合はクローンまたはpull
         if (args.isNotEmpty()) {
             val githubRepo = args[0]
@@ -41,9 +42,15 @@ class LoginAction(
             val targetDir = File(repoPath.second)
 
             // Save project configuration (repo identifier like "kigawa01/infra")
-            val loginConfig = LoginConfigScheme(repo = repoPath.first)
+            val loginConfig = LoginConfigScheme(
+                repo = repoPath.first,
+                repoPath = targetDir.toPath()
+            )
             val globalConfigScheme = GlobalConfigScheme(login = loginConfig)
-            configRepository.saveGlobalConfig(globalConfigScheme)
+            val reposPath = filePaths.baseConfigDir?.resolve(filePaths.reposDir)
+                ?: throw IllegalStateException("Config directory not available")
+            val globalConfig = GlobalConfigImpl(globalConfigScheme, reposPath)
+            configRepository.saveGlobalConfig(globalConfig)
             val configPath = configRepository.getProjectConfigFilePath()
             println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Project configuration saved to $configPath")
             println()

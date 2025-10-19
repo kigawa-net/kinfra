@@ -1,0 +1,187 @@
+name: Claude Code
+
+on:
+  issue_comment:
+    types: [ created, edited ]
+  pull_request_review_comment:
+    types: [ created, edited ]
+  issues:
+    types: [ opened, assigned ]
+  pull_request_review:
+    types: [ submitted ]
+
+jobs:
+  claude:
+    if: |
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
+      (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+      actions: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Comment with GitHub Actions URL
+        run: |
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          if [ "${{ github.event_name }}" = "issue_comment" ]; then
+            gh issue comment ${{ github.event.issue.number }} --body "Claude Code実行開始: $RUN_URL"
+          elif [ "${{ github.event_name }}" = "issues" ]; then
+            gh issue comment ${{ github.event.issue.number }} --body "Claude Code実行開始: $RUN_URL"
+          elif [ "${{ github.event_name }}" = "pull_request_review_comment" ]; then
+            gh pr comment ${{ github.event.pull_request.number }} --body "Claude Code実行開始: $RUN_URL"
+          elif [ "${{ github.event_name }}" = "pull_request_review" ]; then
+            gh pr comment ${{ github.event.pull_request.number }} --body "Claude Code実行開始: $RUN_URL"
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'gradle'
+
+      - name: Create temporary branch
+        run: |
+          # Gitの設定を確実に行う
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # リモートの最新状態を取得
+          git fetch origin
+          
+          # デフォルトブランチを取得
+          DEFAULT_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD | sed 's@^.*/@@')
+          echo "Default branch: $DEFAULT_BRANCH"
+          
+          # ブランチを作成して切り替え
+          git switch -c claude-code-action-${{ github.run_id }} origin/$DEFAULT_BRANCH
+          
+          # ブランチをプッシュ
+          git push --set-upstream origin claude-code-action-${{ github.run_id }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Run Claude Code
+        id: claude
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          additional_permissions: |
+            actions: read
+            contents: write
+            pull-requests: write
+            issues: write
+            id-token: write
+
+          prompt: |
+            # KInfraプロジェクトでの作業
+
+            ## 概要
+            KotlinベースのTerraformラッパー。Bitwarden Secret Manager統合により安全にシークレットを管理します。
+            コンテキストの情報をもとに作業を行なってください
+
+            ## ビルド環境
+            - Gradle 8.10.2
+            - Java 21
+            - Kotlin 2.2.0
+
+            ## コマンド例
+            ./gradlew build
+            ./gradlew test
+            ./gradlew :app-cli:run --args="<cmd>"
+            ./gradlew :app-web:run
+
+            ## 作業ルール
+            1. 変更後はPRを作成し、差分なしならコメントする
+            2. CLAUDE.mdに従う
+            3. テストを通す (`./gradlew test`)
+            4. 日本語で応答
+
+            ## コンテキスト
+            - **トリガーユーザー**: ${{ github.actor }}
+            - **リポジトリ**: ${{ github.repository }}
+            - **ベースブランチ**: ${{ github.base_ref }}
+            - **ヘッドブランチ**: ${{ github.head_ref }}
+            - **PR番号**: ${{ github.event.pull_request.number }}
+            - **Issue番号**: ${{ github.event.issue.number }}
+            - **PRタイトル**: ${{ github.event.pull_request.title }}
+            - **PR説明**: ${{ github.event.pull_request.body }}
+            - **コメント内容**: ${{ github.event.comment.body }}
+
+          claude_args: '--allowed-tools Bash(gh pr:*) Edit --dangerously-skip-permissions'
+
+      - name: Create Pull Request Or Comment
+        run: |
+          # Gitの設定を確実に行う
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add . -A
+          if git diff --cached --quiet; then
+            echo "変更はありません。コメントを投稿します。"
+            TARGET_NUM="${{ github.event.issue.number || github.event.pull_request.number }}"
+            if [ -n "$TARGET_NUM" ]; then
+              gh issue comment "$TARGET_NUM" --body "Claude Code: 変更はありませんでした。"
+            fi
+          else
+            echo "変更をコミットします..."
+            git commit -m "Claude Code Result"
+            
+            echo "リモートの変更を取得します..."
+            git fetch origin
+            
+            echo "リモートブランチにプッシュします..."
+            if ! git push origin claude-code-action-${{ github.run_id }}; then
+              echo "プッシュに失敗しました。force pushを試みます..."
+              git push --force-with-lease origin claude-code-action-${{ github.run_id }}
+            fi
+            
+            echo "Pull Requestを作成または更新します..."
+            # デフォルトブランチを取得
+            DEFAULT_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD | sed 's@^.*/@@')
+            echo "Creating PR to base branch: $DEFAULT_BRANCH"
+            
+            if ! gh pr create \
+              --base $DEFAULT_BRANCH \
+              --head claude-code-action-${{ github.run_id }} \
+              --title "Claude Code実行結果" \
+              --body "Claude Codeによる自動修正結果です。"; then
+              echo "PR作成に失敗しました。既存PRを更新します..."
+               EXISTING_PR=$(gh pr list --head claude-code-action-${{ github.run_id }} --json number -q '.[0].number')
+               if [ -n "$EXISTING_PR" ]; then
+                 CURRENT_BODY=$(gh pr view "$EXISTING_PR" --json body -q '.body')
+                 NEW_BODY="$CURRENT_BODY
+
+          ---
+          
+          Claude Codeが変更を更新しました。"
+                 gh pr edit "$EXISTING_PR" --body "$NEW_BODY"
+               fi
+            fi
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}

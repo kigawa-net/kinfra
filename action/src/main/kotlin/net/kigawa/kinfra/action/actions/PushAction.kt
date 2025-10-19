@@ -6,7 +6,7 @@ import net.kigawa.kinfra.model.Action
 class PushAction(
      private val gitHelper: GitHelper
  ) : Action {
-     override fun execute(args: Array<String>): Int {
+     override fun execute(args: List<String>): Int {
          // Add all changes
          val addSuccess = gitHelper.addChanges()
          if (!addSuccess) {

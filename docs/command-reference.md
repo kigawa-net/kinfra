@@ -52,6 +52,40 @@ kinfra login
 
 ---
 
+## サブプロジェクトコマンド
+
+### sub list
+
+kinfra-parent.yamlに設定されたサブプロジェクトの一覧を表示。
+
+```bash
+kinfra sub list
+```
+
+**実行内容**:
+- kinfra-parent.yamlからサブプロジェクト一覧を取得
+- 番号付きで表示
+
+---
+
+### sub add
+
+kinfra-parent.yamlに新しいサブプロジェクトを追加。
+
+```bash
+kinfra sub add <project-name>
+```
+
+**実行内容**:
+- 指定したプロジェクト名をkinfra-parent.yamlのsubProjectsに追加
+- 設定ファイルが存在しない場合は新規作成
+
+**例**:
+```bash
+kinfra sub add my-new-project
+```
+
+---
 
 ## Terraformコマンド
 
@@ -159,22 +193,7 @@ kinfra fmt
 
 ## Bitwardenコマンド
 
-### setup-r2
 
-Cloudflare R2のTerraform Backendを設定（CLIベース）。
-
-```bash
-kinfra setup-r2
-```
-
-**前提条件**:
-- `bw` CLIがインストール済み
-- Bitwardenにログイン済み
-
-**SDKモード**:
-- `BWS_ACCESS_TOKEN`がある場合、自動的に`setup-r2-sdk`にリダイレクト
-
----
 
 ## 環境変数
 
@@ -186,10 +205,9 @@ Bitwarden Secret Managerアクセストークン。
 export BWS_ACCESS_TOKEN="your-token"
 ```
 
-**効果**:
-- SDKベースコマンドを有効化（`deploy-sdk`, `setup-r2-sdk`）
-- `deploy` → `deploy-sdk`に自動リダイレクト
-- `setup-r2` → `setup-r2-sdk`に自動リダイレクト
+ **効果**:
+ - SDKベースコマンドを有効化（`deploy-sdk`）
+ - `deploy` → `deploy-sdk`に自動リダイレクト
 
 または、`.bws_token`ファイルに保存:
 

@@ -1,76 +1,63 @@
 package net.kigawa.kinfra.action.actions
-import net.kigawa.kinfra.model.util.exitCode
-import net.kigawa.kinfra.model.util.isSuccess
-import net.kigawa.kinfra.model.util.isFailure
-import net.kigawa.kinfra.model.util.message
 
 import net.kigawa.kinfra.action.TerraformService
 import net.kigawa.kinfra.action.bitwarden.BitwardenRepository
+import net.kigawa.kinfra.action.execution.ActionExecutor
+import net.kigawa.kinfra.action.execution.DeploymentPipeline
+import net.kigawa.kinfra.action.execution.ExecutionStep
+import net.kigawa.kinfra.action.logging.Logger
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.conf.R2BackendConfig
 import net.kigawa.kinfra.model.util.AnsiColors
-import net.kigawa.kinfra.model.util.exitCode
-import net.kigawa.kinfra.model.util.isFailure
 import net.kigawa.kinfra.model.util.isSuccess
 import java.io.File
 
 class DeployAction(
     private val terraformService: TerraformService,
-    private val bitwardenRepository: BitwardenRepository
+    private val bitwardenRepository: BitwardenRepository,
+    private val logger: Logger
 ) : Action {
-    override fun execute(args: Array<String>): Int {
-        val additionalArgs = args.filter { it != "--auto-selected" }.toTypedArray()
+    
+    private val executor = ActionExecutor(logger)
+    private val pipeline = DeploymentPipeline(terraformService, bitwardenRepository)
+    
+    override fun execute(args: List<String>): Int {
+        val additionalArgs = args.filter { it != "--auto-selected" }
 
         println("${AnsiColors.BLUE}Starting full deployment pipeline${AnsiColors.RESET}")
         println()
 
-        // Step 0: Setup R2 backend if needed
-        if (!setupR2BackendIfNeeded()) {
-            return 1
+        val steps = listOf(
+            ExecutionStep("Setup backend") { pipeline.setupBackendIfNeeded() },
+            ExecutionStep("Initialize Terraform") { pipeline.initializeTerraform(additionalArgs) },
+            ExecutionStep("Create execution plan") { pipeline.createExecutionPlan(additionalArgs) },
+            ExecutionStep("Apply changes") { pipeline.applyChanges(additionalArgs) }
+        )
+
+        val result = executor.executeSteps(steps)
+        
+        // Handle post-deployment actions
+        if (result == 0) {
+            handleSuccessfulDeployment()
         }
-
-        // Step 1: Initialize
-        println("${AnsiColors.BLUE}Step 1/3: Initializing Terraform${AnsiColors.RESET}")
-        val initResult = terraformService.init(quiet = false)
-        if (initResult.isFailure()) return initResult.exitCode()
-
+        
+        return result
+    }
+    
+    private fun handleSuccessfulDeployment() {
         println()
+        println("${AnsiColors.GREEN}✅ Deployment completed successfully!${AnsiColors.RESET}")
 
-        // Step 2: Plan
-        println("${AnsiColors.BLUE}Step 2/3: Creating execution plan${AnsiColors.RESET}")
-        val planResult = terraformService.plan(additionalArgs, quiet = false)
-        if (planResult.isFailure()) return planResult.exitCode()
-
+        // Auto git push after successful deployment
         println()
-
-        // Step 3: Apply
-        println("${AnsiColors.BLUE}Step 3/3: Applying changes${AnsiColors.RESET}")
-        val applyArgsWithAutoApprove = if (additionalArgs.contains("-auto-approve")) {
-            additionalArgs
-        } else {
-            additionalArgs + "-auto-approve"
+        println("${AnsiColors.BLUE}Pushing to remote repository...${AnsiColors.RESET}")
+        val pushResult = pipeline.pushToGit()
+        if (pushResult != 0) {
+            println("${AnsiColors.YELLOW}⚠${AnsiColors.RESET} Failed to push to remote repository (non-fatal)")
         }
-        val applyResult = terraformService.apply(additionalArgs = applyArgsWithAutoApprove, quiet = false)
-
-        if (applyResult.isSuccess()) {
-            println()
-            println("${AnsiColors.GREEN}✅ Deployment completed successfully!${AnsiColors.RESET}")
-
-            // Auto git push after successful deployment
-            println()
-            println("${AnsiColors.BLUE}Pushing to remote repository...${AnsiColors.RESET}")
-            val pushResult = gitPush()
-            if (pushResult) {
-                println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Successfully pushed to remote repository")
-            } else {
-                println("${AnsiColors.YELLOW}⚠${AnsiColors.RESET} Failed to push to remote repository (non-fatal)")
-            }
-        }
-
-        return applyResult.exitCode()
     }
 
-    override fun getDescription(): String {
+override fun getDescription(): String {
         return "Full deployment pipeline (init → plan → apply)"
     }
 
@@ -136,9 +123,7 @@ class DeployAction(
             println("   - Name: $itemName")
             println("   - Fields: access_key, secret_key, account_id, bucket_name")
             println()
-            println("2. Run the setup command:")
-            println("   ${AnsiColors.BLUE}./gradlew run --args=\"setup-r2\"${AnsiColors.RESET}")
-            println()
+
             println("3. Or use the SDK-based deploy command (recommended if using BW_PROJECT):")
             println("   ${AnsiColors.BLUE}export BWS_ACCESS_TOKEN=<your-token>${AnsiColors.RESET}")
             println("   ${AnsiColors.BLUE}./gradlew run --args=\"deploy-sdk\"${AnsiColors.RESET}")

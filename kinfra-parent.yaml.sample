@@ -10,7 +10,7 @@ description: "Parent project for managing multiple infrastructure components"
 # Common Terraform settings applied to all sub-projects
 terraform:
   version: "1.5.0"
-  workingDirectory: "terraform"
+  workingDirectory: "."
 
 # List of sub-project paths or identifiers
 subProjects:
