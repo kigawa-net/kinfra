@@ -20,6 +20,7 @@ import net.kigawa.kinfra.infrastructure.service.TerraformServiceImpl
 import net.kigawa.kinfra.infrastructure.terraform.TerraformRepository
 import net.kigawa.kinfra.infrastructure.terraform.TerraformRepositoryImpl
 import net.kigawa.kinfra.infrastructure.config.GlobalConfigScheme
+import net.kigawa.kinfra.infrastructure.config.GlobalConfigImpl
 import net.kigawa.kinfra.infrastructure.file.SystemHomeDirGetter
 import net.kigawa.kinfra.model.conf.FilePaths
 import net.kigawa.kinfra.model.conf.GlobalConfig
@@ -32,8 +33,12 @@ val webModule = module {
     single<FilePaths> { FilePaths(get()) }
     // GlobalConfig: Load from file, or use default empty config
     single<GlobalConfig> {
-        val configRepo = ConfigRepositoryImpl(get(), GlobalConfigScheme())
-        runCatching { configRepo.loadGlobalConfig() }.getOrElse { GlobalConfigScheme() }
+        val configRepo = ConfigRepositoryImpl(get())
+        runCatching { configRepo.loadGlobalConfig() }.getOrNull() ?: run {
+            val reposPath = get<FilePaths>().baseConfigDir?.resolve(get<FilePaths>().reposDir)
+                ?: throw IllegalStateException("Config directory not available")
+            GlobalConfigImpl(GlobalConfigScheme(), reposPath)
+        }
     }
     single<Logger> {
         val logDir = System.getenv("KINFRA_LOG_DIR") ?: "logs"
@@ -51,7 +56,7 @@ val webModule = module {
     single<TerraformRepository> { TerraformRepositoryImpl(get()) }
     single<TerraformService> { TerraformServiceImpl(get(), get()) }
     single<BitwardenRepository> { BitwardenRepositoryImpl(get(),get()) }
-    single<ConfigRepository> { ConfigRepositoryImpl(get(),get()) }
+    single<ConfigRepository> { ConfigRepositoryImpl(get()) }
 
     // Bitwarden Secret Manager (環境変数または .bws_token ファイルから BWS_ACCESS_TOKEN を取得)
     // Note: FilePaths は既に登録されているので、早期に取得可能
