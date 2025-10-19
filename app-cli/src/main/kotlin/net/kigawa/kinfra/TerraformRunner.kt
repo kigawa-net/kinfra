@@ -1,8 +1,6 @@
 package net.kigawa.kinfra
 
 import net.kigawa.kinfra.action.logging.Logger
-import net.kigawa.kinfra.model.ActionType
-import net.kigawa.kinfra.model.util.AnsiColors
 import net.kigawa.kinfra.service.ActionRegistry
 import net.kigawa.kinfra.service.CommandInterpreter
 import net.kigawa.kinfra.service.SystemRequirement
@@ -32,7 +30,9 @@ class TerraformRunner: KoinComponent {
         val action = actionRegistry.getAction(parsedCommand.actionName, parsedCommand.subActionType)
 
         if (action == null) {
-            handleUnknownAction(parsedCommand.actionName)
+            commandInterpreter.handleUnknownAction(parsedCommand.actionName) {
+                actionRegistry.getHelpAction()?.execute(emptyList())
+            }
             return
         }
 
@@ -63,43 +63,5 @@ class TerraformRunner: KoinComponent {
             logger.error("Action ${parsedCommand.actionName} failed with exit code: $exitCode")
             exitProcess(exitCode)
         }
-    }
-
-    private fun handleUnknownAction(actionName: String) {
-        // SDK版アクションが見つからない場合、BWS_ACCESS_TOKENの設定を促す
-        if (actionName == ActionType.DEPLOY_SDK.actionName) {
-            logger.error("BWS_ACCESS_TOKEN is not set for SDK action: $actionName")
-            println("${AnsiColors.RED}Error:${AnsiColors.RESET} BWS_ACCESS_TOKEN is not set.")
-            println()
-            println("${AnsiColors.BLUE}Secret Manager is required for this action.${AnsiColors.RESET}")
-            println("${AnsiColors.BLUE}Please set the BWS_ACCESS_TOKEN environment variable:${AnsiColors.RESET}")
-            println("  export BWS_ACCESS_TOKEN=\"your-token\"")
-            println()
-            println("${AnsiColors.BLUE}To generate a token:${AnsiColors.RESET}")
-            println("  1. Log in to Bitwarden Web Vault")
-            println("  2. Go to Secret Manager section")
-            println("  3. Generate an access token from project settings")
-            exitProcess(1)
-        }
-
-        // config-editアクションが見つからない場合、代替案を提示
-        if (actionName == ActionType.CONFIG_EDIT.actionName) {
-            logger.error("config-edit action not found: $actionName")
-            println("${AnsiColors.RED}Error:${AnsiColors.RESET} Unknown action: $actionName")
-            println()
-            println("${AnsiColors.BLUE}Did you mean:${AnsiColors.RESET}")
-            println("  kinfra config          - Edit configuration files")
-            println("  kinfra config edit     - Edit configuration files (alternative)")
-            println("  kinfra config --parent  - Edit parent configuration")
-            println()
-            println("${AnsiColors.BLUE}Available commands:${AnsiColors.RESET}")
-            actionRegistry.getHelpAction()?.execute(emptyList())
-            exitProcess(1)
-        }
-
-        logger.error("Unknown action: $actionName")
-        println("${AnsiColors.RED}Error:${AnsiColors.RESET} Unknown action: $actionName")
-        actionRegistry.getHelpAction()?.execute(emptyList())
-        exitProcess(1)
     }
 }
