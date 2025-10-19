@@ -4,6 +4,7 @@ import net.kigawa.kinfra.action.logging.Logger
 import net.kigawa.kinfra.model.LoginRepo
 import net.kigawa.kinfra.model.conf.KinfraParentConfig
 import net.kigawa.kinfra.model.conf.KinfraParentConfigData
+import net.kigawa.kinfra.model.conf.SubProject
 import net.kigawa.kinfra.model.util.AnsiColors
 import java.io.File
 import kotlin.io.path.exists
@@ -213,13 +214,22 @@ private class SubProjectManager(
             return 1
         }
 
-        val subProjectName = args[0]
+        val subProjectInput = args[0]
+        val subProject = if (':' in subProjectInput) {
+            // "name:path" format
+            val parts = subProjectInput.split(':', limit = 2)
+            SubProject(parts[0].trim(), parts[1].trim())
+        } else {
+            // Just name, use name as path
+            SubProject(subProjectInput.trim())
+        }
+        
         val parentConfig = getOrCreateParentConfig() ?: return 1
 
         // Check if sub-project already exists
-        if (parentConfig.subProjects.contains(subProjectName)) {
+        if (parentConfig.subProjects.any { it.name == subProject.name }) {
             println(
-                "${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Sub-project '$subProjectName' already exists in parent config"
+                "${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Sub-project '${subProject.name}' already exists in parent config"
             )
             return 0
         }
@@ -229,12 +239,12 @@ private class SubProjectManager(
             projectName = parentConfig.projectName,
             description = parentConfig.description,
             terraform = parentConfig.terraform,
-            subProjects = parentConfig.subProjects + subProjectName,
+            subProjects = parentConfig.subProjects + subProject,
             bitwarden = parentConfig.bitwarden,
             update = parentConfig.update
         )
 
-        return saveConfig(updatedConfig, subProjectName, parentConfig)
+        return saveConfig(updatedConfig, subProject, parentConfig)
     }
     
     private fun getOrCreateParentConfig(): KinfraParentConfig? {
@@ -263,18 +273,28 @@ private class SubProjectManager(
     
     private fun saveConfig(
         updatedConfig: KinfraParentConfigData,
-        subProjectName: String,
+        subProject: SubProject,
         parentConfig: KinfraParentConfig
     ): Int {
         return try {
             parentConfig.saveData(updatedConfig)
+            val displayText = if (subProject.path == subProject.name) {
+                subProject.name
+            } else {
+                "${subProject.name}:${subProject.path}"
+            }
             println(
-                "${AnsiColors.GREEN}✓${AnsiColors.RESET} Sub-project '$subProjectName' added to parent configuration"
+                "${AnsiColors.GREEN}✓${AnsiColors.RESET} Sub-project '$displayText' added to parent configuration"
             )
             println()
             println("${AnsiColors.BLUE}Current sub-projects:${AnsiColors.RESET}")
             updatedConfig.subProjects.forEachIndexed { index, project ->
-                println("  ${index + 1}. $project")
+                val projectText = if (project.path == project.name) {
+                    project.name
+                } else {
+                    "${project.name}:${project.path}"
+                }
+                println("  ${index + 1}. $projectText")
             }
             println()
             println("${AnsiColors.BLUE}Config file:${AnsiColors.RESET} ${parentConfig.filePath.absolute()}")
@@ -286,12 +306,18 @@ private class SubProjectManager(
     }
     
     private fun showUsage() {
-        println("${AnsiColors.RED}Error:${AnsiColors.RESET} Sub-project name is required")
+        println("${AnsiColors.RED}Error:${AnsiColors.RESET} Sub-project specification is required")
         println()
         println("${AnsiColors.BLUE}Usage:${AnsiColors.RESET}")
         println("  kinfra config add-subproject <project-name>")
+        println("  kinfra config add-subproject <project-name>:<path>")
         println()
-        println("${AnsiColors.BLUE}Example:${AnsiColors.RESET}")
+        println("${AnsiColors.BLUE}Examples:${AnsiColors.RESET}")
         println("  kinfra config add-subproject project-a")
+        println("  kinfra config add-subproject project-b:../project-b")
+        println("  kinfra config add-subproject project-c:/opt/project-c")
+        println()
+        println("${AnsiColors.BLUE}Note:${AnsiColors.RESET}")
+        println("  If path is not specified, the project name will be used as the path")
     }
 }

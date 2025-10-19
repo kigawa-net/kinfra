@@ -45,12 +45,13 @@ class ConfigEditAction(
         println("  --parent, -p   Edit parent project configuration (kinfra-parent.yaml)")
         println()
         println("${AnsiColors.BLUE}Subcommands:${AnsiColors.RESET}")
-        println("  add-subproject <name>   Add a sub-project to parent configuration")
+        println("  add-subproject <name[:path]>   Add a sub-project to parent configuration")
         println()
         println("${AnsiColors.BLUE}Examples:${AnsiColors.RESET}")
         println("  kinfra config                      Edit project configuration")
         println("  kinfra config --parent             Edit parent configuration")
         println("  kinfra config add-subproject app1  Add 'app1' to parent config")
+        println("  kinfra config add-subproject app2:../app2  Add 'app2' with custom path")
         println()
     }
 }
