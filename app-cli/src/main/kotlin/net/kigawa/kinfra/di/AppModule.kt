@@ -59,11 +59,7 @@ val appModule = module {
     single { SystemRequirement() }
     single { UpdateHandler(get()) }
     
-    // LoginRepo (lazy initialization to avoid requiring login config during app startup)
-    single<net.kigawa.kinfra.model.LoginRepo> { 
-        // Lazy initialization to avoid requiring login config during app startup
-        lazy { net.kigawa.kinfra.infrastructure.config.LoginRepoImpl(get(), get()) }.value 
-    }
+    
     
     // Execution layer components
     single { ActionExecutor(get()) }
@@ -83,8 +79,6 @@ val appModule = module {
     single<Action>(named(ActionType.DESTROY.actionName)) { DestroyAction(get(), get()) }
     single<Action>(named(ActionType.DEPLOY.actionName)) { DeployAction(get(), get(), get()) }
     single<Action>(named(ActionType.PUSH.actionName)) { PushAction(get()) }
-    single<Action>(named(ActionType.CONFIG.actionName)) { ConfigAction(get()) }
-    single<Action>(named(ActionType.CONFIG_EDIT.actionName)) { ConfigEditAction(get(), get()) }
     single<Action>(named(ActionType.SELF_UPDATE.actionName)) {
         SelfUpdateAction(
             get(), get(), get(), get(), get()
@@ -115,6 +109,7 @@ val appModule = module {
                         put(actionType.actionName, get<Action>(named(actionType.actionName)))
                     }.onFailure { e ->
                         println("DEBUG: Failed to add action ${actionType.actionName}: ${e.message}")
+                        e.printStackTrace()
                     }
                 }
             }

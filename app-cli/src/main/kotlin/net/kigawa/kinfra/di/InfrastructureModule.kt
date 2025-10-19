@@ -40,11 +40,7 @@ val infrastructureModule = module {
     // GlobalConfig: Load from file, or use default empty config
     single<GlobalConfig> {
         val configRepo = ConfigRepositoryImpl(get(), get())
-        runCatching { configRepo.loadGlobalConfig() }.getOrNull() ?: run {
-            val reposPath = get<FilePaths>().baseConfigDir?.resolve(get<FilePaths>().reposDir)
-                ?: throw IllegalStateException("Config directory not available")
-            GlobalConfigImpl(GlobalConfigScheme(), reposPath)
-        }
+        configRepo.loadGlobalConfig()
     }
     single<Logger> {
         val logDir = System.getenv("KINFRA_LOG_DIR") ?: "logs"
@@ -66,8 +62,5 @@ val infrastructureModule = module {
     single<VersionChecker> { VersionCheckerImpl(get()) }
     single<AutoUpdater> { AutoUpdaterImpl(get(), get()) }
     single<GitHelper> { GitHelperImpl(get()) }
-    single<LoginRepo> { 
-        // Lazy initialization to avoid requiring login config during app startup
-        lazy { LoginRepoImpl(get(), get()) }.value 
-    }
+    single<LoginRepo> { LoginRepoImpl(get(), get()) }
 }
