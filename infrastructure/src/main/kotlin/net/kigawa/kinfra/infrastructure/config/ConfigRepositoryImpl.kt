@@ -74,8 +74,7 @@ class ConfigRepositoryImpl(
     override fun loadKinfraParentConfig(filePath: String): KinfraParentConfig? {
         val file = File(filePath)
         return if (file.exists()) {
-            val scheme = Yaml.default.decodeFromString(KinfraParentConfigScheme.serializer(), file.readText())
-            KinfraParentConfigImpl(scheme, file)
+            KinfraParentConfigImpl.fromFile(file)
         } else null
     }
 

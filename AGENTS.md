@@ -2,13 +2,14 @@
 
 このファイルは GitHub リポジトリで使用されるエージェントの説明を保持します。
 
-## ビルド/テスト/リントコマンド
+## ビルド/テストコマンド
 
 - **ビルド**: `./gradlew build`
 - **テスト実行**: `./gradlew test`
 - **単一テスト実行**: `./gradlew test --tests "TestClass.testMethod"`
-- **リント**: `./gradlew ktlintCheck`
-- **フォーマット**: `./gradlew ktlintFormat`
+- **クリーン**: `./gradlew clean`
+- **JAR作成**: `./gradlew shadowJar`
+- **配布物作成**: `./gradlew distTar` または `./gradlew distZip`
 
 ## コードスタイルガイドライン
 
@@ -57,6 +58,9 @@
 | todo-maintainer    | タスク管理を自動化するエージェント |
 
 ## 変更履歴
+- 2025-10-19: PR #66 を作成。サブプロジェクトにディレクトリ指定機能を追加。SubProjectデータクラスを作成し、name:path形式でパス指定を可能に。sub editコマンドも追加。
+- 2025-10-19: PR #65 をマージ。config -p editコマンドの解析を修正。CommandInterpreterがフラグをスキップしてサブコマンドを正しく検出するように改善。
+- 2025-10-19: PR #64 をマージ。コンパイルエラーを修正。ConfigRepositoryImpl、GlobalConfig、ActionsModuleの型不一致とパラメータエラーを解決。
 - 2025-10-19: PR #56 を作成。kigawaブランチからdevブランチに向けて、kinfra sub addコマンドの実装。タイトルと本文を日本語に変更。
 - 2025-10-19: kinfra sub addコマンドを追加。SubActionTypeにADDを追加、SubAddActionを実装、ActionsModuleに登録、ドキュメント更新。kinfra-parent.yamlにサブプロジェクトを追加できるようにする。
 - 2025-10-19: CIワークフローを高速化。testとlintジョブを統合、Gradle並列実行・ビルドキャッシュ有効化、条件付き実行を追加。

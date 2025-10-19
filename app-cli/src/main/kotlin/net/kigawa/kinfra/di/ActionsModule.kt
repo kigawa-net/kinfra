@@ -28,6 +28,7 @@ val actionsModule = module {
     single<Action>(named("${ActionType.SUB.actionName} ${SubActionType.ADD.actionName}")) { SubAddAction(get()) }
     single<Action>(named("${ActionType.SUB.actionName} ${SubActionType.SHOW.actionName}")) { SubShowAction(get(), get(), get()) }
     single<Action>(named("${ActionType.SUB.actionName} ${SubActionType.EDIT.actionName}")) { SubEditAction(get(), get()) }
+    single<Action>(named("${ActionType.SUB.actionName} ${SubActionType.REMOVE.actionName}")) { SubRemoveAction(get()) }
     single<Action>(named(ActionType.SELF_UPDATE.actionName)) { SelfUpdateAction(get(), get(), get(), get(), get()) }
 
     // SDK-based actions (only if BWS_ACCESS_TOKEN is available)
