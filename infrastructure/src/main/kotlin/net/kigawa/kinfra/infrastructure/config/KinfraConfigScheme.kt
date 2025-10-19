@@ -6,27 +6,76 @@ import net.kigawa.kinfra.model.conf.*
 @Serializable
 data class ProjectInfoScheme(
     override val projectId: String = "",
-    override val description: String = "",
+    override val description: String? = null,
     override val terraform: TerraformSettingsScheme? = null
-) : ProjectInfo
+) : ProjectInfo {
+    companion object {
+        fun from(projectInfo: ProjectInfo): ProjectInfoScheme {
+            if (projectInfo is ProjectInfoScheme) {
+                return projectInfo
+            }
+            return ProjectInfoScheme(
+                projectId = projectInfo.projectId,
+                description = projectInfo.description,
+                terraform = projectInfo.terraform?.let { TerraformSettingsScheme.from(it) }
+            )
+        }
+    }
+}
 
 @Serializable
 data class TerraformSettingsScheme(
     override val version: String = "",
     override val workingDirectory: String = "terraform"
-) : TerraformSettings
+) : TerraformSettings {
+    companion object {
+        fun from(settings: TerraformSettings): TerraformSettingsScheme {
+            if (settings is TerraformSettingsScheme) {
+                return settings
+            }
+            return TerraformSettingsScheme(
+                version = settings.version,
+                workingDirectory = settings.workingDirectory
+            )
+        }
+    }
+}
 
 @Serializable
 data class BitwardenSettingsScheme(
     override val projectId: String = ""
-) : BitwardenSettings
+) : BitwardenSettings {
+    companion object {
+        fun from(settings: BitwardenSettings): BitwardenSettingsScheme {
+            if (settings is BitwardenSettingsScheme) {
+                return settings
+            }
+            return BitwardenSettingsScheme(
+                projectId = settings.projectId
+            )
+        }
+    }
+}
 
 @Serializable
 data class UpdateSettingsScheme(
     override val autoUpdate: Boolean = true,
     override val checkInterval: Long = 86400000, // 24 hours in milliseconds
     override val githubRepo: String = "kigawa-net/kinfra"
-) : UpdateSettings
+) : UpdateSettings {
+    companion object {
+        fun from(settings: UpdateSettings): UpdateSettingsScheme {
+            if (settings is UpdateSettingsScheme) {
+                return settings
+            }
+            return UpdateSettingsScheme(
+                autoUpdate = settings.autoUpdate,
+                checkInterval = settings.checkInterval,
+                githubRepo = settings.githubRepo
+            )
+        }
+    }
+}
 
 @Serializable
 data class KinfraConfigScheme(
@@ -40,8 +89,11 @@ data class KinfraConfigScheme(
             if (kinfraConfig is KinfraConfigScheme) {
                 return kinfraConfig
             }
-            throw IllegalArgumentException(
-                "KinfraConfig cannot be converted to a ${KinfraConfigScheme::class.simpleName}"
+            return KinfraConfigScheme(
+                rootProject = ProjectInfoScheme.from(kinfraConfig.rootProject),
+                bitwarden = kinfraConfig.bitwarden?.let { BitwardenSettingsScheme.from(it) },
+                subProjects = kinfraConfig.subProjects.map { ProjectInfoScheme.from(it) },
+                update = kinfraConfig.update?.let { UpdateSettingsScheme.from(it) }
             )
         }
     }

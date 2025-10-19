@@ -8,7 +8,19 @@ import net.kigawa.kinfra.model.conf.LoginConfig
 data class LoginConfigScheme(
     override val repo: String,
     override val enabledProjects: List<String> = emptyList()
-): LoginConfig
+): LoginConfig {
+    companion object {
+        fun from(loginConfig: LoginConfig): LoginConfigScheme {
+            if (loginConfig is LoginConfigScheme) {
+                return loginConfig
+            }
+            return LoginConfigScheme(
+                repo = loginConfig.repo,
+                enabledProjects = loginConfig.enabledProjects
+            )
+        }
+    }
+}
 
 @Serializable
 data class GlobalConfigScheme(
@@ -19,8 +31,8 @@ data class GlobalConfigScheme(
             if (globalConfig is GlobalConfigScheme) {
                 return globalConfig
             }
-            throw IllegalArgumentException(
-                "GlobalConfigScheme cannot be converted to a ${GlobalConfigScheme::class.simpleName}"
+            return GlobalConfigScheme(
+                login = globalConfig.login?.let { LoginConfigScheme.from(it) }
             )
         }
     }
