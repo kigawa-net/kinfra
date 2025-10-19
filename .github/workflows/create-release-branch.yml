@@ -105,7 +105,7 @@ jobs:
                 ;;
             esac
 
-VERSION="${MAJOR}.${MINOR}.${PATCH}"
+            VERSION="${MAJOR}.${MINOR}.${PATCH}"
           fi
 
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
