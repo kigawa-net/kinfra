@@ -59,6 +59,12 @@ val appModule = module {
     single { SystemRequirement() }
     single { UpdateHandler(get()) }
     
+    // LoginRepo (lazy initialization to avoid requiring login config during app startup)
+    single<net.kigawa.kinfra.model.LoginRepo> { 
+        // Lazy initialization to avoid requiring login config during app startup
+        lazy { net.kigawa.kinfra.infrastructure.config.LoginRepoImpl(get(), get()) }.value 
+    }
+    
     // Execution layer components
     single { ActionExecutor(get()) }
 
@@ -107,6 +113,8 @@ val appModule = module {
                 } else if (actionType != ActionType.HELP) {
                     runCatching {
                         put(actionType.actionName, get<Action>(named(actionType.actionName)))
+                    }.onFailure { e ->
+                        println("DEBUG: Failed to add action ${actionType.actionName}: ${e.message}")
                     }
                 }
             }

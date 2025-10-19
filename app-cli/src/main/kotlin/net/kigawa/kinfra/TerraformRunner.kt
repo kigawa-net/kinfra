@@ -82,6 +82,21 @@ class TerraformRunner: KoinComponent {
             exitProcess(1)
         }
 
+        // config-editアクションが見つからない場合、代替案を提示
+        if (actionName == ActionType.CONFIG_EDIT.actionName) {
+            logger.error("config-edit action not found: $actionName")
+            println("${AnsiColors.RED}Error:${AnsiColors.RESET} Unknown action: $actionName")
+            println()
+            println("${AnsiColors.BLUE}Did you mean:${AnsiColors.RESET}")
+            println("  kinfra config          - Edit configuration files")
+            println("  kinfra config edit     - Edit configuration files (alternative)")
+            println("  kinfra config --parent  - Edit parent configuration")
+            println()
+            println("${AnsiColors.BLUE}Available commands:${AnsiColors.RESET}")
+            actionRegistry.getHelpAction()?.execute(emptyList())
+            exitProcess(1)
+        }
+
         logger.error("Unknown action: $actionName")
         println("${AnsiColors.RED}Error:${AnsiColors.RESET} Unknown action: $actionName")
         actionRegistry.getHelpAction()?.execute(emptyList())

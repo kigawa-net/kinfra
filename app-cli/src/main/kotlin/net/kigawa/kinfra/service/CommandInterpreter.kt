@@ -46,24 +46,29 @@ class CommandInterpreter: KoinComponent {
             logger.debug("Mapped $actionName to help action")
         }
 
-        // Handle config subcommands
+// Handle config subcommands
         if (actionName == ActionType.CONFIG.actionName && actionArgs.isNotEmpty()) {
-            // Find the subcommand (skip flags like -p, --parent)
+            // Find subcommand (skip flags like -p, --parent)
             val subCommand = actionArgs.find { !it.startsWith("-") }
             when (subCommand) {
                 "edit" -> {
                     actionName = ActionType.CONFIG_EDIT.actionName
-                    // Remove the subcommand but keep flags
+                    // Remove subcommand but keep flags
                     actionArgs = actionArgs.filter { it != "edit" }
                     logger.info("Mapped 'config edit' to config-edit action")
                 }
 
                 "add-subproject" -> {
-                    // Keep as CONFIG_EDIT but don't remove the subcommand
+                    // Keep as CONFIG_EDIT but don't remove subcommand
                     actionName = ActionType.CONFIG_EDIT.actionName
                     logger.info("Mapped 'config add-subproject' to config-edit action")
                 }
             }
+        }
+
+        // Handle direct config-edit command
+        if (actionName == ActionType.CONFIG_EDIT.actionName) {
+            logger.debug("Direct config-edit command detected")
         }
 
         // deploy アクションは常に SDK 版を使用
