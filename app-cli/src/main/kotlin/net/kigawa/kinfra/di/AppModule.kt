@@ -3,6 +3,7 @@ package net.kigawa.kinfra.di
 import net.kigawa.kinfra.TerraformRunner
 import net.kigawa.kinfra.action.actions.*
 import net.kigawa.kinfra.action.bitwarden.BitwardenSecretManagerRepository
+import net.kigawa.kinfra.action.execution.ActionExecutor
 import net.kigawa.kinfra.actions.LoginAction
 import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenSecretManagerRepositoryImpl
 import net.kigawa.kinfra.infrastructure.config.EnvFileLoaderImpl
@@ -57,6 +58,9 @@ val appModule = module {
     single { CommandInterpreter() }
     single { SystemRequirement() }
     single { UpdateHandler(get()) }
+    
+    // Execution layer components
+    single { ActionExecutor(get()) }
 
     // Presentation layer
     single<TerraformRunner> { TerraformRunner() }
@@ -71,13 +75,13 @@ val appModule = module {
     single<Action>(named(ActionType.PLAN.actionName)) { PlanAction(get(), get()) }
     single<Action>(named(ActionType.APPLY.actionName)) { ApplyAction(get()) }
     single<Action>(named(ActionType.DESTROY.actionName)) { DestroyAction(get(), get()) }
-    single<Action>(named(ActionType.DEPLOY.actionName)) { DeployAction(get(), get()) }
+    single<Action>(named(ActionType.DEPLOY.actionName)) { DeployAction(get(), get(), get()) }
     single<Action>(named(ActionType.PUSH.actionName)) { PushAction(get()) }
     single<Action>(named(ActionType.CONFIG.actionName)) { ConfigAction(get()) }
     single<Action>(named(ActionType.CONFIG_EDIT.actionName)) { ConfigEditAction(get(), get()) }
     single<Action>(named(ActionType.SELF_UPDATE.actionName)) {
         SelfUpdateAction(
-            get(), get(), get(), get()
+            get(), get(), get(), get(), get()
         )
     }
 
