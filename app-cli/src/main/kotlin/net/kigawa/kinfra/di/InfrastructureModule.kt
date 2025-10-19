@@ -39,7 +39,7 @@ val infrastructureModule = module {
     single<FilePaths> { FilePaths(get()) }
     // GlobalConfig: Load from file, or use default empty config
     single<GlobalConfig> {
-        val configRepo = ConfigRepositoryImpl(get())
+        val configRepo = ConfigRepositoryImpl(get(), get())
         runCatching { configRepo.loadGlobalConfig() }.getOrNull() ?: run {
             val reposPath = get<FilePaths>().baseConfigDir?.resolve(get<FilePaths>().reposDir)
                 ?: throw IllegalStateException("Config directory not available")
@@ -62,7 +62,7 @@ val infrastructureModule = module {
     single<TerraformRepository> { TerraformRepositoryImpl(get(), get()) }
     single<TerraformService> { TerraformServiceImpl(get(), get()) }
     single<BitwardenRepository> { BitwardenRepositoryImpl(get(), get()) }
-    single<ConfigRepository> { ConfigRepositoryImpl(get()) }
+    single<ConfigRepository> { ConfigRepositoryImpl(get(), get()) }
     single<VersionChecker> { VersionCheckerImpl(get()) }
     single<AutoUpdater> { AutoUpdaterImpl(get(), get()) }
     single<GitHelper> { GitHelperImpl(get()) }

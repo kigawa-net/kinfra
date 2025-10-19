@@ -83,26 +83,7 @@ data class UpdateSettingsScheme(
 fun toUpdateSettings(): UpdateSettings = this
 }
 
-@Serializable
-@Deprecated("LoginConfigScheme should be imported from GlobalConfigScheme. This is kept for backward compatibility.")
-data class LoginConfigScheme(
-    override val repo: String,
-    override val enabledProjects: List<String> = emptyList(),
-    override val repoPath: java.nio.file.Path
-) : LoginConfig {
-    companion object {
-        fun from(loginConfig: LoginConfig): LoginConfigScheme {
-            if (loginConfig is LoginConfigScheme) {
-                return loginConfig
-            }
-            return LoginConfigScheme(
-                repo = loginConfig.repo,
-                enabledProjects = loginConfig.enabledProjects,
-                repoPath = loginConfig.repoPath
-            )
-        }
-    }
-}
+
 
 @Serializable
 data class KinfraConfigScheme(
