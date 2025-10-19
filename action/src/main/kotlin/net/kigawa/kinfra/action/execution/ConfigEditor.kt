@@ -64,7 +64,7 @@ class ConfigEditor(
               description: "My infrastructure project"
               terraform:
                 version: "1.5.0"
-                workingDirectory: "terraform"
+                workingDirectory: "."
 
             subProjects: []
 
@@ -99,7 +99,7 @@ class ConfigEditor(
             # Common Terraform settings for all sub-projects
             #terraform:
             #  version: "1.5.0"
-            #  workingDirectory: "terraform"
+            #  workingDirectory: "."
 
             # List of sub-project paths or identifiers
             #subProjects:

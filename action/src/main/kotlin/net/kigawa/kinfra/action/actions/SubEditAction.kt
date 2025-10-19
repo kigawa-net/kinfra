@@ -94,7 +94,7 @@ class SubEditAction(
               description: "Sub-project: ${subProject.name}"
               terraform:
                 version: "1.5.0"
-                workingDirectory: "terraform"
+                workingDirectory: "."
 
             # Optional Bitwarden settings
             # bitwarden:

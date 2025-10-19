@@ -26,7 +26,7 @@ data class ProjectInfoScheme(
 @Serializable
 data class TerraformSettingsScheme(
     override val version: String = "",
-    override val workingDirectory: String = "terraform"
+    override val workingDirectory: String = "."
 ) : TerraformSettings {
     companion object {
         fun from(settings: TerraformSettings): TerraformSettingsScheme {
