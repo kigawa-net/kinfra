@@ -66,5 +66,8 @@ val infrastructureModule = module {
     single<VersionChecker> { VersionCheckerImpl(get()) }
     single<AutoUpdater> { AutoUpdaterImpl(get(), get()) }
     single<GitHelper> { GitHelperImpl(get()) }
-    single<LoginRepo> { LoginRepoImpl(get(), get()) }
+    single<LoginRepo> { 
+        // Lazy initialization to avoid requiring login config during app startup
+        lazy { LoginRepoImpl(get(), get()) }.value 
+    }
 }

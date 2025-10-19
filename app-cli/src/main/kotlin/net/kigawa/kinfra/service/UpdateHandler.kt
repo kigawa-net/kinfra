@@ -1,16 +1,18 @@
 package net.kigawa.kinfra.service
 
+import net.kigawa.kinfra.action.config.ConfigRepository
 import net.kigawa.kinfra.action.logging.Logger
 import net.kigawa.kinfra.action.update.AutoUpdater
 import net.kigawa.kinfra.action.update.VersionChecker
 import net.kigawa.kinfra.model.LoginRepo
+import net.kigawa.kinfra.model.conf.KinfraConfig
 import net.kigawa.kinfra.model.util.AnsiColors
 import net.kigawa.kinfra.model.util.VersionUtil
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 class UpdateHandler(
-    private val loginRepo: LoginRepo
+    private val configRepository: ConfigRepository
 ) : KoinComponent {
     private val logger: Logger by inject()
     private val versionChecker: VersionChecker by inject()
@@ -20,7 +22,7 @@ class UpdateHandler(
         try {
             // Load config to check if auto-update is enabled
             val config = runCatching {
-                loginRepo.loadKinfraConfig()
+                loadCurrentConfig()
             }.getOrNull()
 
             // Skip update check if auto-update is disabled
@@ -60,5 +62,23 @@ class UpdateHandler(
             logger.warn("Error during update check: ${e.message}")
             // Silently fail - don't interrupt user workflow
         }
+    }
+    
+    private fun loadCurrentConfig(): KinfraConfig? {
+        // Try to load from current directory first
+        val currentDirConfig = runCatching {
+            val configPath = configRepository.getProjectConfigFilePath()
+            configRepository.loadKinfraConfig(java.nio.file.Paths.get(configPath))
+        }.getOrNull()
+        
+        if (currentDirConfig != null) {
+            return currentDirConfig
+        }
+        
+        // Try to load from login repo if available
+        return runCatching {
+            val loginRepo: LoginRepo by inject()
+            loginRepo.loadKinfraConfig()
+        }.getOrNull()
     }
 }
