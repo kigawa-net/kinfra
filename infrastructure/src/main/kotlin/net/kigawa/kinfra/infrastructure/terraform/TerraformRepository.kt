@@ -34,9 +34,9 @@ class TerraformRepositoryImpl(
         val kinfraConfig = configRepository.loadKinfraConfig(Paths.get(configPath))
         
         // Terraformのワーキングディレクトリを決定
-        val terraformDir = if (kinfraConfig != null) {
+        val terraformDir = if (kinfraConfig != null && kinfraConfig.rootProject.terraform != null) {
             // 設定ファイルからworkingDirectoryを読み込む
-            val workingDirPath = kinfraConfig.terraform.workingDirectory
+            val workingDirPath = kinfraConfig.rootProject.terraform!!.workingDirectory
             if (workingDirPath.startsWith("/")) {
                 // 絶対パス
                 File(workingDirPath)
