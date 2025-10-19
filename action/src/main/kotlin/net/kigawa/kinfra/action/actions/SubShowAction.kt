@@ -4,6 +4,7 @@ import net.kigawa.kinfra.action.config.ConfigRepository
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.LoginRepo
 import net.kigawa.kinfra.model.conf.FilePaths
+import net.kigawa.kinfra.model.conf.SubProject
 import net.kigawa.kinfra.model.util.AnsiColors
 import kotlin.io.path.absolute
 import kotlin.io.path.exists
@@ -37,46 +38,57 @@ class SubShowAction(
             return 0
         }
 
-
-        if (!parentConfig.subProjects.contains(projectName)) {
+        val subProject = parentConfig.subProjects.find { it.name == projectName }
+        if (subProject == null) {
             println("${AnsiColors.RED}Error:${AnsiColors.RESET} Sub-project '$projectName' not found")
             println("${AnsiColors.BLUE}Available sub-projects:${AnsiColors.RESET}")
             if (parentConfig.subProjects.isEmpty()) {
                 println("  ${AnsiColors.YELLOW}(none)${AnsiColors.RESET}")
             } else {
                 parentConfig.subProjects.forEach { project ->
-                    println("  - $project")
+                    val displayText = if (project.path == project.name) {
+                        project.name
+                    } else {
+                        "${project.name}:${project.path}"
+                    }
+                    println("  - $displayText")
                 }
             }
             return 1
         }
 
         // Display sub-project details
-        println("${AnsiColors.BLUE}=== Sub-project: $projectName ===${AnsiColors.RESET}")
+        println("${AnsiColors.BLUE}=== Sub-project: ${subProject.name} ===${AnsiColors.RESET}")
         println()
 
+        println("${AnsiColors.BLUE}Name:${AnsiColors.RESET} ${subProject.name}")
+        println("${AnsiColors.BLUE}Path:${AnsiColors.RESET} ${subProject.path}")
+        
         // Check if sub-project directory exists
-        val loginConfig = loginRepo.loginConfig
-
-        println("${AnsiColors.BLUE}Name:${AnsiColors.RESET} $projectName")
-        println("${AnsiColors.BLUE}Directory:${AnsiColors.RESET} ${loginConfig.repoPath}")
+        val projectPath = if (subProject.path.startsWith('/')) {
+            java.nio.file.Paths.get(subProject.path)
+        } else {
+            loginRepo.kinfraConfigPath().parent.resolve(subProject.path)
+        }
+        
+        println("${AnsiColors.BLUE}Full path:${AnsiColors.RESET} $projectPath")
         println(
             "${AnsiColors.BLUE}Status:${AnsiColors.RESET} ${
-                if (loginConfig.repoPath.exists()) "${AnsiColors.GREEN}Directory exists${AnsiColors.RESET}"
+                if (projectPath.toFile().exists()) "${AnsiColors.GREEN}Directory exists${AnsiColors.RESET}"
                 else "${AnsiColors.YELLOW}Directory not found${AnsiColors.RESET}"
             }"
         )
 
-        if (loginConfig.repoPath.exists()) {
+        if (projectPath.toFile().exists()) {
             // Check for kinfra.yaml in sub-project
-            val subProjectConfigFile = loginConfig.repoPath.resolve( filePaths.kinfraConfigFileName)
-            if (subProjectConfigFile.exists()) {
+            val subProjectConfigFile = projectPath.resolve( filePaths.kinfraConfigFileName)
+            if (subProjectConfigFile.toFile().exists()) {
                 println(
                     "${AnsiColors.BLUE}Config file:${AnsiColors.RESET} ${AnsiColors.GREEN}Found${AnsiColors.RESET} (${
                         subProjectConfigFile.fileName})"
                 )
 
-                val subProjectConfig = configRepository.loadKinfraConfig(subProjectConfigFile.absolute())
+                val subProjectConfig = configRepository.loadKinfraConfig(subProjectConfigFile)
                 if (subProjectConfig != null) {
                     println()
                     println("${AnsiColors.BLUE}--- Configuration details ---${AnsiColors.RESET}")
@@ -109,7 +121,7 @@ class SubShowAction(
             }
 
             // Count files in directory
-            val files = loginConfig.repoPath.toFile().listFiles()
+            val files = projectPath.toFile().listFiles()
             if (files != null) {
                 val fileCount = files.count { it.isFile }
                 val dirCount = files.count { it.isDirectory }

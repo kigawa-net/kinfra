@@ -22,7 +22,7 @@ data class KinfraParentConfigScheme(
                 projectName = config.projectName,
                 description = config.description,
                 terraform = config.terraform?.let { TerraformSettingsScheme.from(it) },
-                subProjects = config.subProjects,
+                subProjects = config.subProjects.map { it.toString() },
                 bitwarden = config.bitwarden?.let { BitwardenSettingsScheme.from(it) },
                 update = config.update?.let { UpdateSettingsScheme.from(it) }
             )
@@ -33,7 +33,7 @@ data class KinfraParentConfigScheme(
                 projectName = config.projectName,
                 description = config.description,
                 terraform = config.terraform?.let { TerraformSettingsScheme.from(it) },
-                subProjects = config.subProjects,
+                subProjects = config.subProjects.map { it.toString() },
                 bitwarden = config.bitwarden?.let { BitwardenSettingsScheme.from(it) },
                 update = config.update?.let { UpdateSettingsScheme.from(it) }
 

@@ -3,6 +3,7 @@ package net.kigawa.kinfra.action.actions
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.LoginRepo
 import net.kigawa.kinfra.model.conf.KinfraParentConfigData
+import net.kigawa.kinfra.model.conf.SubProject
 import net.kigawa.kinfra.model.util.AnsiColors
 
 class SubAddAction(
@@ -16,7 +17,13 @@ class SubAddAction(
             return 1
         }
 
-        val projectName = args[0]
+        val subProjectInput = args[0]
+        val subProject = if (':' in subProjectInput) {
+            val parts = subProjectInput.split(':', limit = 2)
+            SubProject(parts[0].trim(), parts[1].trim())
+        } else {
+            SubProject(subProjectInput.trim())
+        }
 
         val parentConfig = loginRepo.loadKinfraParentConfig()
         if (parentConfig == null) {
@@ -27,12 +34,17 @@ class SubAddAction(
             val defaultConfigData = KinfraParentConfigData(
                 projectName = "my-infrastructure",
                 description = "Parent project for managing multiple infrastructure components",
-                subProjects = listOf(projectName)
+                subProjects = listOf(subProject)
             )
 
             try {
                 loginRepo.createKinfraParentConfig(defaultConfigData)
-                println("${AnsiColors.GREEN}Created:${AnsiColors.RESET} Parent configuration with sub-project '$projectName'")
+                val displayText = if (subProject.path == subProject.name) {
+                    subProject.name
+                } else {
+                    "${subProject.name}:${subProject.path}"
+                }
+                println("${AnsiColors.GREEN}Created:${AnsiColors.RESET} Parent configuration with sub-project '$displayText'")
                 return 0
             } catch (e: Exception) {
                 println("${AnsiColors.RED}Error:${AnsiColors.RESET} Failed to create parent configuration: ${e.message}")
@@ -40,20 +52,25 @@ class SubAddAction(
             }
         }
 
-        if (parentConfig.subProjects.contains(projectName)) {
-            println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Sub-project '$projectName' already exists")
+        if (parentConfig.subProjects.any { it.name == subProject.name }) {
+            println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Sub-project '${subProject.name}' already exists")
             return 0
         }
 
         // Add the new sub-project
         val currentData = parentConfig.toData()
         val updatedData = currentData.copy(
-            subProjects = currentData.subProjects + projectName
+            subProjects = currentData.subProjects + subProject
         )
 
         try {
             parentConfig.saveData(updatedData)
-            println("${AnsiColors.GREEN}Added:${AnsiColors.RESET} Sub-project '$projectName'")
+            val displayText = if (subProject.path == subProject.name) {
+                subProject.name
+            } else {
+                "${subProject.name}:${subProject.path}"
+            }
+            println("${AnsiColors.GREEN}Added:${AnsiColors.RESET} Sub-project '$displayText'")
             println("${AnsiColors.BLUE}Total sub-projects:${AnsiColors.RESET} ${updatedData.subProjects.size}")
         } catch (e: Exception) {
             println("${AnsiColors.RED}Error:${AnsiColors.RESET} Failed to save configuration: ${e.message}")

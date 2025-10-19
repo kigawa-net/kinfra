@@ -15,8 +15,8 @@ class KinfraParentConfigImpl(
         get() = kinfraParentConfigScheme.description
     override val terraform: TerraformSettings?
         get() = kinfraParentConfigScheme.terraform
-    override val subProjects: List<String>
-        get() = kinfraParentConfigScheme.subProjects
+    override val subProjects: List<SubProject>
+        get() = kinfraParentConfigScheme.subProjects.map { SubProject.fromString(it) }
     override val bitwarden: BitwardenSettings?
         get() = kinfraParentConfigScheme.bitwarden
     override val update: UpdateSettings?

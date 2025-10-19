@@ -23,9 +23,9 @@ interface KinfraParentConfig {
     val terraform: TerraformSettings?
 
     /**
-     * List of sub-project paths or identifiers
+     * List of sub-projects
      */
-    val subProjects: List<String>
+    val subProjects: List<SubProject>
 
     /**
      * Common Bitwarden settings
