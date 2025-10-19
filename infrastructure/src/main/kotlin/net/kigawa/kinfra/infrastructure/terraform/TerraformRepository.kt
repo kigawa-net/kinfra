@@ -25,21 +25,49 @@ class TerraformRepositoryImpl(
             currentDir
         }
 
-        // tfvarsファイルの存在確認
-        val tfvarsFile = File(projectRoot, "terraform.tfvars")
+        // Terraformコンフィグファイル（.tfファイル）が存在するディレクトリを検索
+        val terraformDir = findTerraformConfigDirectory(currentDir) ?: projectRoot
+
+        // tfvarsファイルの存在確認（terraformディレクトリ内を検索）
+        val tfvarsFile = File(terraformDir, "terraform.tfvars")
         val varFile = if (fileRepository.exists(tfvarsFile)) tfvarsFile else null
 
-        // SSH設定ファイルのパス
+        // SSH設定ファイルのパス（プロジェクトルートを基準）
         val sshConfigFile = File(projectRoot, "ssh_config")
         val sshConfigPath = fileRepository.getAbsolutePath(sshConfigFile)
-
-        // Terraformファイルはterraformディレクトリに配置
-        val terraformDir = File(projectRoot, "terraform")
 
         return TerraformConfig(
             workingDirectory = terraformDir,
             varFile = varFile,
             sshConfigPath = sshConfigPath
         )
+    }
+
+    /**
+     * 現在のディレクトリから上位へさかのぼってTerraformコンフィグファイル（.tf）を探す
+     */
+    private fun findTerraformConfigDirectory(startDir: File): File? {
+        var currentDir = startDir.absoluteFile
+        
+        while (currentDir != null) {
+            // 現在のディレクトリに.tfファイルが存在するか確認
+            val tfFiles = currentDir.listFiles { file ->
+                file.isFile && file.name.endsWith(".tf")
+            }
+            
+            if (!tfFiles.isNullOrEmpty()) {
+                return currentDir
+            }
+            
+            // 親ディレクトリへ移動（ルートディレクトリまで）
+            currentDir = currentDir.parentFile
+            
+            // ルートディレクトリに到達したら終了
+            if (currentDir != null && currentDir.parentFile == currentDir) {
+                break
+            }
+        }
+        
+        return null
     }
 }
