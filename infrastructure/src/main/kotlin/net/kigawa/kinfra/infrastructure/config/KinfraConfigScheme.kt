@@ -39,6 +39,8 @@ data class TerraformSettingsScheme(
             )
         }
     }
+    
+    fun toTerraformSettings(): TerraformSettings = this
 }
 
 @Serializable
@@ -55,6 +57,8 @@ data class BitwardenSettingsScheme(
             )
         }
     }
+    
+    fun toBitwardenSettings(): BitwardenSettings = this
 }
 
 @Serializable
@@ -75,6 +79,8 @@ data class UpdateSettingsScheme(
             )
         }
     }
+    
+    fun toUpdateSettings(): UpdateSettings = this
 }
 
 @Serializable

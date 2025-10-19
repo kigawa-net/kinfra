@@ -10,17 +10,6 @@ data class SubProject(
     val name: String,
     val path: String = name
 ) {
-    /**
-     * 文字列表現を返す（YAMLシリアライズ用）
-     */
-    override fun toString(): String {
-        return if (path == name) {
-            name
-        } else {
-            "$name:$path"
-        }
-    }
-    
     companion object {
         /**
          * 文字列からSubProjectをパース

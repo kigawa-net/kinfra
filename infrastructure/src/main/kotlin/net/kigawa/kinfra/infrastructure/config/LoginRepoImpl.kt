@@ -32,9 +32,7 @@ class LoginRepoImpl(
         if (!kinfraParentConfigFile.exists()) {
             return null
         }
-        val yamlContent = kinfraParentConfigFile.readText()
-        val scheme = Yaml.default.decodeFromString(KinfraParentConfigScheme.serializer(), yamlContent)
-        return KinfraParentConfigImpl(scheme, kinfraParentConfigFile)
+        return KinfraParentConfigImpl.fromFile(kinfraParentConfigFile)
     }
 
     override fun createKinfraParentConfig(
