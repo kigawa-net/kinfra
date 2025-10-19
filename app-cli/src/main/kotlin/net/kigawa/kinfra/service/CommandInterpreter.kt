@@ -48,10 +48,13 @@ class CommandInterpreter: KoinComponent {
 
         // Handle config subcommands
         if (actionName == ActionType.CONFIG.actionName && actionArgs.isNotEmpty()) {
-            when (actionArgs[0]) {
+            // Find the subcommand (skip flags like -p, --parent)
+            val subCommand = actionArgs.find { !it.startsWith("-") }
+            when (subCommand) {
                 "edit" -> {
                     actionName = ActionType.CONFIG_EDIT.actionName
-                    actionArgs = actionArgs.drop(1)
+                    // Remove the subcommand but keep flags
+                    actionArgs = actionArgs.filter { it != "edit" }
                     logger.info("Mapped 'config edit' to config-edit action")
                 }
 
