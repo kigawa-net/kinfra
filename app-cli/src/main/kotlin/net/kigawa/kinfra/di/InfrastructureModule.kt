@@ -59,7 +59,7 @@ val infrastructureModule = module {
     single<EnvFileLoader> { EnvFileLoaderImpl() }
     single<FileRepository> { FileRepositoryImpl() }
     single<ProcessExecutor> { ProcessExecutorImpl() }
-    single<TerraformRepository> { TerraformRepositoryImpl(get()) }
+    single<TerraformRepository> { TerraformRepositoryImpl(get(), get()) }
     single<TerraformService> { TerraformServiceImpl(get(), get()) }
     single<BitwardenRepository> { BitwardenRepositoryImpl(get(), get()) }
     single<ConfigRepository> { ConfigRepositoryImpl(get()) }
