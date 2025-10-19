@@ -8,15 +8,18 @@ import net.kigawa.kinfra.model.conf.KinfraConfig
 import net.kigawa.kinfra.model.conf.KinfraParentConfig
 import net.kigawa.kinfra.infrastructure.config.GlobalConfigImpl
 import net.kigawa.kinfra.infrastructure.config.KinfraParentConfigImpl
+import net.kigawa.kinfra.infrastructure.logging.Logger
 
 import java.io.File
 import java.nio.file.Path
+import java.util.Scanner
 
 /**
  * 設定ファイルを操作する実装です。
  */
 class ConfigRepositoryImpl(
     private val filePaths: FilePaths,
+    private val logger: Logger,
 ) : ConfigRepository {
     // 基本設定ディレクトリ
     private val configDir get() = filePaths.baseConfigDir?.toFile()
@@ -36,12 +39,75 @@ class ConfigRepositoryImpl(
             try {
                 val yaml = projectFile.readText()
                 val scheme = Yaml.default.decodeFromString(GlobalConfigScheme.serializer(), yaml)
-                GlobalConfigImpl(scheme, reposPath)
+                
+                // repoPathが不足している場合に対話形式で補完
+                val completedScheme = completeMissingLoginConfig(scheme)
+                
+                // 設定が変更された場合は保存
+                if (completedScheme != scheme) {
+                    saveGlobalConfig(GlobalConfigImpl(completedScheme, reposPath))
+                    logger.info("設定ファイルを更新しました")
+                }
+                
+                GlobalConfigImpl(completedScheme, reposPath)
             } catch (e: Exception) {
+                logger.debug("設定ファイルの読み込みに失敗: ${e.message}")
                 GlobalConfigImpl(GlobalConfigScheme(), reposPath)
             }
         } else {
             GlobalConfigImpl(GlobalConfigScheme(), reposPath)
+        }
+    }
+    
+    /**
+     * 不足しているLoginConfigの項目を対話形式で補完する
+     */
+    private fun completeMissingLoginConfig(scheme: GlobalConfigScheme): GlobalConfigScheme {
+        val login = scheme.login ?: return scheme
+        
+        val scanner = Scanner(System.`in`)
+        var modified = false
+        var repo = login.repo
+        var repoPath = login.repoPath
+        var enabledProjects = login.enabledProjects
+        
+        // repoが不足している場合
+        if (repo.isBlank()) {
+            print("リポジトリURLを入力してください (例: https://github.com/user/repo.git): ")
+            repo = scanner.nextLine().trim()
+            modified = true
+        }
+        
+        // repoPathが不足している場合
+        if (repoPath.toString().isBlank()) {
+            val defaultPath = filePaths.baseConfigDir?.resolve("repos") ?: Path.of("./repos")
+            print("リポジトリのローカルパスを入力してください (デフォルト: $defaultPath): ")
+            val input = scanner.nextLine().trim()
+            repoPath = if (input.isBlank()) defaultPath else Path.of(input)
+            modified = true
+        }
+        
+        // enabledProjectsが空の場合
+        if (enabledProjects.isEmpty()) {
+            print("有効なプロジェクト名をカンマ区切りで入力してください (例: project1,project2): ")
+            val input = scanner.nextLine().trim()
+            if (input.isNotBlank()) {
+                enabledProjects = input.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+                modified = true
+            }
+        }
+        
+        scanner.close()
+        
+        return if (modified) {
+            val completedLogin = LoginConfigScheme(
+                repo = repo,
+                repoPath = repoPath,
+                enabledProjects = enabledProjects
+            )
+            scheme.copy(login = completedLogin)
+        } else {
+            scheme
         }
     }
 

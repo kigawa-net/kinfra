@@ -33,7 +33,7 @@ val webModule = module {
     single<FilePaths> { FilePaths(get()) }
     // GlobalConfig: Load from file, or use default empty config
     single<GlobalConfig> {
-        val configRepo = ConfigRepositoryImpl(get())
+        val configRepo = ConfigRepositoryImpl(get(), get())
         runCatching { configRepo.loadGlobalConfig() }.getOrNull() ?: run {
             val reposPath = get<FilePaths>().baseConfigDir?.resolve(get<FilePaths>().reposDir)
                 ?: throw IllegalStateException("Config directory not available")
@@ -56,7 +56,7 @@ val webModule = module {
     single<TerraformRepository> { TerraformRepositoryImpl(get(), get()) }
     single<TerraformService> { TerraformServiceImpl(get(), get()) }
     single<BitwardenRepository> { BitwardenRepositoryImpl(get(),get()) }
-    single<ConfigRepository> { ConfigRepositoryImpl(get()) }
+    single<ConfigRepository> { ConfigRepositoryImpl(get(), get()) }
 
     // Bitwarden Secret Manager (環境変数または .bws_token ファイルから BWS_ACCESS_TOKEN を取得)
     // Note: FilePaths は既に登録されているので、早期に取得可能

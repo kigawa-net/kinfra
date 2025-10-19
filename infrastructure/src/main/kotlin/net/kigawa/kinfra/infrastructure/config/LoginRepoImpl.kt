@@ -13,10 +13,13 @@ class LoginRepoImpl(
 
     override val loginConfig: LoginConfig
         get() = globalConfig.login ?: throw IllegalStateException("Login config not available")
-    val repoDir = File(
-        "${filePaths.baseConfigDir}/${filePaths.reposDir}/" +
-            loginConfig.repo.substringAfterLast('/')
-    ).toPath()
+    
+    val repoDir: Path by lazy {
+        loginConfig.repoPath ?: File(
+            "${filePaths.baseConfigDir}/${filePaths.reposDir}/" +
+                loginConfig.repo.substringAfterLast('/')
+        ).toPath()
+    }
 
     override fun kinfraConfigPath(): Path {
         return repoDir.resolve(filePaths.kinfraConfigFileName)

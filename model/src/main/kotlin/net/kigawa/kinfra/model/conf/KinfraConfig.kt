@@ -5,6 +5,8 @@ interface KinfraConfig {
      val bitwarden: BitwardenSettings?
      val subProjects: List<ProjectInfo>
      val update: UpdateSettings?
+     @Deprecated("Login configuration should be in GlobalConfig. This property is kept for backward compatibility.")
+     val login: LoginConfig?
  }
 
 interface ProjectInfo {
@@ -27,3 +29,7 @@ interface UpdateSettings {
      val checkInterval: Long
      val githubRepo: String
  }
+
+
+
+
