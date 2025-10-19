@@ -1,10 +1,13 @@
 package net.kigawa.kinfra.model.conf
 
+import java.nio.file.Path
+
 interface KinfraConfig {
      val rootProject: ProjectInfo
      val bitwarden: BitwardenSettings?
      val subProjects: List<ProjectInfo>
      val update: UpdateSettings?
+     val login: LoginConfig?
  }
 
 interface ProjectInfo {
@@ -27,3 +30,9 @@ interface UpdateSettings {
      val checkInterval: Long
      val githubRepo: String
  }
+
+interface LoginConfig {
+    val repo: String
+    val enabledProjects: List<String>
+    val repoPath: Path
+}

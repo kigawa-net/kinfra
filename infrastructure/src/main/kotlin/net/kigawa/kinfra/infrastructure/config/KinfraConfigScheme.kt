@@ -84,11 +84,32 @@ data class UpdateSettingsScheme(
 }
 
 @Serializable
+data class LoginConfigScheme(
+    override val repo: String,
+    override val enabledProjects: List<String> = emptyList(),
+    override val repoPath: java.nio.file.Path
+) : LoginConfig {
+    companion object {
+        fun from(loginConfig: LoginConfig): LoginConfigScheme {
+            if (loginConfig is LoginConfigScheme) {
+                return loginConfig
+            }
+            return LoginConfigScheme(
+                repo = loginConfig.repo,
+                enabledProjects = loginConfig.enabledProjects,
+                repoPath = loginConfig.repoPath
+            )
+        }
+    }
+}
+
+@Serializable
 data class KinfraConfigScheme(
     override val rootProject: ProjectInfoScheme = ProjectInfoScheme(),
     override val bitwarden: BitwardenSettingsScheme? = null,
     override val subProjects: List<ProjectInfoScheme> = emptyList(),
-    override val update: UpdateSettingsScheme? = null
+    override val update: UpdateSettingsScheme? = null,
+    override val login: LoginConfigScheme? = null
 ) : KinfraConfig {
     companion object {
         fun from(kinfraConfig: KinfraConfig): KinfraConfigScheme {
@@ -99,7 +120,8 @@ data class KinfraConfigScheme(
                 rootProject = ProjectInfoScheme.from(kinfraConfig.rootProject),
                 bitwarden = kinfraConfig.bitwarden?.let { BitwardenSettingsScheme.from(it) },
                 subProjects = kinfraConfig.subProjects.map { ProjectInfoScheme.from(it) },
-                update = kinfraConfig.update?.let { UpdateSettingsScheme.from(it) }
+                update = kinfraConfig.update?.let { UpdateSettingsScheme.from(it) },
+                login = kinfraConfig.login?.let { LoginConfigScheme.from(it) }
             )
         }
     }

@@ -42,7 +42,10 @@ class LoginAction(
             val targetDir = File(repoPath.second)
 
             // Save project configuration (repo identifier like "kigawa01/infra")
-            val loginConfig = LoginConfigScheme(repo = repoPath.first)
+            val loginConfig = LoginConfigScheme(
+                repo = repoPath.first,
+                repoPath = targetDir.toPath()
+            )
             val globalConfigScheme = GlobalConfigScheme(login = loginConfig)
             val reposPath = filePaths.baseConfigDir?.resolve(filePaths.reposDir)
                 ?: throw IllegalStateException("Config directory not available")
