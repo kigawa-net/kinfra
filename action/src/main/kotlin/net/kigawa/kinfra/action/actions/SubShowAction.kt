@@ -23,9 +23,10 @@ class SubShowAction(
         val configFile = File(currentDir, filePaths.kinfraParentConfigFileName)
 
         if (!configFile.exists()) {
-            println("${AnsiColors.RED}Error:${AnsiColors.RESET} Parent configuration file not found: ${configFile.absolutePath}")
+            println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Parent configuration file not found: ${configFile.absolutePath}")
             println("${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Run 'kinfra sub add <project-name>' to create a configuration file")
-            return 1
+            println("${AnsiColors.BLUE}Note:${AnsiColors.RESET} Looking for ${filePaths.kinfraParentConfigFileName} in current directory")
+            return 0
         }
 
         val parentConfig = configRepository.loadKinfraParentConfig(configFile.absolutePath)
@@ -101,7 +102,7 @@ class SubShowAction(
         }
 
         println()
-        println("${AnsiColors.BLUE}Parent config:${AnsiColors.RESET} ${configFile.absolutePath}")
+        println("${AnsiColors.BLUE}Config file:${AnsiColors.RESET} ${configFile.absolutePath}")
         println("${AnsiColors.BLUE}Total sub-projects:${AnsiColors.RESET} ${parentConfig.subProjects.size}")
 
         return 0
