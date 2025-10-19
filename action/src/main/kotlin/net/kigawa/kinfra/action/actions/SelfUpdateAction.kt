@@ -2,8 +2,6 @@ package net.kigawa.kinfra.action.actions
 
 import net.kigawa.kinfra.action.GitHelper
 import net.kigawa.kinfra.model.Action
-import net.kigawa.kinfra.model.conf.FilePaths
-import net.kigawa.kinfra.action.config.ConfigRepository
 import net.kigawa.kinfra.action.update.VersionChecker
 import net.kigawa.kinfra.action.update.AutoUpdater
 import net.kigawa.kinfra.model.LoginRepo
@@ -11,15 +9,13 @@ import net.kigawa.kinfra.model.util.AnsiColors
 import net.kigawa.kinfra.model.util.VersionUtil
 
 class SelfUpdateAction(
-    private val configRepository: ConfigRepository,
     private val versionChecker: VersionChecker,
     private val autoUpdater: AutoUpdater,
     private val gitHelper: GitHelper,
-    private val filePaths: FilePaths,
     val loginRepo: LoginRepo
 ) : Action {
 
-    override fun execute(args: Array<String>): Int {
+    override fun execute(args: List<String>): Int {
         // Pull latest changes from git repository
         if (!gitHelper.pullRepository()) {
             println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Failed to pull from git repository, continuing anyway...")

@@ -77,16 +77,6 @@ class ConfigRepositoryImpl(
         return resolveFilePath(filePath).exists()
     }
 
-    override fun loadKinfraParentConfig(filePath: String): KinfraParentConfig? {
-        val file = resolveFilePath(filePath)
-        if (!file.exists()) {
-            return null
-        }
-
-        val yamlContent = file.readText()
-        return Yaml.default.decodeFromString(KinfraParentConfigScheme.serializer(), yamlContent)
-    }
-
     override fun saveKinfraParentConfig(config: KinfraParentConfig, filePath: String) {
         val file = resolveFilePath(filePath)
         val yamlContent = Yaml.default.encodeToString(
@@ -94,6 +84,17 @@ class ConfigRepositoryImpl(
             KinfraParentConfigScheme.from(config)
         )
         file.writeText(yamlContent)
+    }
+
+    override fun loadKinfraParentConfig(filePath: String): KinfraParentConfig? {
+        val file = resolveFilePath(filePath)
+        if (!file.exists()) {
+            return null
+        }
+
+        val yamlContent = file.readText()
+        val scheme = Yaml.default.decodeFromString(KinfraParentConfigScheme.serializer(), yamlContent)
+        return KinfraParentConfigImpl(scheme, file)
     }
 
     override fun kinfraParentConfigExists(filePath: String): Boolean {

@@ -75,3 +75,10 @@
 - 2025-10-14: config-editコマンドを追加。ConfigEditAction.ktを実装し、ActionType.kt, AppModule.kt, ドキュメントに追加。
 - 2025-10-14: setup-r2コマンドの残存参照を完全に削除。TerraformRunner.kt, DeployAction.kt, ドキュメントから参照を削除。
 - 2025-10-14: origin/devをmainにマージ。プルリクエストを作成。
+- 2025-10-19: TerraformRunnerクラスのリファクタリングを実施。単一責任の原則に基づき、以下のコンポーネントに分割：
+  - ActionRegistry: アクションの登録と管理を担当
+  - CommandInterpreter: コマンドライン引数の解釈を担当
+  - SystemRequirement: システム要件のチェック（Terraformの存在確認）を担当
+  - UpdateHandler: アップデートのチェックと実行を担当
+  - 命名規則の改善：ServiceやManagerといった一般的すぎる名前を避け、具体的な責務を表す名前に変更
+  - TerraformRunnerは各コンポーネントを統合する役割に特化し、コードの可読性と保守性を向上

@@ -11,13 +11,15 @@ import net.kigawa.kinfra.model.util.message
 class HelloAction(
     private val terraformService: TerraformService,
     private val logger: Logger,
-    private val gitHelper: GitHelper
-) : Action {
+    private val gitHelper: GitHelper,
+): Action {
 
-    override fun execute(args: Array<String>): Int {
+    override fun execute(args: List<String>): Int {
         // Pull latest changes from git repository
         if (!gitHelper.pullRepository()) {
-            println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Failed to pull from git repository, continuing anyway...")
+            println(
+                "${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Failed to pull from git repository, continuing anyway..."
+            )
         }
 
         println("${AnsiColors.CYAN}${AnsiColors.BOLD}Welcome to kinfra interactive manager!${AnsiColors.RESET}")
@@ -35,6 +37,7 @@ class HelloAction(
                     println("${AnsiColors.CYAN}Goodbye!${AnsiColors.RESET}")
                     return 0
                 }
+
                 else -> {
                     val index = choice.toIntOrNull()?.minus(1)
                     if (index != null && index in menuItems.indices) {
@@ -50,7 +53,7 @@ class HelloAction(
 
     private data class MenuItem(
         val label: String,
-        val action: () -> Unit
+        val action: () -> Unit,
     )
 
     private fun buildMenuItems(): List<MenuItem> {
@@ -93,7 +96,7 @@ class HelloAction(
         println()
         println("${AnsiColors.BLUE}Initializing Terraform...${AnsiColors.RESET}")
 
-        val result = terraformService.init(quiet = false)
+        val result = terraformService.init(quiet = false, additionalArgs = emptyList())
 
         if (result.isSuccess()) {
             println()
@@ -121,7 +124,7 @@ class HelloAction(
         println()
         println("${AnsiColors.BLUE}Planning Terraform changes...${AnsiColors.RESET}")
 
-        val result = terraformService.plan(quiet = false)
+        val result = terraformService.plan(quiet = false, additionalArgs = emptyList())
 
         if (result.isSuccess()) {
             println()
@@ -149,7 +152,7 @@ class HelloAction(
         println()
         println("${AnsiColors.BLUE}Step 1/2: Initializing Terraform...${AnsiColors.RESET}")
 
-        val initResult = terraformService.init(quiet = false)
+        val initResult = terraformService.init(quiet = false, additionalArgs = emptyList())
 
         if (!initResult.isSuccess()) {
             println()
@@ -163,7 +166,7 @@ class HelloAction(
         println()
         println("${AnsiColors.BLUE}Step 2/2: Planning Terraform changes...${AnsiColors.RESET}")
 
-        val planResult = terraformService.plan(quiet = false)
+        val planResult = terraformService.plan(quiet = false, additionalArgs = emptyList())
 
         if (planResult.isSuccess()) {
             println()
@@ -192,7 +195,7 @@ class HelloAction(
         println()
         println("${AnsiColors.BLUE}Applying Terraform changes...${AnsiColors.RESET}")
 
-        val result = terraformService.apply(quiet = false)
+        val result = terraformService.apply(quiet = false, additionalArgs = emptyList())
 
         if (result.isSuccess()) {
             println()
@@ -212,7 +215,9 @@ class HelloAction(
         val result = gitHelper.getStatus()
         if (result == null) {
             println("${AnsiColors.RED}Error:${AnsiColors.RESET} No repository configured or repository not found")
-            println("${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Run 'kinfra login <github-repo>' to set up a repository")
+            println(
+                "${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Run 'kinfra login <github-repo>' to set up a repository"
+            )
             return
         }
 

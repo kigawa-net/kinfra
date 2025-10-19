@@ -1,5 +1,7 @@
 package net.kigawa.kinfra.model.conf
 
+import java.nio.file.Path
+
 /**
  * Kinfra parent project configuration
  * Used for managing common settings across multiple sub-projects
@@ -34,4 +36,7 @@ interface KinfraParentConfig {
      * Update settings for the parent project
      */
     val update: UpdateSettings?
+    val filePath: Path
+    fun toData(): KinfraParentConfigData
+    fun saveData(updatedConfig: KinfraParentConfigData)
 }
