@@ -8,12 +8,12 @@ import net.kigawa.kinfra.model.conf.LoginConfig
 
 @Serializable
 data class GlobalConfigScheme(
-    val login: LoginConfigScheme? = null,
-) {
+    override val login: LoginConfig? = null,
+) : GlobalConfig {
     companion object {
         fun from(globalConfig: GlobalConfig): GlobalConfigScheme {
             return GlobalConfigScheme(
-                login = globalConfig.login?.let { LoginConfigScheme.from(it) }
+                login = globalConfig.login
             )
         }
     }

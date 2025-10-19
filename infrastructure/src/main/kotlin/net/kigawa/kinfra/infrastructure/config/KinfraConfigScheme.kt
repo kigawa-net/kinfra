@@ -80,10 +80,11 @@ data class UpdateSettingsScheme(
         }
     }
     
-    fun toUpdateSettings(): UpdateSettings = this
+fun toUpdateSettings(): UpdateSettings = this
 }
 
 @Serializable
+@Deprecated("LoginConfigScheme should be imported from GlobalConfigScheme. This is kept for backward compatibility.")
 data class LoginConfigScheme(
     override val repo: String,
     override val enabledProjects: List<String> = emptyList(),
@@ -109,6 +110,7 @@ data class KinfraConfigScheme(
     override val bitwarden: BitwardenSettingsScheme? = null,
     override val subProjects: List<ProjectInfoScheme> = emptyList(),
     override val update: UpdateSettingsScheme? = null,
+    @Deprecated("Login configuration should be in GlobalConfig. This property is kept for backward compatibility.")
     override val login: LoginConfigScheme? = null
 ) : KinfraConfig {
     companion object {

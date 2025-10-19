@@ -1,12 +1,11 @@
 package net.kigawa.kinfra.model.conf
 
-import java.nio.file.Path
-
 interface KinfraConfig {
      val rootProject: ProjectInfo
      val bitwarden: BitwardenSettings?
      val subProjects: List<ProjectInfo>
      val update: UpdateSettings?
+     @Deprecated("Login configuration should be in GlobalConfig. This property is kept for backward compatibility.")
      val login: LoginConfig?
  }
 
@@ -31,8 +30,6 @@ interface UpdateSettings {
      val githubRepo: String
  }
 
-interface LoginConfig {
-    val repo: String
-    val enabledProjects: List<String>
-    val repoPath: Path
-}
+
+
+
