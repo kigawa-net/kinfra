@@ -2,6 +2,7 @@ package net.kigawa.kinfra.di
 
 import net.kigawa.kinfra.action.actions.*
 import net.kigawa.kinfra.actions.LoginAction
+import net.kigawa.kinfra.action.actions.SubEditAction
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.ActionType
 import net.kigawa.kinfra.model.SubActionType
@@ -26,6 +27,7 @@ val actionsModule = module {
     single<Action>(named("${ActionType.SUB.actionName} ${SubActionType.LIST.actionName}")) { SubListAction(get()) }
     single<Action>(named("${ActionType.SUB.actionName} ${SubActionType.ADD.actionName}")) { SubAddAction(get()) }
     single<Action>(named("${ActionType.SUB.actionName} ${SubActionType.SHOW.actionName}")) { SubShowAction(get(), get(), get()) }
+    single<Action>(named("${ActionType.SUB.actionName} ${SubActionType.EDIT.actionName}")) { SubEditAction(get(), get()) }
     single<Action>(named(ActionType.SELF_UPDATE.actionName)) { SelfUpdateAction(get(), get(), get(), get(), get()) }
 
     // SDK-based actions (only if BWS_ACCESS_TOKEN is available)
