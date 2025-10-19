@@ -88,7 +88,7 @@ fun toUpdateSettings(): UpdateSettings = this
 data class LoginConfigScheme(
     override val repo: String,
     override val enabledProjects: List<String> = emptyList(),
-    override val repoPath: java.nio.file.Path
+    override val repoPath: java.nio.file.Path? = null
 ) : LoginConfig {
     companion object {
         fun from(loginConfig: LoginConfig): LoginConfigScheme {

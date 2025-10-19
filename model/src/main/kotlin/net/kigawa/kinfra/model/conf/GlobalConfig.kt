@@ -9,5 +9,5 @@ interface GlobalConfig {
 interface LoginConfig {
     val repo: String
     val enabledProjects: List<String>
-    val repoPath: Path
+    val repoPath: Path?
 }

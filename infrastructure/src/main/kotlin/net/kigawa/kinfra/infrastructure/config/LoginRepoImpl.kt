@@ -15,7 +15,7 @@ class LoginRepoImpl(
         get() = globalConfig.login ?: throw IllegalStateException("Login config not available")
     
     val repoDir: Path by lazy {
-        File(
+        loginConfig.repoPath ?: File(
             "${filePaths.baseConfigDir}/${filePaths.reposDir}/" +
                 loginConfig.repo.substringAfterLast('/')
         ).toPath()
