@@ -2,16 +2,13 @@ package net.kigawa.kinfra.action.actions
 
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.LoginRepo
-import net.kigawa.kinfra.model.conf.FilePaths
 import net.kigawa.kinfra.model.util.AnsiColors
-import java.io.File
 
 class SubListAction(
-    private val loginRepo: LoginRepo,
-    private val filePaths: FilePaths
+    private val loginRepo: LoginRepo
 ) : Action {
 
-    override fun execute(args: Array<String>): Int {
+    override fun execute(args: List<String>): Int {
         val parentConfig = loginRepo.loadKinfraParentConfig()
         if (parentConfig == null) {
             println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Parent configuration not found")

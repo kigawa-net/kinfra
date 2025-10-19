@@ -1,20 +1,16 @@
 package net.kigawa.kinfra.action.actions
 
-import net.kigawa.kinfra.action.config.ConfigRepository
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.LoginRepo
-import net.kigawa.kinfra.model.conf.FilePaths
 import net.kigawa.kinfra.model.util.AnsiColors
 import java.io.File
 import kotlin.io.path.exists
 
 class ConfigAction(
     private val loginRepo: LoginRepo,
-    private val filePaths: FilePaths,
-    private val configRepository: ConfigRepository,
 ): Action {
 
-    override fun execute(args: Array<String>): Int {
+    override fun execute(args: List<String>): Int {
         val isParentConfig = args.contains("--parent") || args.contains("-p")
 
         return if (isParentConfig) {
@@ -27,7 +23,7 @@ class ConfigAction(
     private fun showProjectConfig(): Int {
         val configPath = try {
             loginRepo.kinfraConfigPath()
-        } catch (e: IllegalStateException) {
+        } catch (_: IllegalStateException) {
             println("${AnsiColors.RED}Error:${AnsiColors.RESET} Login configuration not found")
             println("${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Run 'kinfra login <github-repo>' first")
             return 1

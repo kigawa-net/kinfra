@@ -130,7 +130,7 @@ jobs:
 
           claude_args: '--allowed-tools Bash(gh pr:*) Edit --dangerously-skip-permissions'
 
-- name: Create Pull Request Or Comment
+      - name: Create Pull Request Or Comment
         run: |
           # Gitの設定を確実に行う
           git config user.name "github-actions[bot]"

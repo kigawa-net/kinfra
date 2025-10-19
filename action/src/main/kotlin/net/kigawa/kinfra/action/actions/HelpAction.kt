@@ -8,7 +8,7 @@ class HelpAction(
     private val commands: Map<String, Action>,
     private val gitHelper: GitHelper
 ) : Action {
-    override fun execute(args: Array<String>): Int {
+    override fun execute(args: List<String>): Int {
         // Pull latest changes from git repository
         if (!gitHelper.pullRepository()) {
             println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Failed to pull from git repository, continuing anyway...")

@@ -22,10 +22,10 @@ class DeployActionWithSDK(
     private val logger: Logger,
     private val envFileLoader: EnvFileLoader
 ): Action {
-    override fun execute(args: Array<String>): Int {
+    override fun execute(args: List<String>): Int {
         logger.info("DeployActionWithSDK started with args: ${args.joinToString(" ")}")
 
-        val additionalArgs = args.filter { it != "--auto-selected" }.toTypedArray()
+        val additionalArgs = args.filter { it != "--auto-selected" }
 
         println("${AnsiColors.BLUE}Starting full deployment pipeline${AnsiColors.RESET}")
         println()
@@ -40,7 +40,7 @@ class DeployActionWithSDK(
         // Step 1: Initialize
         logger.info("Step 1: Initializing Terraform")
         println("${AnsiColors.BLUE}Step 1/3: Initializing Terraform${AnsiColors.RESET}")
-        val initResult = terraformService.init()
+        val initResult = terraformService.init(emptyList())
         if (initResult.isFailure()) {
             logger.error("Terraform init failed with exit code: ${initResult.exitCode()}")
             return initResult.exitCode()

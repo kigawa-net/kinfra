@@ -19,7 +19,7 @@ class LoginAction(
     val loginRepo: LoginRepo,
 ): Action {
 
-    override fun execute(args: Array<String>): Int {
+    override fun execute(args: List<String>): Int {
         // GitHubリポジトリ引数が指定されている場合はクローンまたはpull
         if (args.isNotEmpty()) {
             val githubRepo = args[0]

@@ -1,23 +1,9 @@
 package net.kigawa.kinfra.di
 
 import net.kigawa.kinfra.TerraformRunner
-import net.kigawa.kinfra.action.actions.ApplyAction
-import net.kigawa.kinfra.action.actions.ConfigAction
-import net.kigawa.kinfra.action.actions.ConfigEditAction
-import net.kigawa.kinfra.action.actions.DeployAction
-import net.kigawa.kinfra.action.actions.DeployActionWithSDK
-import net.kigawa.kinfra.action.actions.DestroyAction
-import net.kigawa.kinfra.action.actions.FormatAction
-import net.kigawa.kinfra.action.actions.HelpAction
-import net.kigawa.kinfra.action.actions.HelloAction
-import net.kigawa.kinfra.action.actions.InitAction
-import net.kigawa.kinfra.action.actions.PlanAction
-import net.kigawa.kinfra.action.actions.PushAction
-import net.kigawa.kinfra.action.actions.SelfUpdateAction
-import net.kigawa.kinfra.action.actions.StatusAction
-import net.kigawa.kinfra.action.actions.ValidateAction
-import net.kigawa.kinfra.actions.LoginAction
+import net.kigawa.kinfra.action.actions.*
 import net.kigawa.kinfra.action.bitwarden.BitwardenSecretManagerRepository
+import net.kigawa.kinfra.actions.LoginAction
 import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenSecretManagerRepositoryImpl
 import net.kigawa.kinfra.infrastructure.config.EnvFileLoaderImpl
 import net.kigawa.kinfra.infrastructure.file.SystemHomeDirGetter
@@ -25,6 +11,10 @@ import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.ActionType
 import net.kigawa.kinfra.model.SubActionType
 import net.kigawa.kinfra.model.conf.FilePaths
+import net.kigawa.kinfra.service.ActionRegistry
+import net.kigawa.kinfra.service.CommandInterpreter
+import net.kigawa.kinfra.service.SystemRequirement
+import net.kigawa.kinfra.service.UpdateHandler
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
@@ -62,8 +52,14 @@ val appModule = module {
         }
     }
 
+    // Service layer components
+    single { ActionRegistry() }
+    single { CommandInterpreter() }
+    single { SystemRequirement() }
+    single { UpdateHandler(get()) }
+
     // Presentation layer
-    single<TerraformRunner> { TerraformRunner(get()) }
+    single<TerraformRunner> { TerraformRunner() }
 
     // Actions
     single<Action>(named(ActionType.FMT.actionName)) { FormatAction(get(), get()) }
@@ -77,9 +73,13 @@ val appModule = module {
     single<Action>(named(ActionType.DESTROY.actionName)) { DestroyAction(get(), get()) }
     single<Action>(named(ActionType.DEPLOY.actionName)) { DeployAction(get(), get()) }
     single<Action>(named(ActionType.PUSH.actionName)) { PushAction(get()) }
-    single<Action>(named(ActionType.CONFIG.actionName)) { ConfigAction(get(), get(), get()) }
-    single<Action>(named(ActionType.CONFIG_EDIT.actionName)) { ConfigEditAction(get()) }
-    single<Action>(named(ActionType.SELF_UPDATE.actionName)) { SelfUpdateAction(get(), get(), get(), get(), get(), get()) }
+    single<Action>(named(ActionType.CONFIG.actionName)) { ConfigAction(get()) }
+    single<Action>(named(ActionType.CONFIG_EDIT.actionName)) { ConfigEditAction(get(), get()) }
+    single<Action>(named(ActionType.SELF_UPDATE.actionName)) {
+        SelfUpdateAction(
+            get(), get(), get(), get()
+        )
+    }
 
     // SDK-based actions (only if BWS_ACCESS_TOKEN is available)
     if (hasBwsToken) {
@@ -94,7 +94,10 @@ val appModule = module {
                     // Add subcommands
                     SubActionType.entries.forEach { subActionType ->
                         runCatching {
-                            put("${actionType.actionName} ${subActionType.actionName}", get<Action>(named("${actionType.actionName} ${subActionType.actionName}")))
+                            put(
+                                "${actionType.actionName} ${subActionType.actionName}",
+                                get<Action>(named("${actionType.actionName} ${subActionType.actionName}"))
+                            )
                         }
                     }
                 } else if (actionType != ActionType.HELP) {

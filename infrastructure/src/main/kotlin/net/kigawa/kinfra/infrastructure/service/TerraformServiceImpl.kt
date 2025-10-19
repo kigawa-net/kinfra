@@ -15,7 +15,7 @@ class TerraformServiceImpl(
     private val terraformRepository: TerraformRepository,
 ): TerraformService {
 
-    override fun init(additionalArgs: Array<String>, quiet: Boolean): Res<Int, ActionException> {
+    override fun init(additionalArgs: List<String>, quiet: Boolean): Res<Int, ActionException> {
         val config = terraformRepository.getTerraformConfig()
 
         val args = arrayOf("terraform", "init") + additionalArgs
@@ -28,7 +28,7 @@ class TerraformServiceImpl(
         )
     }
 
-    override fun plan(additionalArgs: Array<String>, quiet: Boolean): Res<Int, ActionException> {
+    override fun plan(additionalArgs: List<String>, quiet: Boolean): Res<Int, ActionException> {
         val config = terraformRepository.getTerraformConfig()
         val varFileArgs = if (config.hasVarFile()) {
             arrayOf("-var-file=${config.varFile!!.absolutePath}")
@@ -46,7 +46,9 @@ class TerraformServiceImpl(
         )
     }
 
-    override fun apply(planFile: String?, additionalArgs: Array<String>, quiet: Boolean): Res<Int, ActionException> {
+    override fun apply(
+        planFile: String?, additionalArgs: List<String>, quiet: Boolean,
+    ): Res<Int, ActionException> {
         val config = terraformRepository.getTerraformConfig()
 
         val baseArgs = arrayOf("terraform", "apply")
@@ -67,7 +69,7 @@ class TerraformServiceImpl(
         )
     }
 
-    override fun destroy(additionalArgs: Array<String>, quiet: Boolean): Res<Int, ActionException> {
+    override fun destroy(additionalArgs: List<String>, quiet: Boolean): Res<Int, ActionException> {
         val config = terraformRepository.getTerraformConfig()
         val varFileArgs = if (config.hasVarFile()) {
             arrayOf("-var-file=${config.varFile!!.absolutePath}")
@@ -99,7 +101,7 @@ class TerraformServiceImpl(
         return processExecutor.execute(args = arrayOf("terraform", "validate"), quiet = quiet)
     }
 
-    override fun show(additionalArgs: Array<String>, quiet: Boolean): Res<Int, ActionException> {
+    override fun show(additionalArgs: List<String>, quiet: Boolean): Res<Int, ActionException> {
         val config = terraformRepository.getTerraformConfig()
         val args = arrayOf("terraform", "show") + additionalArgs
 

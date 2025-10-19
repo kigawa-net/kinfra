@@ -2,17 +2,14 @@ package net.kigawa.kinfra.action.actions
 
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.LoginRepo
-import net.kigawa.kinfra.model.conf.FilePaths
 import net.kigawa.kinfra.model.conf.KinfraParentConfigData
 import net.kigawa.kinfra.model.util.AnsiColors
-import java.io.File
 
 class SubAddAction(
-    private val loginRepo: LoginRepo,
-    private val filePaths: FilePaths
+    private val loginRepo: LoginRepo
 ) : Action {
 
-    override fun execute(args: Array<String>): Int {
+    override fun execute(args: List<String>): Int {
         if (args.isEmpty()) {
             println("${AnsiColors.RED}Error:${AnsiColors.RESET} Sub-project name is required")
             println("Usage: kinfra sub add <project-name>")

@@ -1,5 +1,6 @@
 package net.kigawa.kinfra.action.actions
 
+import net.kigawa.kinfra.action.logging.Logger
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.LoginRepo
 import net.kigawa.kinfra.model.conf.KinfraParentConfigData
@@ -11,11 +12,13 @@ import kotlin.io.path.name
 
 class ConfigEditAction(
     private val loginRepo: LoginRepo,
+    val logger: Logger,
 ): Action {
 
-    override fun execute(args: Array<String>): Int {
+    override fun execute(args: List<String>): Int {
         // Check for add-subproject subcommand
         if (args.isNotEmpty() && args[0] == "add-subproject") {
+            logger.debug("add-subproject subcommand found: $args")
             return addSubProject(args.drop(1).toTypedArray())
         }
 
@@ -208,7 +211,7 @@ class ConfigEditAction(
             return 1
         }
 
-        val subProjectName = args[1]
+        val subProjectName = args[0]
         val parentConfig = loginRepo.loadKinfraParentConfig() ?: let {
 
             println(
@@ -229,7 +232,10 @@ class ConfigEditAction(
             )
         }
 
-
+        println(
+            "parent config: $parentConfig, subProjectName: $subProjectName, " +
+                "args: ${args.joinToString(",")}"
+        )
         // Check if sub-project already exists
         if (parentConfig.subProjects.contains(subProjectName)) {
             println(
