@@ -22,12 +22,11 @@ val actionsModule = module {
     single<Action>(named(ActionType.DESTROY.actionName)) { DestroyAction(get(), get()) }
     single<Action>(named(ActionType.DEPLOY.actionName)) { DeployAction(get(), get(), get()) }
     single<Action>(named(ActionType.PUSH.actionName)) { PushAction(get()) }
-<<<<<<< HEAD
-    single<Action>(named(ActionType.CONFIG_EDIT.actionName)) { ConfigEditAction(get(), get(), get()) }
-    single<Action>(named("${ActionType.SUB.actionName} ${SubActionType.LIST.actionName}")) { SubListAction(get(), get()) }
-    single<Action>(named("${ActionType.SUB.actionName} ${SubActionType.ADD.actionName}")) { SubAddAction(get(), get()) }
+    single<Action>(named(ActionType.CONFIG_EDIT.actionName)) { ConfigEditAction(get(), get()) }
+    single<Action>(named("${ActionType.SUB.actionName} ${SubActionType.LIST.actionName}")) { SubListAction(get()) }
+    single<Action>(named("${ActionType.SUB.actionName} ${SubActionType.ADD.actionName}")) { SubAddAction(get()) }
     single<Action>(named("${ActionType.SUB.actionName} ${SubActionType.SHOW.actionName}")) { SubShowAction(get(), get()) }
-    single<Action>(named(ActionType.SELF_UPDATE.actionName)) { SelfUpdateAction(get(), get(), get(), get(), get(), get()) }
+    single<Action>(named(ActionType.SELF_UPDATE.actionName)) { SelfUpdateAction(get(), get(), get(), get(), get()) }
 
     // SDK-based actions (only if BWS_ACCESS_TOKEN is available)
     // Note: This will be conditionally registered in the main appModule

@@ -11,7 +11,7 @@ class SubShowAction(
     private val filePaths: FilePaths
 ) : Action {
 
-    override fun execute(args: Array<String>): Int {
+    override fun execute(args: List<String>): Int {
         if (args.isEmpty()) {
             println("${AnsiColors.RED}Error:${AnsiColors.RESET} Sub-project name is required")
             println("Usage: kinfra sub show <project-name>")
