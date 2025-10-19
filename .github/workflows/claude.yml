@@ -61,10 +61,14 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
           # リモートの最新状態を取得
-          git fetch origin main
+          git fetch origin
+          
+          # デフォルトブランチを取得
+          DEFAULT_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD | sed 's@^.*/@@')
+          echo "Default branch: $DEFAULT_BRANCH"
           
           # ブランチを作成して切り替え
-          git switch -c claude-code-action-${{ github.run_id }} origin/main
+          git switch -c claude-code-action-${{ github.run_id }} origin/$DEFAULT_BRANCH
           
           # ブランチをプッシュ
           git push --set-upstream origin claude-code-action-${{ github.run_id }}
@@ -148,7 +152,7 @@ jobs:
             git commit -m "Claude Code Result"
             
             echo "リモートの変更を取得します..."
-            git fetch origin main
+            git fetch origin
             
             echo "リモートブランチにプッシュします..."
             if ! git push origin claude-code-action-${{ github.run_id }}; then
@@ -157,8 +161,12 @@ jobs:
             fi
             
             echo "Pull Requestを作成または更新します..."
+            # デフォルトブランチを取得
+            DEFAULT_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD | sed 's@^.*/@@')
+            echo "Creating PR to base branch: $DEFAULT_BRANCH"
+            
             if ! gh pr create \
-              --base main \
+              --base $DEFAULT_BRANCH \
               --head claude-code-action-${{ github.run_id }} \
               --title "Claude Code実行結果" \
               --body "Claude Codeによる自動修正結果です。"; then

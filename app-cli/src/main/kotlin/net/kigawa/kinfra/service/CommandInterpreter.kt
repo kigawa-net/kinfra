@@ -3,8 +3,10 @@ package net.kigawa.kinfra.service
 import net.kigawa.kinfra.action.logging.Logger
 import net.kigawa.kinfra.model.ActionType
 import net.kigawa.kinfra.model.SubActionType
+import net.kigawa.kinfra.model.util.AnsiColors
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import kotlin.system.exitProcess
 
 data class ParsedCommand(
     val actionName: String,
@@ -46,24 +48,29 @@ class CommandInterpreter: KoinComponent {
             logger.debug("Mapped $actionName to help action")
         }
 
-        // Handle config subcommands
+// Handle config subcommands
         if (actionName == ActionType.CONFIG.actionName && actionArgs.isNotEmpty()) {
-            // Find the subcommand (skip flags like -p, --parent)
+            // Find subcommand (skip flags like -p, --parent)
             val subCommand = actionArgs.find { !it.startsWith("-") }
             when (subCommand) {
                 "edit" -> {
                     actionName = ActionType.CONFIG_EDIT.actionName
-                    // Remove the subcommand but keep flags
+                    // Remove subcommand but keep flags
                     actionArgs = actionArgs.filter { it != "edit" }
                     logger.info("Mapped 'config edit' to config-edit action")
                 }
 
                 "add-subproject" -> {
-                    // Keep as CONFIG_EDIT but don't remove the subcommand
+                    // Keep as CONFIG_EDIT but don't remove subcommand
                     actionName = ActionType.CONFIG_EDIT.actionName
                     logger.info("Mapped 'config add-subproject' to config-edit action")
                 }
             }
+        }
+
+        // Handle direct config-edit command
+        if (actionName == ActionType.CONFIG_EDIT.actionName) {
+            logger.debug("Direct config-edit command detected")
         }
 
         // deploy アクションは常に SDK 版を使用
@@ -97,5 +104,46 @@ class CommandInterpreter: KoinComponent {
             || actionName == ActionType.CONFIG.actionName
             || actionName == ActionType.CONFIG_EDIT.actionName
             || actionName == ActionType.SUB.actionName
+    }
+
+    fun handleUnknownAction(actionName: String, helpAction: (() -> Unit)? = null) {
+        logger.error("Unknown action: $actionName")
+        
+        when (actionName) {
+            ActionType.DEPLOY_SDK.actionName -> {
+                logger.error("BWS_ACCESS_TOKEN is not set for SDK action: $actionName")
+                println("${AnsiColors.RED}Error:${AnsiColors.RESET} BWS_ACCESS_TOKEN is not set.")
+                println()
+                println("${AnsiColors.BLUE}Secret Manager is required for this action.${AnsiColors.RESET}")
+                println("${AnsiColors.BLUE}Please set BWS_ACCESS_TOKEN environment variable:${AnsiColors.RESET}")
+                println("  export BWS_ACCESS_TOKEN=\"your-token\"")
+                println()
+                println("${AnsiColors.BLUE}To generate a token:${AnsiColors.RESET}")
+                println("  1. Log in to Bitwarden Web Vault")
+                println("  2. Go to Secret Manager section")
+                println("  3. Generate an access token from project settings")
+                exitProcess(1)
+            }
+            
+            ActionType.CONFIG_EDIT.actionName -> {
+                logger.error("config-edit action not found: $actionName")
+                println("${AnsiColors.RED}Error:${AnsiColors.RESET} Unknown action: $actionName")
+                println()
+                println("${AnsiColors.BLUE}Did you mean:${AnsiColors.RESET}")
+                println("  kinfra config          - Edit configuration files")
+                println("  kinfra config edit     - Edit configuration files (alternative)")
+                println("  kinfra config --parent  - Edit parent configuration")
+                println()
+                println("${AnsiColors.BLUE}Available commands:${AnsiColors.RESET}")
+                helpAction?.invoke()
+                exitProcess(1)
+            }
+            
+            else -> {
+                println("${AnsiColors.RED}Error:${AnsiColors.RESET} Unknown action: $actionName")
+                helpAction?.invoke()
+                exitProcess(1)
+            }
+        }
     }
 }

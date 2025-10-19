@@ -12,7 +12,7 @@ class LoginRepoImpl(
 ): LoginRepo {
 
     override val loginConfig: LoginConfig
-        get() = globalConfig.login ?: throw IllegalStateException("Login config not available")
+        get() = globalConfig.login ?: throw IllegalStateException("Login config not available. Please run 'kinfra login <repository>' first.")
     
     val repoDir: Path by lazy {
         loginConfig.repoPath ?: File(
@@ -30,7 +30,7 @@ class LoginRepoImpl(
         return repoDir.resolve(filePaths.kinfraParentConfigFileName)
     }
 
-    val kinfraParentConfigFile: File = kinfraParentConfigPath().toFile()
+    val kinfraParentConfigFile: File by lazy { kinfraParentConfigPath().toFile() }
     override fun loadKinfraParentConfig(): KinfraParentConfigImpl? {
         if (!kinfraParentConfigFile.exists()) {
             return null

@@ -59,6 +59,8 @@ val appModule = module {
     single { SystemRequirement() }
     single { UpdateHandler(get()) }
     
+    
+    
     // Execution layer components
     single { ActionExecutor(get()) }
 
@@ -77,8 +79,6 @@ val appModule = module {
     single<Action>(named(ActionType.DESTROY.actionName)) { DestroyAction(get(), get()) }
     single<Action>(named(ActionType.DEPLOY.actionName)) { DeployAction(get(), get(), get()) }
     single<Action>(named(ActionType.PUSH.actionName)) { PushAction(get()) }
-    single<Action>(named(ActionType.CONFIG.actionName)) { ConfigAction(get()) }
-    single<Action>(named(ActionType.CONFIG_EDIT.actionName)) { ConfigEditAction(get(), get()) }
     single<Action>(named(ActionType.SELF_UPDATE.actionName)) {
         SelfUpdateAction(
             get(), get(), get(), get(), get()
@@ -107,6 +107,9 @@ val appModule = module {
                 } else if (actionType != ActionType.HELP) {
                     runCatching {
                         put(actionType.actionName, get<Action>(named(actionType.actionName)))
+                    }.onFailure { e ->
+                        println("DEBUG: Failed to add action ${actionType.actionName}: ${e.message}")
+                        e.printStackTrace()
                     }
                 }
             }
