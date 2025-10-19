@@ -18,7 +18,8 @@ enum class ActionType(val actionName: String) {
     SELF_UPDATE("self-update"),
     PUSH("push"),
     CONFIG_EDIT("config"),
-    ADD_SUBPROJECT("add-subproject");
+    ADD_SUBPROJECT("add-subproject"),
+    SUB_SHOW("sub-show");
 
     companion object {
         fun fromString(name: String): ActionType? {

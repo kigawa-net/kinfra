@@ -6,6 +6,7 @@ import net.kigawa.kinfra.action.TerraformService
 import net.kigawa.kinfra.action.actions.AddSubProjectAction
 import net.kigawa.kinfra.action.actions.ApplyAction
 import net.kigawa.kinfra.action.actions.ConfigEditAction
+import net.kigawa.kinfra.action.actions.SubShowAction
 import net.kigawa.kinfra.action.actions.DeployAction
 import net.kigawa.kinfra.action.actions.DeployActionWithSDK
 import net.kigawa.kinfra.action.actions.DestroyAction
@@ -136,6 +137,7 @@ val appModule = module {
     single<Action>(named(ActionType.PUSH.actionName)) { PushAction(get()) }
     single<Action>(named(ActionType.CONFIG_EDIT.actionName)) { ConfigEditAction(get(), get()) }
     single<Action>(named(ActionType.ADD_SUBPROJECT.actionName)) { AddSubProjectAction(get(), get()) }
+    single<Action>(named(ActionType.SUB_SHOW.actionName)) { SubShowAction(get(), get()) }
     single<Action>(named(ActionType.SELF_UPDATE.actionName)) { SelfUpdateAction(get(), get(), get(), get(), get(), get()) }
 
     // SDK-based actions (only if BWS_ACCESS_TOKEN is available)
