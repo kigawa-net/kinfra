@@ -1,20 +1,16 @@
 package net.kigawa.kinfra.action.actions
 
-import net.kigawa.kinfra.action.config.ConfigRepository
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.LoginRepo
-import net.kigawa.kinfra.model.conf.FilePaths
-import net.kigawa.kinfra.model.conf.KinfraParentConfig
 import net.kigawa.kinfra.model.conf.KinfraParentConfigData
 import net.kigawa.kinfra.model.util.AnsiColors
 import java.io.File
 import kotlin.io.path.absolute
 import kotlin.io.path.exists
+import kotlin.io.path.name
 
 class ConfigEditAction(
     private val loginRepo: LoginRepo,
-    private val filePaths: FilePaths,
-    private val configRepository: ConfigRepository,
 ): Action {
 
     override fun execute(args: Array<String>): Int {
@@ -35,7 +31,7 @@ class ConfigEditAction(
     private fun editProjectConfig(): Int {
         val configPath = try {
             loginRepo.kinfraConfigPath()
-        } catch (e: IllegalStateException) {
+        } catch (_: IllegalStateException) {
             println("${AnsiColors.RED}Error:${AnsiColors.RESET} Login configuration not found")
             println("${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Run 'kinfra login <github-repo>' first")
             return 1
@@ -195,7 +191,7 @@ class ConfigEditAction(
 
             val exitCode = process.waitFor()
             exitCode == 0
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             false
         }
     }
@@ -212,19 +208,9 @@ class ConfigEditAction(
             return 1
         }
 
-        val subProjectName = args[0]
-        val currentDir = File(System.getProperty("user.dir"))
-        val configFile = File(currentDir, filePaths.kinfraParentConfigFileName)
+        val subProjectName = args[1]
+        val parentConfig = loginRepo.loadKinfraParentConfig() ?: let {
 
-        // Load or create parent config
-        val parentConfig: KinfraParentConfig = if (configFile.exists()) {
-            val loaded = loginRepo.loadKinfraParentConfig()
-            if (loaded == null) {
-                println("${AnsiColors.RED}Error:${AnsiColors.RESET} Failed to load parent configuration")
-                return 1
-            }
-            loaded
-        } else {
             println(
                 "${AnsiColors.YELLOW}Parent configuration not found. Creating new parent config...${AnsiColors.RESET}"
             )
@@ -234,7 +220,6 @@ class ConfigEditAction(
             print("${AnsiColors.GREEN}Enter project description (optional):${AnsiColors.RESET} ")
             val description = readlnOrNull()?.trim()?.takeIf { it.isNotEmpty() }
 
-
             loginRepo.createKinfraParentConfig(
                 KinfraParentConfigData(
                     projectName = projectName,
@@ -243,6 +228,7 @@ class ConfigEditAction(
                 )
             )
         }
+
 
         // Check if sub-project already exists
         if (parentConfig.subProjects.contains(subProjectName)) {
@@ -265,14 +251,16 @@ class ConfigEditAction(
         // Save config
         try {
             parentConfig.saveData(updatedConfig)
-            println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Sub-project '$subProjectName' added to ${configFile.name}")
+            println(
+                "${AnsiColors.GREEN}✓${AnsiColors.RESET} Sub-project '$subProjectName' added to ${parentConfig.filePath.name}"
+            )
             println()
             println("${AnsiColors.BLUE}Current sub-projects:${AnsiColors.RESET}")
             updatedConfig.subProjects.forEachIndexed { index, project ->
                 println("  ${index + 1}. $project")
             }
             println()
-            println("${AnsiColors.BLUE}Config file:${AnsiColors.RESET} ${configFile.absolutePath}")
+            println("${AnsiColors.BLUE}Config file:${AnsiColors.RESET} ${parentConfig.filePath.absolute()}")
             return 0
         } catch (e: Exception) {
             println("${AnsiColors.RED}Error:${AnsiColors.RESET} Failed to save parent configuration: ${e.message}")

@@ -1,8 +1,6 @@
 package net.kigawa.kinfra.di
 
 import net.kigawa.kinfra.TerraformRunner
-import net.kigawa.kinfra.action.GitHelper
-import net.kigawa.kinfra.action.TerraformService
 import net.kigawa.kinfra.action.actions.ApplyAction
 import net.kigawa.kinfra.action.actions.ConfigAction
 import net.kigawa.kinfra.action.actions.ConfigEditAction
@@ -17,7 +15,6 @@ import net.kigawa.kinfra.action.actions.PlanAction
 import net.kigawa.kinfra.action.actions.PushAction
 import net.kigawa.kinfra.action.actions.SelfUpdateAction
 import net.kigawa.kinfra.action.actions.StatusAction
-import net.kigawa.kinfra.action.actions.SubListAction
 import net.kigawa.kinfra.action.actions.ValidateAction
 import net.kigawa.kinfra.actions.LoginAction
 import net.kigawa.kinfra.action.bitwarden.BitwardenSecretManagerRepository
@@ -81,7 +78,7 @@ val appModule = module {
     single<Action>(named(ActionType.DEPLOY.actionName)) { DeployAction(get(), get()) }
     single<Action>(named(ActionType.PUSH.actionName)) { PushAction(get()) }
     single<Action>(named(ActionType.CONFIG.actionName)) { ConfigAction(get(), get(), get()) }
-    single<Action>(named(ActionType.CONFIG_EDIT.actionName)) { ConfigEditAction(get(), get(), get()) }
+    single<Action>(named(ActionType.CONFIG_EDIT.actionName)) { ConfigEditAction(get()) }
     single<Action>(named(ActionType.SELF_UPDATE.actionName)) { SelfUpdateAction(get(), get(), get(), get(), get(), get()) }
 
     // SDK-based actions (only if BWS_ACCESS_TOKEN is available)
