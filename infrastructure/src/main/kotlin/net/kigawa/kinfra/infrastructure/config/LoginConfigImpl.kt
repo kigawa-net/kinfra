@@ -11,6 +11,6 @@ class LoginConfigImpl(
         get() = loginConfig.repo
     override val enabledProjects: List<String>
         get() = loginConfig.enabledProjects
-    override val repoPath: Path?
+    override val repoPath: Path
         get() = loginConfig.repoPath ?: kinfraReposPath.resolve(loginConfig.repo).resolve("repo")
 }
