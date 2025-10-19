@@ -8,12 +8,14 @@ import net.kigawa.kinfra.model.conf.KinfraParentConfig
 import net.kigawa.kinfra.model.conf.KinfraParentConfigData
 import net.kigawa.kinfra.model.util.AnsiColors
 import java.io.File
+import kotlin.io.path.absolute
+import kotlin.io.path.exists
 
 class ConfigEditAction(
     private val loginRepo: LoginRepo,
     private val filePaths: FilePaths,
-    private val configRepository: ConfigRepository
-) : Action {
+    private val configRepository: ConfigRepository,
+): Action {
 
     override fun execute(args: Array<String>): Int {
         // Check for add-subproject subcommand
@@ -70,19 +72,21 @@ class ConfigEditAction(
             """.trimIndent()
 
             configFile.writeText(sampleContent)
-            println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Created sample configuration at ${configFile.absolutePath}")
+            println(
+                "${AnsiColors.GREEN}✓${AnsiColors.RESET} Created sample configuration at ${configFile.absolutePath}"
+            )
         }
 
         return openInEditor(configFile)
     }
 
     private fun editParentConfig(): Int {
-        val currentDir = File(System.getProperty("user.dir"))
-        val configFile = File(currentDir, filePaths.kinfraParentConfigFileName)
-
+        val path = loginRepo.kinfraParentConfigPath()
         // Create sample config if it doesn't exist
-        if (!configFile.exists()) {
-            println("${AnsiColors.YELLOW}Parent configuration file not found. Creating from sample...${AnsiColors.RESET}")
+        if (!path.exists()) {
+            println(
+                "${AnsiColors.YELLOW}Parent configuration file not found. Creating from sample...${AnsiColors.RESET}"
+            )
 
             val sampleContent = """
                 # Kinfra Parent Project Configuration
@@ -91,15 +95,15 @@ class ConfigEditAction(
                 description: "Parent project for managing multiple infrastructure components"
 
                 # Common Terraform settings for all sub-projects
-                terraform:
-                  version: "1.5.0"
-                  workingDirectory: "terraform"
+                #terraform:
+                #  version: "1.5.0"
+                #  workingDirectory: "terraform"
 
                 # List of sub-project paths or identifiers
-                subProjects:
-                  - "project-a"
-                  - "project-b"
-                  - "project-c"
+                #subProjects:
+                #  - "project-a"
+                #  - "project-b"
+                #  - "project-c"
 
                 # Optional Bitwarden settings
                 # bitwarden:
@@ -112,11 +116,13 @@ class ConfigEditAction(
                 #   githubRepo: "kigawa-net/kinfra"
             """.trimIndent()
 
-            configFile.writeText(sampleContent)
-            println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Created sample parent configuration at ${configFile.absolutePath}")
+            path.toFile().writeText(sampleContent)
+            println(
+                "${AnsiColors.GREEN}✓${AnsiColors.RESET} Created sample parent configuration at ${path.absolute()}"
+            )
         }
 
-        return openInEditor(configFile)
+        return openInEditor(path.toFile())
     }
 
     private fun openInEditor(file: File): Int {
@@ -124,7 +130,9 @@ class ConfigEditAction(
 
         if (editor == null) {
             println("${AnsiColors.RED}Error:${AnsiColors.RESET} No suitable editor found")
-            println("${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Set the EDITOR environment variable to your preferred editor")
+            println(
+                "${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Set the EDITOR environment variable to your preferred editor"
+            )
             println("  Example: export EDITOR=nano")
             println()
             println("${AnsiColors.BLUE}Or install one of:${AnsiColors.RESET} nano, vim, vi, emacs")
@@ -152,7 +160,9 @@ class ConfigEditAction(
             }
         } catch (e: Exception) {
             println("${AnsiColors.RED}Error:${AnsiColors.RESET} Failed to open editor: ${e.message}")
-            println("${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Set the EDITOR environment variable to your preferred editor")
+            println(
+                "${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Set the EDITOR environment variable to your preferred editor"
+            )
             println("  Example: export EDITOR=nano")
             1
         }
@@ -208,30 +218,37 @@ class ConfigEditAction(
 
         // Load or create parent config
         val parentConfig: KinfraParentConfig = if (configFile.exists()) {
-            val loaded = configRepository.loadKinfraParentConfig(configFile.absolutePath)
+            val loaded = loginRepo.loadKinfraParentConfig()
             if (loaded == null) {
                 println("${AnsiColors.RED}Error:${AnsiColors.RESET} Failed to load parent configuration")
                 return 1
             }
             loaded
         } else {
-            println("${AnsiColors.YELLOW}Parent configuration not found. Creating new parent config...${AnsiColors.RESET}")
+            println(
+                "${AnsiColors.YELLOW}Parent configuration not found. Creating new parent config...${AnsiColors.RESET}"
+            )
             print("${AnsiColors.GREEN}Enter parent project name:${AnsiColors.RESET} ")
             val projectName = readlnOrNull()?.trim() ?: "my-infrastructure"
 
             print("${AnsiColors.GREEN}Enter project description (optional):${AnsiColors.RESET} ")
             val description = readlnOrNull()?.trim()?.takeIf { it.isNotEmpty() }
 
-            KinfraParentConfigData(
-                projectName = projectName,
-                description = description,
-                subProjects = emptyList()
+
+            loginRepo.createKinfraParentConfig(
+                KinfraParentConfigData(
+                    projectName = projectName,
+                    description = description,
+                    subProjects = emptyList()
+                )
             )
         }
 
         // Check if sub-project already exists
         if (parentConfig.subProjects.contains(subProjectName)) {
-            println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Sub-project '$subProjectName' already exists in parent config")
+            println(
+                "${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Sub-project '$subProjectName' already exists in parent config"
+            )
             return 0
         }
 
@@ -247,7 +264,7 @@ class ConfigEditAction(
 
         // Save config
         try {
-            configRepository.saveKinfraParentConfig(updatedConfig, configFile.absolutePath)
+            parentConfig.saveData(updatedConfig)
             println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Sub-project '$subProjectName' added to ${configFile.name}")
             println()
             println("${AnsiColors.BLUE}Current sub-projects:${AnsiColors.RESET}")

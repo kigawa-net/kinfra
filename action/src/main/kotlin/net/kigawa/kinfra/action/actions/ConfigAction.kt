@@ -6,12 +6,13 @@ import net.kigawa.kinfra.model.LoginRepo
 import net.kigawa.kinfra.model.conf.FilePaths
 import net.kigawa.kinfra.model.util.AnsiColors
 import java.io.File
+import kotlin.io.path.exists
 
 class ConfigAction(
     private val loginRepo: LoginRepo,
     private val filePaths: FilePaths,
-    private val configRepository: ConfigRepository
-) : Action {
+    private val configRepository: ConfigRepository,
+): Action {
 
     override fun execute(args: Array<String>): Int {
         val isParentConfig = args.contains("--parent") || args.contains("-p")
@@ -38,7 +39,9 @@ class ConfigAction(
             println("${AnsiColors.RED}Error:${AnsiColors.RESET} Configuration file not found")
             println("${AnsiColors.CYAN}Expected location:${AnsiColors.RESET} ${configFile.absolutePath}")
             println()
-            println("${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Run 'kinfra config edit' to create a configuration file")
+            println(
+                "${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Run 'kinfra config edit' to create a configuration file"
+            )
             return 1
         }
 
@@ -46,18 +49,25 @@ class ConfigAction(
     }
 
     private fun showParentConfig(): Int {
-        val currentDir = File(System.getProperty("user.dir"))
-        val configFile = File(currentDir, filePaths.kinfraParentConfigFileName)
-
-        if (!configFile.exists()) {
+        val config = loginRepo.loadKinfraParentConfig()
+        if (config == null) {
+            println("${AnsiColors.RED}Error:${AnsiColors.RESET} Parent configuration not found")
+            println(
+                "${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Run 'kinfra config edit --parent' to create a parent configuration file"
+            )
+            return 1
+        }
+        if (!config.filePath.exists()) {
             println("${AnsiColors.RED}Error:${AnsiColors.RESET} Parent configuration file not found")
-            println("${AnsiColors.CYAN}Expected location:${AnsiColors.RESET} ${configFile.absolutePath}")
+            println("${AnsiColors.CYAN}Expected location:${AnsiColors.RESET} ${config.filePath}")
             println()
-            println("${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Run 'kinfra config edit --parent' to create a parent configuration file")
+            println(
+                "${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Run 'kinfra config edit --parent' to create a parent configuration file"
+            )
             return 1
         }
 
-        return displayConfigFile(configFile)
+        return displayConfigFile(config.filePath.toFile())
     }
 
     private fun displayConfigFile(file: File): Int {

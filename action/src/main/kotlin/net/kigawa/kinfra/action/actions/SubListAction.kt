@@ -1,30 +1,22 @@
 package net.kigawa.kinfra.action.actions
 
-import net.kigawa.kinfra.action.config.ConfigRepository
 import net.kigawa.kinfra.model.Action
+import net.kigawa.kinfra.model.LoginRepo
 import net.kigawa.kinfra.model.conf.FilePaths
 import net.kigawa.kinfra.model.util.AnsiColors
 import java.io.File
 
 class SubListAction(
-    private val configRepository: ConfigRepository,
+    private val loginRepo: LoginRepo,
     private val filePaths: FilePaths
 ) : Action {
 
     override fun execute(args: Array<String>): Int {
-        val currentDir = File(System.getProperty("user.dir"))
-        val configFile = File(currentDir, filePaths.kinfraParentConfigFileName)
-
-        if (!configFile.exists()) {
-            println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Parent configuration file not found: ${configFile.absolutePath}")
+        val parentConfig = loginRepo.loadKinfraParentConfig()
+        if (parentConfig == null) {
+            println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Parent configuration not found")
             println("${AnsiColors.BLUE}No sub-projects configured.${AnsiColors.RESET}")
             return 0
-        }
-
-        val parentConfig = configRepository.loadKinfraParentConfig(configFile.absolutePath)
-        if (parentConfig == null) {
-            println("${AnsiColors.RED}Error:${AnsiColors.RESET} Failed to load parent configuration")
-            return 1
         }
 
         println("${AnsiColors.BLUE}=== Sub-projects in ${parentConfig.projectName} ===${AnsiColors.RESET}")
@@ -40,7 +32,7 @@ class SubListAction(
 
         println()
         println("${AnsiColors.BLUE}Total:${AnsiColors.RESET} ${parentConfig.subProjects.size} sub-project(s)")
-        println("${AnsiColors.BLUE}Config file:${AnsiColors.RESET} ${configFile.absolutePath}")
+        println("${AnsiColors.BLUE}Config file:${AnsiColors.RESET} ${parentConfig.filePath}")
 
         return 0
     }
