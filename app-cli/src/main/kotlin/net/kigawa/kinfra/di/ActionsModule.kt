@@ -20,7 +20,7 @@ val actionsModule = module {
     single<Action>(named(ActionType.PLAN.actionName)) { PlanAction(get(), get()) }
     single<Action>(named(ActionType.APPLY.actionName)) { ApplyAction(get()) }
     single<Action>(named(ActionType.DESTROY.actionName)) { DestroyAction(get(), get()) }
-    single<Action>(named(ActionType.DEPLOY.actionName)) { DeployAction(get(), get()) }
+    single<Action>(named(ActionType.DEPLOY.actionName)) { DeployAction(get(), get(), get()) }
     single<Action>(named(ActionType.PUSH.actionName)) { PushAction(get()) }
     single<Action>(named(ActionType.CONFIG_EDIT.actionName)) { ConfigEditAction(get(), get()) }
     single<Action>(named("${ActionType.SUB.actionName} ${SubActionType.LIST.actionName}")) {
@@ -31,7 +31,7 @@ val actionsModule = module {
     single<Action>(named("${ActionType.SUB.actionName} ${SubActionType.ADD.actionName}")) { SubAddAction(get()) }
     single<Action>(named(ActionType.SELF_UPDATE.actionName)) {
         SelfUpdateAction(
-            get(), get(), get(), get()
+            get(), get(), get(), get(), get()
         )
     }
 
