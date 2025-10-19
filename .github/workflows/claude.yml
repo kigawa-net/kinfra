@@ -56,7 +56,17 @@ jobs:
 
       - name: Create temporary branch
         run: |
-          git switch -c claude-code-action-${{ github.run_id }}
+          # Gitの設定を確実に行う
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # リモートの最新状態を取得
+          git fetch origin main
+          
+          # ブランチを作成して切り替え
+          git switch -c claude-code-action-${{ github.run_id }} origin/main
+          
+          # ブランチをプッシュ
           git push --set-upstream origin claude-code-action-${{ github.run_id }}
         env:
           GH_TOKEN: ${{ github.token }}
@@ -120,8 +130,12 @@ jobs:
 
           claude_args: '--allowed-tools Bash(gh pr:*) Edit --dangerously-skip-permissions'
 
-      - name: Create Pull Request Or Comment
+- name: Create Pull Request Or Comment
         run: |
+          # Gitの設定を確実に行う
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
           git add . -A
           if git diff --cached --quiet; then
             echo "変更はありません。コメントを投稿します。"
@@ -130,15 +144,24 @@ jobs:
               gh issue comment "$TARGET_NUM" --body "Claude Code: 変更はありませんでした。"
             fi
           else
+            echo "変更をコミットします..."
             git commit -m "Claude Code Result"
-            git pull
-            git push
+            
+            echo "リモートの変更を取得します..."
+            git fetch origin main
+            
+            echo "リモートブランチにプッシュします..."
+            if ! git push origin claude-code-action-${{ github.run_id }}; then
+              echo "プッシュに失敗しました。force pushを試みます..."
+              git push --force-with-lease origin claude-code-action-${{ github.run_id }}
+            fi
+            
             echo "Pull Requestを作成または更新します..."
             if ! gh pr create \
               --base main \
               --head claude-code-action-${{ github.run_id }} \
               --title "Claude Code実行結果" \
-              --body "Claude Codeによる自動修正結果です."; then
+              --body "Claude Codeによる自動修正結果です。"; then
               echo "PR作成に失敗しました。既存PRを更新します..."
                EXISTING_PR=$(gh pr list --head claude-code-action-${{ github.run_id }} --json number -q '.[0].number')
                if [ -n "$EXISTING_PR" ]; then
