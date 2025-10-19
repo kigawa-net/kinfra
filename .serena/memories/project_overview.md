@@ -37,3 +37,14 @@ Multi-module layered architecture:
 - Project config: `kinfra.yaml` (auto-generated on login)
 - Backend config: `backend.tfvars`
 - Environment variables: BWS_ACCESS_TOKEN, BW_PROJECT, KINFRA_LOG_DIR, KINFRA_LOG_LEVEL
+
+## Recent Changes (2025-10-19)
+- TerraformRunnerクラスのリファクタリングを実施
+- executionパッケージを新規作成し、責務を分離
+- ActionExecutor: アクション実行の共通パターン
+- CommandInterpreter: コマンドライン引数の解釈
+- SystemRequirement: システム要件のチェック
+- UpdateHandler: アップデートのチェックと実行
+- ConfigEditor: 設定ファイル編集機能
+- DeploymentPipeline: デプロイパイプライン
+- UpdateProcessor: アップデート処理
