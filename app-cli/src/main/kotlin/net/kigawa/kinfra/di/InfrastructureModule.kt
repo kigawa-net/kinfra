@@ -10,6 +10,7 @@ import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenRepositoryImpl
 import net.kigawa.kinfra.infrastructure.config.ConfigRepositoryImpl
 import net.kigawa.kinfra.infrastructure.config.EnvFileLoaderImpl
 import net.kigawa.kinfra.infrastructure.config.GlobalConfigScheme
+import net.kigawa.kinfra.infrastructure.config.GlobalConfigImpl
 import net.kigawa.kinfra.infrastructure.config.LoginRepoImpl
 import net.kigawa.kinfra.infrastructure.file.FileRepositoryImpl
 import net.kigawa.kinfra.infrastructure.logging.FileLogger
@@ -38,8 +39,12 @@ val infrastructureModule = module {
     single<FilePaths> { FilePaths(get()) }
     // GlobalConfig: Load from file, or use default empty config
     single<GlobalConfig> {
-        val configRepo = ConfigRepositoryImpl(get(), GlobalConfigScheme())
-        runCatching { configRepo.loadGlobalConfig() }.getOrElse { GlobalConfigScheme() }
+        val configRepo = ConfigRepositoryImpl(get())
+        runCatching { configRepo.loadGlobalConfig() }.getOrNull() ?: run {
+            val reposPath = get<FilePaths>().baseConfigDir?.resolve(get<FilePaths>().reposDir)
+                ?: throw IllegalStateException("Config directory not available")
+            GlobalConfigImpl(GlobalConfigScheme(), reposPath)
+        }
     }
     single<Logger> {
         val logDir = System.getenv("KINFRA_LOG_DIR") ?: "logs"
@@ -57,7 +62,7 @@ val infrastructureModule = module {
     single<TerraformRepository> { TerraformRepositoryImpl(get()) }
     single<TerraformService> { TerraformServiceImpl(get(), get()) }
     single<BitwardenRepository> { BitwardenRepositoryImpl(get(), get()) }
-    single<ConfigRepository> { ConfigRepositoryImpl(get(), get()) }
+    single<ConfigRepository> { ConfigRepositoryImpl(get()) }
     single<VersionChecker> { VersionCheckerImpl(get()) }
     single<AutoUpdater> { AutoUpdaterImpl(get(), get()) }
     single<GitHelper> { GitHelperImpl(get()) }

@@ -6,14 +6,12 @@ import net.kigawa.kinfra.model.conf.LoginConfig
 
 @Serializable
 data class LoginConfigScheme(
-    override val repo: String,
-    override val enabledProjects: List<String> = emptyList()
-): LoginConfig {
+    val repo: String,
+    val enabledProjects: List<String> = emptyList(),
+) {
     companion object {
         fun from(loginConfig: LoginConfig): LoginConfigScheme {
-            if (loginConfig is LoginConfigScheme) {
-                return loginConfig
-            }
+
             return LoginConfigScheme(
                 repo = loginConfig.repo,
                 enabledProjects = loginConfig.enabledProjects
@@ -24,13 +22,10 @@ data class LoginConfigScheme(
 
 @Serializable
 data class GlobalConfigScheme(
-    override val login: LoginConfigScheme? = null,
-): GlobalConfig {
+    val login: LoginConfigScheme? = null,
+) {
     companion object {
         fun from(globalConfig: GlobalConfig): GlobalConfigScheme {
-            if (globalConfig is GlobalConfigScheme) {
-                return globalConfig
-            }
             return GlobalConfigScheme(
                 login = globalConfig.login?.let { LoginConfigScheme.from(it) }
             )

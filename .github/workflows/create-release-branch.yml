@@ -67,7 +67,7 @@ jobs:
       - name: Calculate new version
         id: calculate_version
         run: |
-          if [ "${{ github.event_name }}" == "push" ]; then
+          if [ "${{ github.event_name }}" = "push" ]; then
             VERSION_TYPE="patch"
           else
             VERSION_TYPE="${{ github.event.inputs.version_type }}"

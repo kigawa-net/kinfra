@@ -5,6 +5,7 @@ import net.kigawa.kinfra.action.bitwarden.BitwardenRepository
 import net.kigawa.kinfra.action.config.ConfigRepository
 import net.kigawa.kinfra.infrastructure.config.GlobalConfigScheme
 import net.kigawa.kinfra.infrastructure.config.LoginConfigScheme
+import net.kigawa.kinfra.infrastructure.config.GlobalConfigImpl
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.LoginRepo
 import net.kigawa.kinfra.model.conf.FilePaths
@@ -43,7 +44,10 @@ class LoginAction(
             // Save project configuration (repo identifier like "kigawa01/infra")
             val loginConfig = LoginConfigScheme(repo = repoPath.first)
             val globalConfigScheme = GlobalConfigScheme(login = loginConfig)
-            configRepository.saveGlobalConfig(globalConfigScheme)
+            val reposPath = filePaths.baseConfigDir?.resolve(filePaths.reposDir)
+                ?: throw IllegalStateException("Config directory not available")
+            val globalConfig = GlobalConfigImpl(globalConfigScheme, reposPath)
+            configRepository.saveGlobalConfig(globalConfig)
             val configPath = configRepository.getProjectConfigFilePath()
             println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Project configuration saved to $configPath")
             println()
