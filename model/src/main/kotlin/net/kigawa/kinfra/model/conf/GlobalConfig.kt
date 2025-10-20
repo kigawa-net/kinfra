@@ -7,12 +7,12 @@ interface GlobalConfig {
 }
 
 data class LoginConfig(
-    val repo: String = "",
+    val repo: RepositoryName = RepositoryName(""),
     val enabledProjects: List<String> = emptyList(),
     val repoPath: Path = Path.of("")
 ) {
     companion object {
-        fun from(repo: String, repoPath: Path, enabledProjects: List<String> = emptyList()): LoginConfig {
+        fun from(repo: RepositoryName, repoPath: Path, enabledProjects: List<String> = emptyList()): LoginConfig {
             return LoginConfig(
                 repo = repo,
                 repoPath = repoPath,

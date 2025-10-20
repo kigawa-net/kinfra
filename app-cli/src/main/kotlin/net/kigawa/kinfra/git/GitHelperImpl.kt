@@ -25,10 +25,10 @@ class GitHelperImpl(
     private fun getRepositoryPath(): File? {
         val projectConfig = configRepository.loadGlobalConfig()
         val repo = projectConfig.login?.repo
-        return if (repo != null && repo.isNotEmpty()) {
+        return if (repo != null && repo.value.isNotEmpty()) {
             // repo contains "user/repo" format, need to convert to local path
             // Use FilePaths to get the base directory
-            val repoDirName = repo.substringAfterLast('/')
+            val repoDirName = repo.getShortName()
             val userHome = System.getProperty("user.home")
             File("$userHome/.local/kinfra/repos/$repoDirName")
         } else {
