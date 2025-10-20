@@ -9,5 +9,5 @@ class GlobalConfigImpl(
     val kinfraReposPath: Path,
 ): GlobalConfig {
     override val login: LoginConfig?
-        get() = globalConfigScheme.login
+        get() = globalConfigScheme.login?.toLoginConfig()
 }
