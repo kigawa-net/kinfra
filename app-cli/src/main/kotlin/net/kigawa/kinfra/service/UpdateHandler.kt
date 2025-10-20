@@ -8,15 +8,14 @@ import net.kigawa.kinfra.model.LoginRepo
 import net.kigawa.kinfra.model.conf.KinfraConfig
 import net.kigawa.kinfra.model.util.AnsiColors
 import net.kigawa.kinfra.model.util.VersionUtil
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
 class UpdateHandler(
-    private val configRepository: ConfigRepository
-) : KoinComponent {
-    private val logger: Logger by inject()
-    private val versionChecker: VersionChecker by inject()
-    private val autoUpdater: AutoUpdater by inject()
+    private val versionChecker: VersionChecker,
+    private val autoUpdater: AutoUpdater,
+    private val logger: Logger,
+    private val configRepository: ConfigRepository,
+    private val loginRepo: LoginRepo
+) {
 
     fun checkForUpdates() {
         try {
@@ -77,7 +76,6 @@ class UpdateHandler(
         
         // Try to load from login repo if available
         return runCatching {
-            val loginRepo: LoginRepo by inject()
             loginRepo.loadKinfraConfig()
         }.getOrNull()
     }

@@ -1,20 +1,14 @@
 package net.kigawa.kinfra
 
-import net.kigawa.kinfra.action.logging.Logger
-import net.kigawa.kinfra.service.ActionRegistry
-import net.kigawa.kinfra.service.CommandInterpreter
-import net.kigawa.kinfra.service.SystemRequirement
-import net.kigawa.kinfra.service.UpdateHandler
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
+import net.kigawa.kinfra.di.DependencyContainer
 import kotlin.system.exitProcess
 
-class TerraformRunner: KoinComponent {
-    private val logger: Logger by inject()
-    private val actionRegistry: ActionRegistry by inject()
-    private val commandInterpreter: CommandInterpreter by inject()
-    private val systemRequirement: SystemRequirement by inject()
-    private val updateHandler: UpdateHandler by inject()
+class TerraformRunner(private val container: DependencyContainer) {
+    private val logger = container.logger
+    private val actionRegistry = container.actionRegistry
+    private val commandInterpreter = container.commandInterpreter
+    private val systemRequirement = container.systemRequirement
+    private val updateHandler = container.updateHandler
 
     fun run(args: Array<String>) {
         logger.info("Starting Terraform Runner with args: ${args.joinToString(" ")}")

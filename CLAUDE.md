@@ -39,21 +39,21 @@ model (依存なし) → action (契約) → infrastructure (実装) → app-cli
 - **model**: ドメインモデル（`Command`, `CommandType`, `TerraformConfig`など）
 - **action**: ビジネスロジック契約（`TerraformService`）
 - **infrastructure**: 実装（Terraform/Bitwarden統合、プロセス実行、設定管理、ログ）
-- **app-cli**: CLI（`App.kt`, `TerraformRunner`, `commands/`, Koin DI）
+- **app-cli**: CLI（`App.kt`, `TerraformRunner`, `commands/`, Manual DI）
 - **app-web**: Ktor REST API（`Application.kt`, `/terraform/*`エンドポイント）
 
-### DI（Koin）
+### DI（Manual Dependency Injection）
 
-- **CLI**: `di/AppModule.kt` - コマンドを`CommandType.commandName`で名前付き登録。`BWS_ACCESS_TOKEN`があればSDK版コマンドを登録（`deploy`→`deploy-sdk`自動リダイレクト）
-- **Web**: `di/WebModule.kt` - Infrastructure実装を提供
+- **CLI**: `di/DependencyContainer.kt` - 全ての依存関係を管理するコンテナ。`BWS_ACCESS_TOKEN`があればSDK版コマンドを登録（`deploy`→`deploy-sdk`自動リダイレクト）
+- **Web**: `di/DependencyContainer.kt` - Infrastructure実装を提供
 
 ### コマンドシステム
 
 新規コマンド追加：
-1. `CommandType` enumに追加（`model/.../CommandType.kt`）
-2. `Command`実装クラス作成（`app-cli/.../commands/`）
-3. `di/AppModule.kt`で登録
-4. Terraformチェック不要なら`TerraformRunner.kt`の`skipTerraformCheck`に追加
+1. `ActionType` enumに追加（`model/.../ActionType.kt`）
+2. `Action`実装クラス作成（`action/.../actions/`または`app-cli/.../actions/`）
+3. `di/DependencyContainer.kt`のactionsマップに登録
+4. Terraformチェック不要なら`CommandInterpreter.kt`の`shouldSkipTerraformCheck`に追加
 
  **重要**: `deploy`はSDK版に自動リダイレクト。
 
