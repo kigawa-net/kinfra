@@ -93,6 +93,8 @@ fun toUpdateSettings(): UpdateSettings = this
 
 @Serializable
 data class KinfraConfigScheme(
+    // Support both old and new formats for reading
+    private val rootProjectNew: ProjectInfoScheme? = null,
     private val rootProjectField: ProjectInfoScheme? = null,
     override val bitwarden: BitwardenSettingsScheme? = null,
     override val subProjects: List<ProjectInfoScheme> = emptyList(),
@@ -105,7 +107,7 @@ data class KinfraConfigScheme(
 ) : KinfraConfig {
 
     override val rootProject: ProjectInfoScheme
-        get() = project ?: rootProjectField ?: ProjectInfoScheme()
+        get() = project ?: rootProjectNew ?: rootProjectField ?: ProjectInfoScheme()
 
     @Deprecated("Login configuration should be in GlobalConfig. This property is kept for backward compatibility.")
     override val login: LoginConfig?
