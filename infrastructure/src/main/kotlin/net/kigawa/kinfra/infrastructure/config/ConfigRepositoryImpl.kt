@@ -13,7 +13,6 @@ import net.kigawa.kinfra.infrastructure.logging.Logger
 
 import java.io.File
 import java.nio.file.Path
-import java.util.Scanner
 
 /**
  * 設定ファイルを操作する実装です。
@@ -65,41 +64,38 @@ class ConfigRepositoryImpl(
      */
     private fun completeMissingLoginConfig(scheme: GlobalConfigScheme): GlobalConfigScheme {
         val login = scheme.login ?: return scheme
-        
-        val scanner = Scanner(System.`in`)
+
         var modified = false
         var repo = login.repo
         var repoPath = login.repoPath
         var enabledProjects = login.enabledProjects
-        
+
         // repoが不足している場合
         if (repo.isBlank()) {
             print("リポジトリURLを入力してください (例: https://github.com/user/repo.git): ")
-            repo = scanner.nextLine().trim()
+            repo = readlnOrNull()?.trim() ?: ""
             modified = true
         }
-        
+
         // repoPathが不足している場合
         if (repoPath.toString().isBlank()) {
             val defaultPath = filePaths.baseConfigDir?.resolve("repos") ?: Path.of("./repos")
             print("リポジトリのローカルパスを入力してください (デフォルト: $defaultPath): ")
-            val input = scanner.nextLine().trim()
+            val input = readlnOrNull()?.trim() ?: ""
             repoPath = if (input.isBlank()) defaultPath.toString() else input
             modified = true
         }
-        
+
         // enabledProjectsが空の場合
         if (enabledProjects.isEmpty()) {
             print("有効なプロジェクト名をカンマ区切りで入力してください (例: project1,project2): ")
-            val input = scanner.nextLine().trim()
+            val input = readlnOrNull()?.trim() ?: ""
             if (input.isNotBlank()) {
                 enabledProjects = input.split(",").map { it.trim() }.filter { it.isNotEmpty() }
                 modified = true
             }
         }
-        
-        scanner.close()
-        
+
         return if (modified) {
             val completedLogin = LoginConfigScheme(
                 repo = repo,
