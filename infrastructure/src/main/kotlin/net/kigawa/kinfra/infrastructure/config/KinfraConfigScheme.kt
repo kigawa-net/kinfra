@@ -100,13 +100,12 @@ data class KinfraConfigScheme(
     @Deprecated("Login configuration should be in GlobalConfig. This property is kept for backward compatibility.")
     @Transient
     private val loginScheme: LoginConfigScheme? = null,
-    // Backward compatibility for old 'project' property (not serialized)
-    @Transient
+    // Backward compatibility for old 'project' property - save as 'project' for compatibility
     private val project: ProjectInfoScheme? = null
 ) : KinfraConfig {
 
     override val rootProject: ProjectInfoScheme
-        get() = rootProjectField ?: project ?: ProjectInfoScheme()
+        get() = project ?: rootProjectField ?: ProjectInfoScheme()
 
     @Deprecated("Login configuration should be in GlobalConfig. This property is kept for backward compatibility.")
     override val login: LoginConfig?
@@ -117,7 +116,7 @@ data class KinfraConfigScheme(
                 return kinfraConfig
             }
             return KinfraConfigScheme(
-                rootProjectField = ProjectInfoScheme.from(kinfraConfig.rootProject),
+                project = ProjectInfoScheme.from(kinfraConfig.rootProject),
                 bitwarden = kinfraConfig.bitwarden?.let { BitwardenSettingsScheme.from(it) },
                 subProjects = kinfraConfig.subProjects.map { ProjectInfoScheme.from(it) },
                 update = kinfraConfig.update?.let { UpdateSettingsScheme.from(it) },
