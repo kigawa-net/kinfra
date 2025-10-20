@@ -3,6 +3,7 @@ package net.kigawa.kinfra.di
 import net.kigawa.kinfra.action.actions.*
 import net.kigawa.kinfra.actions.LoginAction
 import net.kigawa.kinfra.action.actions.SubEditAction
+import net.kigawa.kinfra.action.execution.SubProjectExecutor
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.ActionType
 import net.kigawa.kinfra.model.SubActionType
@@ -10,6 +11,9 @@ import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
 val actionsModule = module {
+
+    // Execution
+    single<SubProjectExecutor> { SubProjectExecutor(get()) }
 
     // Actions
     single<Action>(named(ActionType.FMT.actionName)) { FormatAction(get(), get()) }
