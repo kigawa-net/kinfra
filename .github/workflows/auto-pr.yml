@@ -1,0 +1,59 @@
+name: Auto Create PR
+
+on:
+  push:
+    branches:
+      - kigawa
+    paths:
+      - '**/*.kt'
+      - '**/*.kts'
+      - '**/*.gradle*'
+      - '**/*.yaml'
+      - '**/*.yml'
+      - '**/*.md'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  create-pr:
+    name: Create Pull Request
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get commit message
+        id: commit
+        run: |
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          echo "message=$COMMIT_MSG" >> $GITHUB_OUTPUT
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: kigawa-auto-pr
+          base: dev
+          title: "${{ steps.commit.outputs.message }}"
+          body: |
+            ## Auto-generated PR
+
+            This PR was automatically created from the latest commit on `kigawa` branch.
+
+            **Commit Message:** ${{ steps.commit.outputs.message }}
+
+            ### Recent Commits
+            ```
+            ${{ steps.commit.outputs.message }}
+            ```
+
+            ---
+            *This PR was created automatically by GitHub Actions.*
+          draft: false
+          delete-branch: true
