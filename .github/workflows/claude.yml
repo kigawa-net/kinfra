@@ -178,7 +178,7 @@ jobs:
           fi
 
       - name: Create Pull Request
-        if: steps.claude.outcome == 'success' && ! git diff --cached --quiet
+        if: steps.claude.outcome == 'success'
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ github.token }}
