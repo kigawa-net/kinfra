@@ -11,6 +11,7 @@ import net.kigawa.kinfra.model.util.AnsiColors
 import net.kigawa.kinfra.model.util.exitCode
 import net.kigawa.kinfra.model.util.isFailure
 import net.kigawa.kinfra.model.util.isSuccess
+import net.kigawa.kinfra.model.util.message
 import net.kigawa.kinfra.action.logging.Logger
 import net.kigawa.kinfra.model.BitwardenSecret
 import java.io.File
@@ -146,6 +147,12 @@ class DeployActionWithSDK(
         println("${AnsiColors.BLUE}Step 1/3: Initializing Terraform${AnsiColors.RESET}")
         val initResult = terraformService.init(emptyList())
         if (initResult.isFailure()) {
+            // Terraform設定がない場合はスキップとして成功扱い
+            if (initResult.message()?.contains("Terraform configuration not found") == true) {
+                logger.info("Terraform configuration not found for sub-project, skipping")
+                println("${AnsiColors.YELLOW}⚠ Terraform configuration not found, skipping${AnsiColors.RESET}")
+                return 0
+            }
             logger.error("Terraform init failed for sub-project with exit code: ${initResult.exitCode()}")
             return initResult.exitCode()
         }
@@ -158,6 +165,12 @@ class DeployActionWithSDK(
         println("${AnsiColors.BLUE}Step 2/3: Creating execution plan${AnsiColors.RESET}")
         val planResult = terraformService.plan(additionalArgs)
         if (planResult.isFailure()) {
+            // Terraform設定がない場合はスキップとして成功扱い
+            if (planResult.message()?.contains("Terraform configuration not found") == true) {
+                logger.info("Terraform configuration not found for sub-project, skipping")
+                println("${AnsiColors.YELLOW}⚠ Terraform configuration not found, skipping${AnsiColors.RESET}")
+                return 0
+            }
             logger.error("Terraform plan failed for sub-project with exit code: ${planResult.exitCode()}")
             return planResult.exitCode()
         }
@@ -176,6 +189,12 @@ class DeployActionWithSDK(
         val applyResult = terraformService.apply(additionalArgs = applyArgsWithAutoApprove)
 
         if (applyResult.isFailure()) {
+            // Terraform設定がない場合はスキップとして成功扱い
+            if (applyResult.message()?.contains("Terraform configuration not found") == true) {
+                logger.info("Terraform configuration not found for sub-project, skipping")
+                println("${AnsiColors.YELLOW}⚠ Terraform configuration not found, skipping${AnsiColors.RESET}")
+                return 0
+            }
             logger.error("Terraform apply failed for sub-project with exit code: ${applyResult.exitCode()}")
             return applyResult.exitCode()
         }

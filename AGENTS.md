@@ -58,6 +58,7 @@
 | todo-maintainer    | タスク管理を自動化するエージェント |
 
 ## 変更履歴
+- 2025-10-20: plan実行前にプロジェクト名を表示する。PlanActionでterraform plan実行前に作業ディレクトリパスを表示。
 - 2025-10-20: Terraform実行がスキップされた場合に成功として扱う。DeploymentPipelineでTerraform設定が見つからないエラーをexit code 0として扱う。
 - 2025-10-20: GitHub Actionsワークフローで無効な条件式を修正。Create Pull Requestステップの条件からbashコマンドを削除。
 - 2025-10-20: Terraform設定がnullの場合にエラーを出さずにスキップする。plan, apply, status, destroy, format, validate, initアクションでconfig == nullの場合に静かにreturn 0。
