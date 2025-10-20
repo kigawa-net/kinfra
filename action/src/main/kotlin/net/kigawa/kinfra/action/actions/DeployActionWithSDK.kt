@@ -2,7 +2,9 @@ package net.kigawa.kinfra.action.actions
 
 import net.kigawa.kinfra.model.service.TerraformService
 import net.kigawa.kinfra.action.bitwarden.BitwardenSecretManagerRepository
+import net.kigawa.kinfra.action.config.ConfigRepository
 import net.kigawa.kinfra.action.config.EnvFileLoader
+import net.kigawa.kinfra.action.execution.SubProjectExecutor
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.conf.R2BackendConfig
 import net.kigawa.kinfra.model.util.AnsiColors
@@ -19,15 +21,25 @@ import java.io.File
 class DeployActionWithSDK(
     private val terraformService: TerraformService,
     private val secretManagerRepository: BitwardenSecretManagerRepository,
+    private val configRepository: ConfigRepository,
     private val logger: Logger,
     private val envFileLoader: EnvFileLoader
 ): Action {
+
+    private val subProjectExecutor = SubProjectExecutor(configRepository)
+
     override fun execute(args: List<String>): Int {
         logger.info("DeployActionWithSDK started with args: ${args.joinToString(" ")}")
 
         val additionalArgs = args.filter { it != "--auto-selected" }
 
         println("${AnsiColors.BLUE}Starting full deployment pipeline${AnsiColors.RESET}")
+        println()
+
+        // Execute parent project first
+        println("${AnsiColors.CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${AnsiColors.RESET}")
+        println("${AnsiColors.CYAN}Executing parent project${AnsiColors.RESET}")
+        println("${AnsiColors.CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${AnsiColors.RESET}")
         println()
 
         // Step 0: Setup R2 backend if needed
@@ -43,6 +55,7 @@ class DeployActionWithSDK(
         val initResult = terraformService.init(emptyList())
         if (initResult.isFailure()) {
             logger.error("Terraform init failed with exit code: ${initResult.exitCode()}")
+            println("${AnsiColors.RED}Parent project deployment failed${AnsiColors.RESET}")
             return initResult.exitCode()
         }
         logger.info("Terraform init completed successfully")
@@ -55,6 +68,7 @@ class DeployActionWithSDK(
         val planResult = terraformService.plan(additionalArgs)
         if (planResult.isFailure()) {
             logger.error("Terraform plan failed with exit code: ${planResult.exitCode()}")
+            println("${AnsiColors.RED}Parent project deployment failed${AnsiColors.RESET}")
             return planResult.exitCode()
         }
         logger.info("Terraform plan completed successfully")
@@ -71,27 +85,103 @@ class DeployActionWithSDK(
         }
         val applyResult = terraformService.apply(additionalArgs = applyArgsWithAutoApprove)
 
-        if (applyResult.isSuccess()) {
-            logger.info("Deployment completed successfully")
-            println()
-            println("${AnsiColors.GREEN}✅ Deployment completed successfully!${AnsiColors.RESET}")
-
-            // Auto git push after successful deployment
-            println()
-            println("${AnsiColors.BLUE}Pushing to remote repository...${AnsiColors.RESET}")
-            val pushResult = gitPush()
-            if (pushResult) {
-                logger.info("Successfully pushed to remote repository")
-                println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Successfully pushed to remote repository")
-            } else {
-                logger.warn("Failed to push to remote repository")
-                println("${AnsiColors.YELLOW}⚠${AnsiColors.RESET} Failed to push to remote repository (non-fatal)")
-            }
-        } else {
+        if (applyResult.isFailure()) {
             logger.error("Terraform apply failed with exit code: ${applyResult.exitCode()}")
+            println("${AnsiColors.RED}Parent project deployment failed${AnsiColors.RESET}")
+            return applyResult.exitCode()
         }
 
-        return applyResult.exitCode()
+        logger.info("Parent project deployment completed successfully")
+        println()
+        println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Parent project completed successfully")
+
+        // Execute sub-projects
+        val subProjects = subProjectExecutor.getSubProjects()
+        if (subProjects.isNotEmpty()) {
+            println()
+            println("${AnsiColors.BLUE}Found ${subProjects.size} sub-project(s)${AnsiColors.RESET}")
+
+            val subResult = subProjectExecutor.executeInSubProjects(subProjects) { subProject, subProjectDir ->
+                executeSubProjectDeployment(additionalArgs, subProjectDir)
+            }
+
+            if (subResult != 0) {
+                println("${AnsiColors.RED}Sub-project deployment failed${AnsiColors.RESET}")
+                return subResult
+            }
+        }
+
+        // Handle post-deployment actions
+        logger.info("All deployments completed successfully")
+        println()
+        println("${AnsiColors.GREEN}✅ Deployment completed successfully!${AnsiColors.RESET}")
+
+        // Auto git push after successful deployment
+        println()
+        println("${AnsiColors.BLUE}Pushing to remote repository...${AnsiColors.RESET}")
+        val pushResult = gitPush()
+        if (pushResult) {
+            logger.info("Successfully pushed to remote repository")
+            println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Successfully pushed to remote repository")
+        } else {
+            logger.warn("Failed to push to remote repository")
+            println("${AnsiColors.YELLOW}⚠${AnsiColors.RESET} Failed to push to remote repository (non-fatal)")
+        }
+
+        return 0
+    }
+
+    private fun executeSubProjectDeployment(additionalArgs: List<String>, subProjectDir: File): Int {
+        logger.info("Deploying sub-project in directory: ${subProjectDir.absolutePath}")
+
+        // Step 0: Setup R2 backend if needed
+        logger.info("Step 0: Checking R2 backend configuration for sub-project")
+        if (!setupR2BackendIfNeeded()) {
+            logger.error("Failed to setup R2 backend for sub-project")
+            return 1
+        }
+
+        // Step 1: Initialize
+        logger.info("Step 1: Initializing Terraform for sub-project")
+        println("${AnsiColors.BLUE}Step 1/3: Initializing Terraform${AnsiColors.RESET}")
+        val initResult = terraformService.init(emptyList())
+        if (initResult.isFailure()) {
+            logger.error("Terraform init failed for sub-project with exit code: ${initResult.exitCode()}")
+            return initResult.exitCode()
+        }
+        logger.info("Terraform init completed successfully for sub-project")
+
+        println()
+
+        // Step 2: Plan
+        logger.info("Step 2: Creating execution plan for sub-project")
+        println("${AnsiColors.BLUE}Step 2/3: Creating execution plan${AnsiColors.RESET}")
+        val planResult = terraformService.plan(additionalArgs)
+        if (planResult.isFailure()) {
+            logger.error("Terraform plan failed for sub-project with exit code: ${planResult.exitCode()}")
+            return planResult.exitCode()
+        }
+        logger.info("Terraform plan completed successfully for sub-project")
+
+        println()
+
+        // Step 3: Apply
+        logger.info("Step 3: Applying changes for sub-project")
+        println("${AnsiColors.BLUE}Step 3/3: Applying changes${AnsiColors.RESET}")
+        val applyArgsWithAutoApprove = if (additionalArgs.contains("-auto-approve")) {
+            additionalArgs
+        } else {
+            additionalArgs + "-auto-approve"
+        }
+        val applyResult = terraformService.apply(additionalArgs = applyArgsWithAutoApprove)
+
+        if (applyResult.isFailure()) {
+            logger.error("Terraform apply failed for sub-project with exit code: ${applyResult.exitCode()}")
+            return applyResult.exitCode()
+        }
+
+        logger.info("Sub-project deployment completed successfully")
+        return 0
     }
 
     override fun getDescription(): String {
