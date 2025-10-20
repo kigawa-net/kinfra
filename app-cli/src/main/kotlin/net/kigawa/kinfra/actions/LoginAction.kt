@@ -43,7 +43,7 @@ class LoginAction(
 
             // Save project configuration (repo identifier like "kigawa01/infra")
             val loginConfig = LoginConfigScheme(
-                repo = repoPath.first,
+                repo = repoPath.first.value,
                 repoPath = targetDir.absolutePath
             )
             val globalConfigScheme = GlobalConfigScheme(login = loginConfig)
@@ -279,33 +279,16 @@ class LoginAction(
      *   - user/repo
      *   - https://github.com/user/repo.git
      *   - git@github.com:user/repo.git
-     * @return Pair of (repoName, localPath) or null if invalid format
+     * @return Pair of (RepositoryName, localPath) or null if invalid format
      */
-    private fun parseGitHubRepoPath(githubRepo: String): Pair<String, String>? {
-        val repoName = when {
-            // HTTPS URL: https://github.com/user/repo.git
-            githubRepo.startsWith("https://github.com/") -> {
-                githubRepo.removePrefix("https://github.com/").removeSuffix(".git")
-            }
-            // SSH URL: git@github.com:user/repo.git
-            githubRepo.startsWith("git@github.com:") -> {
-                githubRepo.removePrefix("git@github.com:").removeSuffix(".git")
-            }
-            // Short format: user/repo
-            githubRepo.matches(Regex("^[a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+$")) -> {
-                githubRepo
-            }
-
-            else -> return null
-        }
-
-        // Extract repo directory name (last part after /)
-        val repoDirName = repoName.substringAfterLast('/')
+    private fun parseGitHubRepoPath(githubRepo: String): Pair<net.kigawa.kinfra.model.conf.RepositoryName, String>? {
+        val repositoryName = net.kigawa.kinfra.model.conf.RepositoryName.fromGitHubRepo(githubRepo)
+            ?: return null
 
         // Default local path: ~/.local/kinfra/repos/{repo}
-        val localPath = "${filePaths.baseConfigDir}/${filePaths.reposDir}/$repoDirName"
+        val localPath = "${filePaths.baseConfigDir}/${filePaths.reposDir}/${repositoryName.getShortName()}"
 
-        return Pair(repoName, localPath)
+        return Pair(repositoryName, localPath)
     }
 
     override fun getDescription(): String {
