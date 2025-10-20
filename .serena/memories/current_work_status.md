@@ -3,22 +3,21 @@
 ## ワーキングツリーの状態
 - **ブランチ**: kigawa (devと同期済み)
 - **コミット予定の変更**: なし (すべてコミット済み)
-- **ステージされていない変更**: なし
+- **ステージされていない変更**: AGENTS.mdの更新
 
 ## 最近の作業履歴
-1. **変更コミット済み**: YAMLデシリアライズと入力ストリーム競合の修正
-   - ProjectInfoSchemeに@SerialName("projectId")を追加
-   - LoginActionでreadlnOrNull()を使用
-   - bin/commonにgit merge origin/devを追加
+1. **PR #99 作成**: YAMLデシリアライズでUnknown property 'login'を無視する修正
+   - ConfigRepositoryImplでYamlConfiguration(strictMode = false)を設定
+   - Unknown propertyを含むYAMLファイルをエラーなく読み込み可能
 
-2. **PR作成済み**: 変更はdevブランチにマージ済み
+2. **PR #97 マージ待ち**: ドキュメント更新
 
-3. **ドキュメント更新**: configuration-reference.mdを更新してサポートされるYAML形式を記載
+3. **PR #95 マージ済み**: ProjectInfoSchemeのシリアライズ修正
 
 ## 次の作業予定
+- PRのレビューとマージを待つ
 - 追加の互換性問題の監視
-- 必要に応じてさらなる修正
 
 ## 注意事項
-- YAML形式の後方互換性を確保
+- YAMLデシリアライズのstrictModeをfalseに設定して後方互換性を確保
 - ドキュメントを最新の状態に維持

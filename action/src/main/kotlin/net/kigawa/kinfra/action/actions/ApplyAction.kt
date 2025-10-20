@@ -3,6 +3,8 @@ package net.kigawa.kinfra.action.actions
 import net.kigawa.kinfra.model.service.TerraformService
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.util.exitCode
+import net.kigawa.kinfra.model.util.AnsiColors
+import net.kigawa.kinfra.model.util.isFailure
 
 class ApplyAction(
     private val terraformService: TerraformService
@@ -19,6 +21,13 @@ class ApplyAction(
         val argsWithoutPlan = if (planFile != null) args.drop(1) else args
 
         val result = terraformService.apply(planFile, argsWithoutPlan, quiet = false)
+
+        // エラーが発生した場合、プロジェクト情報を表示
+        if (result.isFailure()) {
+            val config = terraformService.getTerraformConfig()
+            println("${AnsiColors.RED}Error in project:${AnsiColors.RESET} ${config.workingDirectory.absolutePath}")
+        }
+
         return result.exitCode()
     }
 
