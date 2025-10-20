@@ -87,6 +87,25 @@ kinfra sub add my-new-project
 
 ---
 
+### sub plan
+
+指定したサブプロジェクトでterraform planを実行。
+
+```bash
+kinfra sub plan <sub-project-name>
+```
+
+**実行内容**:
+- 指定したサブプロジェクトのディレクトリに移動
+- `terraform plan`を実行
+
+**例**:
+```bash
+kinfra sub plan my-project
+```
+
+---
+
 ## Terraformコマンド
 
 ### init

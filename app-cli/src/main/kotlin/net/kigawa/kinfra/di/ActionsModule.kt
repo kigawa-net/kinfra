@@ -3,6 +3,7 @@ package net.kigawa.kinfra.di
 import net.kigawa.kinfra.action.actions.*
 import net.kigawa.kinfra.actions.LoginAction
 import net.kigawa.kinfra.action.actions.SubEditAction
+import net.kigawa.kinfra.action.execution.SubProjectExecutor
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.ActionType
 import net.kigawa.kinfra.model.SubActionType
@@ -11,6 +12,9 @@ import org.koin.dsl.module
 
 val actionsModule = module {
 
+    // Execution
+    single<SubProjectExecutor> { SubProjectExecutor(get()) }
+
     // Actions
     single<Action>(named(ActionType.FMT.actionName)) { FormatAction(get(), get()) }
     single<Action>(named(ActionType.VALIDATE.actionName)) { ValidateAction(get(), get()) }
@@ -18,7 +22,7 @@ val actionsModule = module {
     single<Action>(named(ActionType.LOGIN.actionName)) { LoginAction(get(), get(), get(), get(), get()) }
     single<Action>(named(ActionType.HELLO.actionName)) { HelloAction(get(), get(), get()) }
     single<Action>(named(ActionType.INIT.actionName)) { InitAction(get(), get()) }
-    single<Action>(named(ActionType.PLAN.actionName)) { PlanAction(get(), get()) }
+    single<Action>(named(ActionType.PLAN.actionName)) { PlanAction(get(), get(), get()) }
     single<Action>(named(ActionType.APPLY.actionName)) { ApplyAction(get()) }
     single<Action>(named(ActionType.DESTROY.actionName)) { DestroyAction(get(), get()) }
     single<Action>(named(ActionType.DEPLOY.actionName)) { DeployAction(get(), get(), get(), get()) }
@@ -28,6 +32,7 @@ val actionsModule = module {
     single<Action>(named("${ActionType.SUB.actionName} ${SubActionType.SHOW.actionName}")) { SubShowAction(get(), get(), get()) }
     single<Action>(named("${ActionType.SUB.actionName} ${SubActionType.EDIT.actionName}")) { SubEditAction(get(), get()) }
     single<Action>(named("${ActionType.SUB.actionName} ${SubActionType.REMOVE.actionName}")) { SubRemoveAction(get()) }
+    single<Action>(named("${ActionType.SUB.actionName} ${SubActionType.PLAN.actionName}")) { SubPlanAction(get(), get()) }
     single<Action>(named(ActionType.CONFIG.actionName)) { ConfigAction(get()) }
     single<Action>(named(ActionType.CONFIG_EDIT.actionName)) { ConfigEditAction(get(), get()) }
     single<Action>(named(ActionType.SELF_UPDATE.actionName)) { SelfUpdateAction(get(), get(), get(), get(), get()) }
