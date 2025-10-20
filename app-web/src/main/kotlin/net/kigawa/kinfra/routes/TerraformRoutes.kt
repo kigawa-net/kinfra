@@ -4,10 +4,9 @@ import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
-import net.kigawa.kinfra.model.service.TerraformService
+import net.kigawa.kinfra.dependencyContainer
 import net.kigawa.kinfra.model.util.exitCode
 import net.kigawa.kinfra.model.util.message
-import org.koin.ktor.ext.inject
 
 @Serializable
 data class TerraformResponse(
@@ -18,7 +17,7 @@ data class TerraformResponse(
 )
 
 fun Route.terraformRoutes() {
-    val terraformService by inject<TerraformService>()
+    val terraformService = dependencyContainer.terraformService
 
     route("/terraform") {
         post("/init") {
