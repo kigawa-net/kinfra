@@ -2,11 +2,8 @@ package net.kigawa.kinfra.service
 
 import net.kigawa.kinfra.action.logging.Logger
 import net.kigawa.kinfra.model.util.AnsiColors
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
-class SystemRequirement : KoinComponent {
-    private val logger: Logger by inject()
+class SystemRequirement(private val logger: Logger) {
 
     fun isTerraformInstalled(): Boolean {
         return try {

@@ -12,10 +12,6 @@ dependencies {
     implementation(project(":action"))
     implementation(project(":infrastructure"))
 
-    // Koin for dependency injection
-    implementation("io.insert-koin:koin-core:3.5.6")
-    implementation("io.insert-koin:koin-ktor:3.5.6")
-
     // Ktor server
     implementation("io.ktor:ktor-server-core-jvm")
     implementation("io.ktor:ktor-server-netty-jvm")
@@ -29,7 +25,6 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.4.14")
 
     // Testing
-    testImplementation("io.insert-koin:koin-test:3.5.6")
     testImplementation("io.ktor:ktor-server-test-host-jvm")
 }
 

@@ -4,8 +4,6 @@ import net.kigawa.kinfra.action.logging.Logger
 import net.kigawa.kinfra.model.ActionType
 import net.kigawa.kinfra.model.SubActionType
 import net.kigawa.kinfra.model.util.AnsiColors
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 import kotlin.system.exitProcess
 
 data class ParsedCommand(
@@ -15,8 +13,7 @@ data class ParsedCommand(
     val showHelp: Boolean = false,
 )
 
-class CommandInterpreter: KoinComponent {
-    private val logger: Logger by inject()
+class CommandInterpreter(private val logger: Logger) {
 
     fun parse(args: Array<String>): ParsedCommand? {
         if (args.isEmpty()) {
