@@ -1,6 +1,6 @@
 package net.kigawa.kinfra.action.actions
 
-import net.kigawa.kinfra.action.TerraformService
+import net.kigawa.kinfra.model.service.TerraformService
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.util.exitCode
 

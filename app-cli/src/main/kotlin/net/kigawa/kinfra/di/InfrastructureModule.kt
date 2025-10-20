@@ -1,7 +1,7 @@
 package net.kigawa.kinfra.di
 
 import net.kigawa.kinfra.action.GitHelper
-import net.kigawa.kinfra.action.TerraformService
+import net.kigawa.kinfra.model.service.TerraformService
 import net.kigawa.kinfra.action.config.ConfigRepository
 import net.kigawa.kinfra.action.update.AutoUpdater
 import net.kigawa.kinfra.action.update.VersionChecker
