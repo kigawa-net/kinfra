@@ -1,6 +1,7 @@
 package net.kigawa.kinfra.infrastructure.config
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import net.kigawa.kinfra.model.conf.*
 
 @Serializable
@@ -97,8 +98,10 @@ data class KinfraConfigScheme(
     override val subProjects: List<ProjectInfoScheme> = emptyList(),
     override val update: UpdateSettingsScheme? = null,
     @Deprecated("Login configuration should be in GlobalConfig. This property is kept for backward compatibility.")
+    @Transient
     private val loginScheme: LoginConfigScheme? = null,
-    // Backward compatibility for old 'project' property
+    // Backward compatibility for old 'project' property (not serialized)
+    @Transient
     private val project: ProjectInfoScheme? = null
 ) : KinfraConfig {
 
