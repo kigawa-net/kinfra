@@ -58,7 +58,7 @@
 | todo-maintainer    | タスク管理を自動化するエージェント |
 
 ## 変更履歴
-- 2025-10-20: YAMLデシリアライズエラーと入力ストリーム競合を修正。ProjectInfoSchemeに@SerialName("projectId")を追加、LoginActionでreadlnOrNull()を使用、bin/commonにgit merge origin/devを追加。ConfigRepositoryImplでstrictMode=falseを設定してUnknown propertyを無視。Terraformエラー時にプロジェクト情報を表示する機能を追加。
+- 2025-10-20: YAMLデシリアライズエラーと入力ストリーム競合を修正。ProjectInfoSchemeに@SerialName("projectId")を追加、LoginActionでreadlnOrNull()を使用、bin/commonにgit merge origin/devを追加。ConfigRepositoryImplでstrictMode=falseを設定してUnknown propertyを無視。Terraformエラー時にプロジェクト情報を表示する機能を追加。Terraform設定がnullの場合に実行しない機能を追加。
 - 2025-10-19: PR #95 をマージ。ProjectInfoSchemeのシリアライズフィールド名を修正してprojectIdプロパティを正しく読み込み。
 - 2025-10-19: PR #66 を作成。サブプロジェクトにディレクトリ指定機能を追加。SubProjectデータクラスを作成し、name:path形式でパス指定を可能に。sub editコマンドも追加。
 - 2025-10-19: PR #65 をマージ。config -p editコマンドの解析を修正。CommandInterpreterがフラグをスキップしてサブコマンドを正しく検出するように改善。
