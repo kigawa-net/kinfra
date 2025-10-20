@@ -20,8 +20,8 @@ class InitAction(
 
         val config = terraformService.getTerraformConfig()
         if (config == null) {
-            ColorLogger.error("Terraform configuration not found. Please check your kinfra.yaml file.")
-            return 1
+            // 設定がない場合は静かにスキップ
+            return 0
         }
 
         ColorLogger.info("Working directory: ${config.workingDirectory.absolutePath}")

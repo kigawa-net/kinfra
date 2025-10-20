@@ -58,6 +58,7 @@
 | todo-maintainer    | タスク管理を自動化するエージェント |
 
 ## 変更履歴
+- 2025-10-20: Terraformアクションのエラーメッセージを詳細に表示するように改善。plan, apply, status, destroy, format, validate, initアクションでresult.message()を表示。
 - 2025-10-20: GitHub Actionsワークフローでcreate-pull-requestアクションを使用するように修正。peter-evans/create-pull-request@v6を使用し、PR作成を自動化。
 - 2025-10-20: YAMLデシリアライズエラーと入力ストリーム競合を修正。ProjectInfoSchemeに@SerialName("projectId")を追加、LoginActionでreadlnOrNull()を使用、bin/commonにgit merge origin/devを追加。ConfigRepositoryImplでstrictMode=falseを設定してUnknown propertyを無視。Terraformエラー時にプロジェクト情報を表示する機能を追加。Terraform設定がnullの場合に実行しない機能を追加。
 - 2025-10-19: PR #95 をマージ。ProjectInfoSchemeのシリアライズフィールド名を修正してprojectIdプロパティを正しく読み込み。
