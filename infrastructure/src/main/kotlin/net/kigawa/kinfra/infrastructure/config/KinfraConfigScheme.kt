@@ -5,17 +5,22 @@ import net.kigawa.kinfra.model.conf.*
 
 @Serializable
 data class ProjectInfoScheme(
-    override val projectId: String = "",
+    private val projectIdField: String? = null,
     override val description: String? = null,
-    override val terraform: TerraformSettingsScheme? = null
+    override val terraform: TerraformSettingsScheme? = null,
+    // Backward compatibility for old 'name' property
+    private val name: String? = null
 ) : ProjectInfo {
+
+    override val projectId: String
+        get() = projectIdField ?: name ?: ""
     companion object {
         fun from(projectInfo: ProjectInfo): ProjectInfoScheme {
             if (projectInfo is ProjectInfoScheme) {
                 return projectInfo
             }
             return ProjectInfoScheme(
-                projectId = projectInfo.projectId,
+                projectIdField = projectInfo.projectId,
                 description = projectInfo.description,
                 terraform = projectInfo.terraform?.let { TerraformSettingsScheme.from(it) }
             )
