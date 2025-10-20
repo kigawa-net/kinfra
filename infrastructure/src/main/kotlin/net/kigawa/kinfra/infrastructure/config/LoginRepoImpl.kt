@@ -20,7 +20,7 @@ class LoginRepoImpl(
         } else {
             File(
                 "${filePaths.baseConfigDir}/${filePaths.reposDir}/" +
-                    loginConfig.repo.substringAfterLast('/')
+                    loginConfig.repo.getShortName()
             ).toPath()
         }
     }
