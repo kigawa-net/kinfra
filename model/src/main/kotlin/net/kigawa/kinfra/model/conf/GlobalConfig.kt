@@ -7,7 +7,7 @@ interface GlobalConfig {
 }
 
 data class LoginConfig(
-    val repo: RepositoryName = RepositoryName(""),
+    val repo: RepositoryName,
     val enabledProjects: List<String> = emptyList(),
     val repoPath: Path = Path.of("")
 ) {
