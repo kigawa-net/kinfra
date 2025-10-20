@@ -1,5 +1,6 @@
 package net.kigawa.kinfra.action.actions
 import net.kigawa.kinfra.model.util.exitCode
+import net.kigawa.kinfra.model.util.message
 
 import net.kigawa.kinfra.action.GitHelper
 import net.kigawa.kinfra.model.service.TerraformService
@@ -29,6 +30,7 @@ class FormatAction(
         // エラーが発生した場合、プロジェクト情報を表示
         if (result.isFailure()) {
             println("${AnsiColors.RED}Error in project:${AnsiColors.RESET} ${config.workingDirectory.absolutePath}")
+            result.message()?.let { println("${AnsiColors.RED}Details: $it${AnsiColors.RESET}") }
         }
 
         return result.exitCode()
