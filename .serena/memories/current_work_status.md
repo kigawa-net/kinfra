@@ -5,15 +5,17 @@
 - **コミット予定の変更**: AGENTS.mdの更新
 
 ## 最近の作業履歴
-1. **PR #99 更新**: Terraformエラー時にプロジェクト情報を表示する機能を追加
-   - PlanAction, StatusAction, ApplyAction, DestroyAction, ValidateAction, FormatAction, InitActionでエラー発生時にプロジェクトパスを表示
+1. **PR #104 作成**: Terraform設定がnullの場合に実行しない機能を追加
+   - TerraformService.getTerraformConfig()をnullableに変更
+   - TerraformRepositoryで設定がない場合にnullを返す
+   - Actionクラスで事前にconfigチェック
 
-2. **PR #97 マージ待ち**: ドキュメント更新
+2. **PR #99 更新**: Terraformエラー時にプロジェクト情報を表示
 
 ## 次の作業予定
 - PRのレビューとマージを待つ
 - 追加の機能改善
 
 ## 注意事項
-- Terraformエラー時にプロジェクト情報を表示することで、デバッグが容易になる
-- 複数プロジェクト管理時のユーザビリティ向上
+- Terraform設定がない場合のエラーハンドリングを改善
+- kinfra固有のエラーメッセージを表示
