@@ -1,5 +1,6 @@
 package net.kigawa.kinfra.infrastructure.config
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import net.kigawa.kinfra.model.conf.*
@@ -94,6 +95,7 @@ fun toUpdateSettings(): UpdateSettings = this
 @Serializable
 data class KinfraConfigScheme(
     // Support both old and new formats for reading
+    @SerialName("rootProject")
     private val rootProjectNew: ProjectInfoScheme? = null,
     private val rootProjectField: ProjectInfoScheme? = null,
     override val bitwarden: BitwardenSettingsScheme? = null,
