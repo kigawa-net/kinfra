@@ -186,7 +186,7 @@ class LoginAction(
             println("${AnsiColors.BLUE}Creating default kinfra.yaml...${AnsiColors.RESET}")
 
             val defaultConfig = net.kigawa.kinfra.infrastructure.config.KinfraConfigScheme(
-                rootProject = net.kigawa.kinfra.infrastructure.config.ProjectInfoScheme()
+                rootProjectField = net.kigawa.kinfra.infrastructure.config.ProjectInfoScheme()
             )
 
             try {
