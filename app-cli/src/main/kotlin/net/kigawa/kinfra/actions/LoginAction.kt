@@ -166,7 +166,15 @@ class LoginAction(
     private fun setupKinfraConfig() {
         println("${AnsiColors.BLUE}=== Kinfra Configuration ===${AnsiColors.RESET}")
 
-        if (loginRepo.kinfraConfigExists()) {
+        // Check if login config is available before accessing kinfra config
+        val hasLoginConfig = try {
+            loginRepo.loginConfig
+            true
+        } catch (e: IllegalStateException) {
+            false
+        }
+
+        if (hasLoginConfig && loginRepo.kinfraConfigExists()) {
             println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Found kinfra.yaml")
             try {
                 val config = loginRepo.loadKinfraConfig()
@@ -181,7 +189,7 @@ class LoginAction(
                 println("${AnsiColors.RED}Error:${AnsiColors.RESET} Failed to read kinfra.yaml: ${e.message}")
                 println()
             }
-        } else {
+        } else if (hasLoginConfig) {
             println("${AnsiColors.YELLOW}kinfra.yaml not found${AnsiColors.RESET}")
             println("${AnsiColors.BLUE}Creating default kinfra.yaml...${AnsiColors.RESET}")
 
@@ -198,6 +206,10 @@ class LoginAction(
                 println("${AnsiColors.RED}Error:${AnsiColors.RESET} Failed to create kinfra.yaml: ${e.message}")
                 println()
             }
+        } else {
+            println("${AnsiColors.YELLOW}Login configuration not available${AnsiColors.RESET}")
+            println("${AnsiColors.BLUE}Please run 'kinfra login <github-repo>' first${AnsiColors.RESET}")
+            println()
         }
     }
 
