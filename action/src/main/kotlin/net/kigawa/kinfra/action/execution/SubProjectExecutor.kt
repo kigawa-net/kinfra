@@ -20,6 +20,7 @@ class SubProjectExecutor(
      */
     fun getSubProjects(parentConfigPath: String = "kinfra-parent.yaml"): List<SubProject> {
         if (!configRepository.kinfraParentConfigExists(parentConfigPath)) {
+            println("kinfra-parent.yaml not found. Skipping sub-project execution.")
             return emptyList()
         }
 
