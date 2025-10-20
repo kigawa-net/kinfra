@@ -17,6 +17,9 @@ class TerraformServiceImpl(
 
     override fun init(additionalArgs: List<String>, quiet: Boolean): Res<Int, ActionException> {
         val config = terraformRepository.getTerraformConfig()
+        if (config == null) {
+            return Res.Err(ActionException(1, "Terraform configuration not found"))
+        }
 
         val args = arrayOf("terraform", "init") + additionalArgs
 
@@ -30,6 +33,10 @@ class TerraformServiceImpl(
 
     override fun plan(additionalArgs: List<String>, quiet: Boolean): Res<Int, ActionException> {
         val config = terraformRepository.getTerraformConfig()
+        if (config == null) {
+            return Res.Err(ActionException(1, "Terraform configuration not found"))
+        }
+
         val varFileArgs = if (config.hasVarFile()) {
             arrayOf("-var-file=${config.varFile!!.absolutePath}")
         } else {
@@ -50,6 +57,9 @@ class TerraformServiceImpl(
         planFile: String?, additionalArgs: List<String>, quiet: Boolean,
     ): Res<Int, ActionException> {
         val config = terraformRepository.getTerraformConfig()
+        if (config == null) {
+            return Res.Err(ActionException(1, "Terraform configuration not found"))
+        }
 
         val baseArgs = arrayOf("terraform", "apply")
         val varFileArgs = if (planFile == null && config.hasVarFile()) {
@@ -71,6 +81,10 @@ class TerraformServiceImpl(
 
     override fun destroy(additionalArgs: List<String>, quiet: Boolean): Res<Int, ActionException> {
         val config = terraformRepository.getTerraformConfig()
+        if (config == null) {
+            return Res.Err(ActionException(1, "Terraform configuration not found"))
+        }
+
         val varFileArgs = if (config.hasVarFile()) {
             arrayOf("-var-file=${config.varFile!!.absolutePath}")
         } else {
@@ -103,6 +117,10 @@ class TerraformServiceImpl(
 
     override fun show(additionalArgs: List<String>, quiet: Boolean): Res<Int, ActionException> {
         val config = terraformRepository.getTerraformConfig()
+        if (config == null) {
+            return Res.Err(ActionException(1, "Terraform configuration not found"))
+        }
+
         val args = arrayOf("terraform", "show") + additionalArgs
 
         return processExecutor.execute(
@@ -113,7 +131,7 @@ class TerraformServiceImpl(
         )
     }
 
-    override fun getTerraformConfig(): TerraformConfig {
+    override fun getTerraformConfig(): TerraformConfig? {
         return terraformRepository.getTerraformConfig()
     }
 }
