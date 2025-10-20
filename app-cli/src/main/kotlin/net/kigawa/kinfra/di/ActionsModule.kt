@@ -18,7 +18,7 @@ val actionsModule = module {
     single<Action>(named(ActionType.LOGIN.actionName)) { LoginAction(get(), get(), get(), get(), get()) }
     single<Action>(named(ActionType.HELLO.actionName)) { HelloAction(get(), get(), get()) }
     single<Action>(named(ActionType.INIT.actionName)) { InitAction(get(), get()) }
-    single<Action>(named(ActionType.PLAN.actionName)) { PlanAction(get(), get()) }
+    single<Action>(named(ActionType.PLAN.actionName)) { PlanAction(get(), get(), get()) }
     single<Action>(named(ActionType.APPLY.actionName)) { ApplyAction(get()) }
     single<Action>(named(ActionType.DESTROY.actionName)) { DestroyAction(get(), get()) }
     single<Action>(named(ActionType.DEPLOY.actionName)) { DeployAction(get(), get(), get(), get()) }

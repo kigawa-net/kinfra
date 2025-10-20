@@ -58,6 +58,7 @@
 | todo-maintainer    | タスク管理を自動化するエージェント |
 
 ## 変更履歴
+- 2025-10-20: kinfra sub planコマンドを追加。サブプロジェクトでterraform planを実行できるようにする。
 - 2025-10-20: サブプロジェクト実行時にkinfra-parent.yamlがない場合にメッセージを表示。SubProjectExecutor.getSubProjects()でファイルが存在しない場合にメッセージを表示。
 - 2025-10-20: PlanActionでTerraform設定がない場合にスキップする。config == nullの場合に静かにreturn 0。
 - 2025-10-20: PlanActionでTerraform設定がない場合にエラーを出すように戻す。planコマンドが設定なしで実行されないようにする。
