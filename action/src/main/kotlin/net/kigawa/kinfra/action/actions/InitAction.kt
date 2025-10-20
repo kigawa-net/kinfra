@@ -1,7 +1,7 @@
 package net.kigawa.kinfra.action.actions
 import net.kigawa.kinfra.model.util.exitCode
 
-import net.kigawa.kinfra.action.GitHelper
+import net.kigawa.kinfra.model.GitHelper
 import net.kigawa.kinfra.model.service.TerraformService
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.util.ColorLogger
