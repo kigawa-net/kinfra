@@ -8,6 +8,7 @@ import net.kigawa.kinfra.model.util.AnsiColors
 import net.kigawa.kinfra.model.util.exitCode
 import net.kigawa.kinfra.model.util.isSuccess
 import net.kigawa.kinfra.model.util.isFailure
+import net.kigawa.kinfra.model.util.message
 import java.io.File
 
 /**
@@ -35,12 +36,30 @@ class DeploymentPipeline(
     
     fun initializeTerraform(additionalArgs: List<String>): Int {
         val result = terraformService.init(quiet = false, additionalArgs = additionalArgs)
-        return if (result.isFailure()) result.exitCode() else 0
+        return if (result.isFailure()) {
+            // Terraform設定がない場合はスキップとして成功扱い
+            if (result.message()?.contains("Terraform configuration not found") == true) {
+                0
+            } else {
+                result.exitCode()
+            }
+        } else {
+            0
+        }
     }
     
     fun createExecutionPlan(additionalArgs: List<String>): Int {
         val result = terraformService.plan(additionalArgs, quiet = false)
-        return if (result.isFailure()) result.exitCode() else 0
+        return if (result.isFailure()) {
+            // Terraform設定がない場合はスキップとして成功扱い
+            if (result.message()?.contains("Terraform configuration not found") == true) {
+                0
+            } else {
+                result.exitCode()
+            }
+        } else {
+            0
+        }
     }
     
     fun applyChanges(additionalArgs: List<String>): Int {
@@ -50,7 +69,16 @@ class DeploymentPipeline(
             additionalArgs + "-auto-approve"
         }
         val result = terraformService.apply(additionalArgs = applyArgsWithAutoApprove, quiet = false)
-        return result.exitCode()
+        return if (result.isFailure()) {
+            // Terraform設定がない場合はスキップとして成功扱い
+            if (result.message()?.contains("Terraform configuration not found") == true) {
+                0
+            } else {
+                result.exitCode()
+            }
+        } else {
+            0
+        }
     }
     
     fun pushToGit(): Int {

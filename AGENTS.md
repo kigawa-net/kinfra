@@ -58,6 +58,7 @@
 | todo-maintainer    | タスク管理を自動化するエージェント |
 
 ## 変更履歴
+- 2025-10-20: GitHub Actionsワークフローで無効な条件式を修正。Create Pull Requestステップの条件からbashコマンドを削除。
 - 2025-10-20: Terraform設定がnullの場合にエラーを出さずにスキップする。plan, apply, status, destroy, format, validate, initアクションでconfig == nullの場合に静かにreturn 0。
 - 2025-10-20: Terraformアクションのエラーメッセージを詳細に表示するように改善。plan, apply, status, destroy, format, validate, initアクションでresult.message()を表示。
 - 2025-10-20: GitHub Actionsワークフローでcreate-pull-requestアクションを使用するように修正。peter-evans/create-pull-request@v6を使用し、PR作成を自動化。
