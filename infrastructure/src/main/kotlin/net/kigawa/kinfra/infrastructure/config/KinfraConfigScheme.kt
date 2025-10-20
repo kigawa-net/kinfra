@@ -87,16 +87,21 @@ fun toUpdateSettings(): UpdateSettings = this
 
 @Serializable
 data class KinfraConfigScheme(
-    override val rootProject: ProjectInfoScheme,
+    private val rootProjectField: ProjectInfoScheme? = null,
     override val bitwarden: BitwardenSettingsScheme? = null,
     override val subProjects: List<ProjectInfoScheme> = emptyList(),
     override val update: UpdateSettingsScheme? = null,
     @Deprecated("Login configuration should be in GlobalConfig. This property is kept for backward compatibility.")
-    private val loginScheme: LoginConfigScheme? = null
+    private val loginScheme: LoginConfigScheme? = null,
+    // Backward compatibility for old 'project' property
+    private val project: ProjectInfoScheme? = null
 ) : KinfraConfig {
-    
+
+    override val rootProject: ProjectInfoScheme
+        get() = rootProjectField ?: project ?: ProjectInfoScheme()
+
     @Deprecated("Login configuration should be in GlobalConfig. This property is kept for backward compatibility.")
-    override val login: LoginConfig? 
+    override val login: LoginConfig?
         get() = loginScheme?.toLoginConfig()
     companion object {
         fun from(kinfraConfig: KinfraConfig): KinfraConfigScheme {
@@ -104,7 +109,7 @@ data class KinfraConfigScheme(
                 return kinfraConfig
             }
             return KinfraConfigScheme(
-                rootProject = ProjectInfoScheme.from(kinfraConfig.rootProject),
+                rootProjectField = ProjectInfoScheme.from(kinfraConfig.rootProject),
                 bitwarden = kinfraConfig.bitwarden?.let { BitwardenSettingsScheme.from(it) },
                 subProjects = kinfraConfig.subProjects.map { ProjectInfoScheme.from(it) },
                 update = kinfraConfig.update?.let { UpdateSettingsScheme.from(it) },
