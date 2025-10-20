@@ -5,6 +5,7 @@ import net.kigawa.kinfra.action.GitHelper
 import net.kigawa.kinfra.model.service.TerraformService
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.util.ColorLogger
+import net.kigawa.kinfra.model.util.isFailure
 
 class InitAction(
     private val terraformService: TerraformService,
@@ -20,6 +21,12 @@ class InitAction(
         ColorLogger.info("Working directory: ${config.workingDirectory.absolutePath}")
 
         val result = terraformService.init(args, quiet = false)
+
+        // エラーが発生した場合、プロジェクト情報を表示
+        if (result.isFailure()) {
+            ColorLogger.error("Error in project: ${config.workingDirectory.absolutePath}")
+        }
+
         return result.exitCode()
     }
 

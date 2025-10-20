@@ -1,6 +1,7 @@
 package net.kigawa.kinfra.infrastructure.config
 
 import com.charleskorn.kaml.Yaml
+import com.charleskorn.kaml.YamlConfiguration
 import net.kigawa.kinfra.action.config.ConfigRepository
 import net.kigawa.kinfra.model.conf.FilePaths
 import net.kigawa.kinfra.model.conf.GlobalConfig
@@ -21,6 +22,13 @@ class ConfigRepositoryImpl(
     private val filePaths: FilePaths,
     private val logger: Logger,
 ) : ConfigRepository {
+    private val yaml = Yaml(
+        configuration = YamlConfiguration(
+            encodeDefaults = false,
+            strictMode = false
+        )
+    )
+
     // 基本設定ディレクトリ
     private val configDir get() = filePaths.baseConfigDir?.toFile()
         ?: throw IllegalStateException("Config directory not available")
@@ -117,7 +125,7 @@ class ConfigRepositoryImpl(
 
     override fun loadKinfraConfig(filePath: Path): KinfraConfig? {
         val file = filePath.toFile()
-        return if (file.exists()) Yaml.default.decodeFromString(KinfraConfigScheme.serializer(), file.readText()) else null
+        return if (file.exists()) yaml.decodeFromString(KinfraConfigScheme.serializer(), file.readText()) else null
     }
 
     override fun saveKinfraConfig(config: KinfraConfig, filePath: String) {
