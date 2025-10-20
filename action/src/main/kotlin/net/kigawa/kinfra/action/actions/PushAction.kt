@@ -1,6 +1,6 @@
 package net.kigawa.kinfra.action.actions
 
-import net.kigawa.kinfra.action.GitHelper
+import net.kigawa.kinfra.model.GitHelper
 import net.kigawa.kinfra.model.Action
 
 class PushAction(

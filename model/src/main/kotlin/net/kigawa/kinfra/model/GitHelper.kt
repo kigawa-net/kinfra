@@ -1,4 +1,4 @@
-package net.kigawa.kinfra.action
+package net.kigawa.kinfra.model
 
 import java.io.File
 

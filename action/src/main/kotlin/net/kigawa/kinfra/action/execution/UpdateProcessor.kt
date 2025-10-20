@@ -1,6 +1,6 @@
 package net.kigawa.kinfra.action.execution
 
-import net.kigawa.kinfra.action.GitHelper
+import net.kigawa.kinfra.model.GitHelper
 import net.kigawa.kinfra.action.logging.Logger
 import net.kigawa.kinfra.action.update.AutoUpdater
 import net.kigawa.kinfra.action.update.VersionChecker
