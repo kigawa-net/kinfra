@@ -87,22 +87,99 @@ export KINFRA_LOG_DIR=/var/log/kinfra
 
 **形式**: YAML
 
-**例**:
+**例** (新しい形式):
 
 ```yaml
-terraform_dir: ./terraform
-environments:
-  - dev
-  - staging
-  - prod
+project:
+  projectId: "my-infrastructure"
+  description: "Parent project for managing multiple infrastructure components"
+  terraform:
+    version: "1.5.0"
+    workingDirectory: "."
+
+bitwarden:
+  projectId: "your-bitwarden-project-id"
+
+subProjects:
+  - projectId: "project-a"
+    description: "First sub-project"
+    terraform:
+      version: "1.5.0"
+      workingDirectory: "./project-a"
+  - projectId: "project-b"
+    description: "Second sub-project"
+
+update:
+  autoUpdate: true
+  checkInterval: 86400000  # 24 hours in milliseconds
+  githubRepo: "kigawa-net/kinfra"
+```
+
+**例** (古い形式、互換性維持):
+
+```yaml
+rootProject:
+  projectId: "my-infrastructure"
+  description: "Parent project for managing multiple infrastructure components"
+  terraform:
+    version: "1.5.0"
+    workingDirectory: "."
+
+bitwarden:
+  projectId: "your-bitwarden-project-id"
+
+subProjects:
+  - name: "project-a"  # 古い形式では 'name' を使用
+    description: "First sub-project"
+    terraform:
+      version: "1.5.0"
+      workingDirectory: "./project-a"
+
+update:
+  autoUpdate: true
+  checkInterval: 86400000
+  githubRepo: "kigawa-net/kinfra"
 ```
 
 **フィールド**:
 
 | フィールド | 型 | 説明 |
 |-----------|-----|------|
-| terraform_dir | string | Terraformディレクトリのパス |
-| environments | array | 利用可能な環境のリスト |
+| project | object | ルートプロジェクト設定 (推奨) |
+| rootProject | object | ルートプロジェクト設定 (古い形式、互換性維持) |
+| bitwarden | object | Bitwarden設定 |
+| subProjects | array | サブプロジェクトのリスト |
+| update | object | 自動更新設定 |
+
+#### プロジェクト設定 (project/rootProject)
+
+| フィールド | 型 | 説明 |
+|-----------|-----|------|
+| projectId | string | プロジェクトID (新しい形式) |
+| name | string | プロジェクト名 (古い形式、互換性維持) |
+| description | string | プロジェクト説明 (任意) |
+| terraform | object | Terraform設定 |
+
+#### Terraform設定
+
+| フィールド | 型 | 説明 | デフォルト |
+|-----------|-----|------|----------|
+| version | string | Terraformバージョン | "1.5.0" |
+| workingDirectory | string | 作業ディレクトリ | "." |
+
+#### Bitwarden設定
+
+| フィールド | 型 | 説明 |
+|-----------|-----|------|
+| projectId | string | BitwardenプロジェクトID |
+
+#### 更新設定
+
+| フィールド | 型 | 説明 | デフォルト |
+|-----------|-----|------|----------|
+| autoUpdate | boolean | 自動更新有効 | true |
+| checkInterval | number | チェック間隔 (ミリ秒) | 86400000 (24時間) |
+| githubRepo | string | GitHubリポジトリ | "kigawa-net/kinfra" |
 
 ---
 
