@@ -24,6 +24,9 @@ class PlanAction(
             return 0
         }
 
+        // プロジェクト名を表示
+        println("${AnsiColors.BLUE}Planning Terraform changes for project:${AnsiColors.RESET} ${config.workingDirectory.absolutePath}")
+
         val result = terraformService.plan(args, quiet = false)
 
         // エラーが発生した場合、プロジェクト情報を表示
