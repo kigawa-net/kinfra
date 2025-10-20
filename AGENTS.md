@@ -57,6 +57,7 @@
 ## 変更履歴
 - 2025-10-21: GitHub Actionsワークフローの構文エラーを修正。TARGET_NUM変数の代入方法を改善し、git diff HEAD~1の安全なチェックを追加。
 - 2025-10-21: planコマンド実行時に deprecated Gradle フィーチャー警告を表示するようにし、`--warning-mode all` の使用を推奨。
+- 2025-10-21: マージコンフリクトを解決。GlobalConfig.ktでLoginConfigのインターフェース定義を保持し、重複するデータクラス定義を削除。
 - 2025-10-20: kinfra planで全てのプロジェクトでplanを実行する。親プロジェクトとサブプロジェクトの両方で terraform plan を実行。
 - 2025-10-20: kinfra sub planコマンドを追加。サブプロジェクトで terraform plan を実行できるようにする。
 - 2025-10-20: サブプロジェクト実行時にkinfra-parent.yamlがない場合にメッセージを表示。
