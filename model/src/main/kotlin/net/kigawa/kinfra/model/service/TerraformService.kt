@@ -1,4 +1,4 @@
-package net.kigawa.kinfra.action
+package net.kigawa.kinfra.model.service
 
 import net.kigawa.kinfra.model.conf.TerraformConfig
 import net.kigawa.kinfra.model.err.ActionException

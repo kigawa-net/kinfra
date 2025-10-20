@@ -4,7 +4,7 @@ import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
-import net.kigawa.kinfra.action.TerraformService
+import net.kigawa.kinfra.model.service.TerraformService
 import net.kigawa.kinfra.model.util.exitCode
 import net.kigawa.kinfra.model.util.message
 import org.koin.ktor.ext.inject

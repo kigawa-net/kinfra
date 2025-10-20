@@ -1,6 +1,6 @@
 package net.kigawa.kinfra.action.actions
 
-import net.kigawa.kinfra.action.TerraformService
+import net.kigawa.kinfra.model.service.TerraformService
 import net.kigawa.kinfra.action.bitwarden.BitwardenRepository
 import net.kigawa.kinfra.action.execution.ActionExecutor
 import net.kigawa.kinfra.action.execution.DeploymentPipeline
