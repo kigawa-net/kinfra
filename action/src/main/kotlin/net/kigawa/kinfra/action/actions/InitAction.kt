@@ -1,5 +1,6 @@
 package net.kigawa.kinfra.action.actions
 import net.kigawa.kinfra.model.util.exitCode
+import net.kigawa.kinfra.model.util.message
 
 import net.kigawa.kinfra.model.GitHelper
 import net.kigawa.kinfra.model.service.TerraformService
@@ -30,6 +31,7 @@ class InitAction(
         // エラーが発生した場合、プロジェクト情報を表示
         if (result.isFailure()) {
             ColorLogger.error("Error in project: ${config.workingDirectory.absolutePath}")
+            result.message()?.let { ColorLogger.error("Details: $it") }
         }
 
         return result.exitCode()
