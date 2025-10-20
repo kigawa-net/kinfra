@@ -5,6 +5,7 @@ import net.kigawa.kinfra.action.GitHelper
 import net.kigawa.kinfra.model.service.TerraformService
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.util.AnsiColors
+import net.kigawa.kinfra.model.util.isFailure
 
 class ValidateAction(
     private val terraformService: TerraformService,
@@ -17,6 +18,13 @@ class ValidateAction(
         }
 
         val result = terraformService.validate(quiet = false)
+
+        // エラーが発生した場合、プロジェクト情報を表示
+        if (result.isFailure()) {
+            val config = terraformService.getTerraformConfig()
+            println("${AnsiColors.RED}Error in project:${AnsiColors.RESET} ${config.workingDirectory.absolutePath}")
+        }
+
         return result.exitCode()
     }
 
