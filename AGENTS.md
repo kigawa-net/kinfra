@@ -10,6 +10,7 @@
 - **クリーン**: `./gradlew clean`
 - **JAR作成**: `./gradlew shadowJar`
 - **配布物作成**: `./gradlew distTar` または `./gradlew distZip`
+- **サブプロジェクト plan**: `kinfra sub plan` (各サブプロジェクトに対して terraform plan を実行)
 
 ## コードスタイルガイドライン
 
@@ -39,64 +40,48 @@
 | **todowrite** | TODOリストを更新する |
 | **todoread** | TODOリストを取得する |
 | **task** | エージェントへタスクを委譲する |
-| **todowrite** | TODOリストを更新する |
-| **todoread** | TODOリストを読む |
-| **task** | エージェントで複雑タスクを実行する |
 | **todo-maintainer** | タスク管理を自動化するエージェント |
 | **code-reviewer** | コードレビューを自動で行う |
-| **greeting-responder** | 挨拶に対する返答をする |
+| **greeting-responder** | ユーザーの挨拶に対して適切な返答を行う |
 | **general** | 一般的なタスクを実行する |
-
 
 ## エージェント一覧
 
-| エージェント名            | 説明                              |
-|--------------------|---------------------------------|
+| エージェント名            | 説明 |
+|------------------------|------|
 | general            | 一般的なタスクを実行するエージェント（検索、実行、情報収集）。 |
-| code-reviewer      | コードレビューを自動で行うエージェント             |
-| greeting-responder | ユーザーの挨拶に対して適切な返答を行うエージェント       |
+| code-reviewer      | コードレビューを自動で行うエージェント |
+| greeting-responder | ユーザーの挨拶に対して適切な返答を行う |
 | todo-maintainer    | タスク管理を自動化するエージェント |
 
 ## 変更履歴
-- 2025-10-20: kinfra planで全てのプロジェクトでplanを実行する。親プロジェクトとサブプロジェクトの両方でterraform planを実行。
-- 2025-10-20: kinfra sub planコマンドを追加。サブプロジェクトでterraform planを実行できるようにする。
-- 2025-10-20: サブプロジェクト実行時にkinfra-parent.yamlがない場合にメッセージを表示。SubProjectExecutor.getSubProjects()でファイルが存在しない場合にメッセージを表示。
-- 2025-10-20: PlanActionでTerraform設定がない場合にスキップする。config == nullの場合に静かにreturn 0。
-- 2025-10-20: PlanActionでTerraform設定がない場合にエラーを出すように戻す。planコマンドが設定なしで実行されないようにする。
-- 2025-10-20: サブプロジェクトのTerraform実行がスキップされた場合に成功として扱う。DeployActionWithSDKのexecuteSubProjectDeploymentでTerraform設定が見つからないエラーをexit code 0として扱う。
-- 2025-10-20: plan実行前にプロジェクト名を表示する。PlanActionでterraform plan実行前に作業ディレクトリパスを表示。
-- 2025-10-20: Terraform実行がスキップされた場合に成功として扱う。DeploymentPipelineでTerraform設定が見つからないエラーをexit code 0として扱う。
-- 2025-10-20: GitHub Actionsワークフローで無効な条件式を修正。Create Pull Requestステップの条件からbashコマンドを削除。
-- 2025-10-20: Terraform設定がnullの場合にエラーを出さずにスキップする。plan, apply, status, destroy, format, validate, initアクションでconfig == nullの場合に静かにreturn 0。
-- 2025-10-20: Terraformアクションのエラーメッセージを詳細に表示するように改善。plan, apply, status, destroy, format, validate, initアクションでresult.message()を表示。
-- 2025-10-20: GitHub Actionsワークフローでcreate-pull-requestアクションを使用するように修正。peter-evans/create-pull-request@v6を使用し、PR作成を自動化。
-- 2025-10-20: YAMLデシリアライズエラーと入力ストリーム競合を修正。ProjectInfoSchemeに@SerialName("projectId")を追加、LoginActionでreadlnOrNull()を使用、bin/commonにgit merge origin/devを追加。ConfigRepositoryImplでstrictMode=falseを設定してUnknown propertyを無視。Terraformエラー時にプロジェクト情報を表示する機能を追加。Terraform設定がnullの場合に実行しない機能を追加。
-- 2025-10-19: PR #95 をマージ。ProjectInfoSchemeのシリアライズフィールド名を修正してprojectIdプロパティを正しく読み込み。
-- 2025-10-19: PR #66 を作成。サブプロジェクトにディレクトリ指定機能を追加。SubProjectデータクラスを作成し、name:path形式でパス指定を可能に。sub editコマンドも追加。
-- 2025-10-19: PR #65 をマージ。config -p editコマンドの解析を修正。CommandInterpreterがフラグをスキップしてサブコマンドを正しく検出するように改善。
-- 2025-10-19: PR #64 をマージ。コンパイルエラーを修正。ConfigRepositoryImpl、GlobalConfig、ActionsModuleの型不一致とパラメータエラーを解決。
-- 2025-10-19: PR #56 を作成。kigawaブランチからdevブランチに向けて、kinfra sub addコマンドの実装。タイトルと本文を日本語に変更。
-- 2025-10-19: kinfra sub addコマンドを追加。SubActionTypeにADDを追加、SubAddActionを実装、ActionsModuleに登録、ドキュメント更新。kinfra-parent.yamlにサブプロジェクトを追加できるようにする。
-- 2025-10-19: CIワークフローを高速化。testとlintジョブを統合、Gradle並列実行・ビルドキャッシュ有効化、条件付き実行を追加。
-- 2025-10-19: CIワークフローでgradle/actionsの無効なパラメータbuild-cacheを削除して警告を解決。
-- 2025-10-19: CIテスト失敗を修正。ActionTypeにSUBを追加し、AppModule.ktとActionsModule.ktのimportを修正してコンパイルエラーを解決。
-- 2025-10-19: ClaudeワークフローのPR編集を上書きから追記に変更。既存PR本文を取得して追記するように修正。
-- 2025-10-18: AppModuleを細分化。InfrastructureModule.kt, BitwardenModule.kt, ActionsModule.ktを作成し、AppModule.ktをリファクタリングしてモジュールを組み合わせる。
-- 2025-10-18: サブコマンドの構造を改善。SubActionType enumを作成し、ActionTypeからSUB_LISTを削除してSUBを追加。TerraformRunnerとAppModuleでサブコマンドの解析と登録を更新。
-- 2025-10-18: sub listコマンドを追加。SubListAction.ktを実装し、kinfra-parent.yamlからサブプロジェクト一覧を表示。ActionType.kt, AppModule.kt, ドキュメントに追加。
-- 2025-10-14: PushAction.ktをKotlinで実装し、add, commit, push機能を追加。GitHelperにaddChangesとcommitChangesメソッドを追加。
-- 2025-10-14: Terraformアクションでログを表示するように変更。各アクションでquiet=falseを設定。
-- 2025-10-18: GitHub Actions実行18615897430が成功。CIワークフローの高速化関連（claude.yml）。
-- 2025-10-18: CIワークフローからアーティファクトアップロード処理を削除（テスト結果、CLI JAR、Web JARのアップロードを除去）。CIの高速化を図る。
-- 2025-10-18: GitHub Actions実行18616218199が成功。Claudeワークフローでissueコメントによりトリガーされ、30秒で完了。
-- 2025-10-14: setup-r2コマンドを削除。関連ファイル（SetupR2Action.kt, SetupR2ActionWithSDK.kt）を削除し、ActionType.kt, AppModule.kt, TerraformRunner.kt, DeployAction.kt, ドキュメントから参照を削除。
-- 2025-10-14: config-editコマンドを追加。ConfigEditAction.ktを実装し、ActionType.kt, AppModule.kt, ドキュメントに追加。
-- 2025-10-14: setup-r2コマンドの残存参照を完全に削除。TerraformRunner.kt, DeployAction.kt, ドキュメントから参照を削除。
-- 2025-10-14: origin/devをmainにマージ。プルリクエストを作成。
-- 2025-10-19: TerraformRunnerクラスのリファクタリングを実施。単一責任の原則に基づき、以下のコンポーネントに分割：
-  - ActionRegistry: アクションの登録と管理を担当
-  - CommandInterpreter: コマンドライン引数の解釈を担当
-  - SystemRequirement: システム要件のチェック（Terraformの存在確認）を担当
-  - UpdateHandler: アップデートのチェックと実行を担当
-  - 命名規則の改善：ServiceやManagerといった一般的すぎる名前を避け、具体的な責務を表す名前に変更
-  - TerraformRunnerは各コンポーネントを統合する役割に特化し、コードの可読性と保守性を向上
+- 2025-10-21: GitHub Actionsワークフローの構文エラーを修正。TARGET_NUM変数の代入方法を改善し、git diff HEAD~1の安全なチェックを追加。
+- 2025-10-21: planコマンド実行時に deprecated Gradle フィーチャー警告を表示するようにし、`--warning-mode all` の使用を推奨。
+- 2025-10-20: kinfra planで全てのプロジェクトでplanを実行する。親プロジェクトとサブプロジェクトの両方で terraform plan を実行。
+- 2025-10-20: kinfra sub planコマンドを追加。サブプロジェクトで terraform plan を実行できるようにする。
+- 2025-10-20: サブプロジェクト実行時にkinfra-parent.yamlがない場合にメッセージを表示。
+- 2025-10-20: PlanActionでTerraform設定がない場合にスキップする。
+- 2025-10-20: PlanActionでTerraform設定がない場合にエラーを出すように戻す。
+- 2025-10-20: サブプロジェクトのTerraform実行がスキップされた場合に成功として扱う。
+- 2025-10-20: plan実行前にプロジェクト名を表示する。
+- 2025-10-20: Terraform実行がスキップされた場合に成功として扱う。
+- 2025-10-20: GitHub Actionsワークフローで無効な条件式を修正。
+- 2025-10-20: Terraform設定がnullの場合にエラーを出さずにスキップする。
+- 2025-10-20: Terraformアクションのエラーメッセージを詳細に表示。
+- 2025-10-20: GitHub Actionsワークフローでcreate-pull-requestアクションを使用。
+- 2025-10-20: YAMLデシリアライズエラーと入力ストリーム競合を修正。
+- 2025-10-19: PR #95 をマージ。
+- 2025-10-19: PR #66 を作成。
+- 2025-10-19: PR #65 をマージ。
+- 2025-10-19: PR #64 をマージ。
+- 2025-10-19: PR #56 を作成。
+- 2025-10-19: kinfra sub addコマンドを追加。
+- 2025-10-19: CIワークフローを高速化。
+- 2025-10-18: AppModuleを細分化。
+- 2025-10-18: サブコマンドの構造を改善。
+- 2025-10-18: sub listコマンドを追加。
+- 2025-10-14: PushAction.ktを実装。GitHelperにaddChangesとcommitChangesメソッドを追加。
+- 2025-10-14: Terraformアクションでログを表示。
+- 2025-10-14: setup-r2コマンドを削除。
+- 2025-10-14: config-editコマンドを追加。
+- 2025-10-19: TerraformRunnerクラスのリファクタリングを実施。
