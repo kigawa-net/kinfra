@@ -6,6 +6,7 @@ import net.kigawa.kinfra.model.conf.FilePaths
 import net.kigawa.kinfra.model.conf.GlobalConfig
 import net.kigawa.kinfra.model.conf.KinfraConfig
 import net.kigawa.kinfra.model.conf.KinfraParentConfig
+import net.kigawa.kinfra.model.conf.LoginConfig
 import net.kigawa.kinfra.infrastructure.config.GlobalConfigImpl
 import net.kigawa.kinfra.infrastructure.config.KinfraParentConfigImpl
 import net.kigawa.kinfra.infrastructure.logging.Logger
@@ -83,7 +84,7 @@ class ConfigRepositoryImpl(
             val defaultPath = filePaths.baseConfigDir?.resolve("repos") ?: Path.of("./repos")
             print("リポジトリのローカルパスを入力してください (デフォルト: $defaultPath): ")
             val input = scanner.nextLine().trim()
-            repoPath = if (input.isBlank()) defaultPath else Path.of(input)
+            repoPath = if (input.isBlank()) defaultPath.toString() else input
             modified = true
         }
         

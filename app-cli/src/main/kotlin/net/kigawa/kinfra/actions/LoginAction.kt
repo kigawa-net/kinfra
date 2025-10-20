@@ -44,7 +44,7 @@ class LoginAction(
             // Save project configuration (repo identifier like "kigawa01/infra")
             val loginConfig = LoginConfigScheme(
                 repo = repoPath.first,
-                repoPath = targetDir.toPath()
+                repoPath = targetDir.absolutePath
             )
             val globalConfigScheme = GlobalConfigScheme(login = loginConfig)
             val reposPath = filePaths.baseConfigDir?.resolve(filePaths.reposDir)
