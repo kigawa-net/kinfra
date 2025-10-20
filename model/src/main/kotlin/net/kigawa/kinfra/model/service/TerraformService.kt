@@ -15,5 +15,5 @@ interface TerraformService {
     fun format(recursive: Boolean = true, quiet: Boolean = true): Res<Int, ActionException>
     fun validate(quiet: Boolean = true): Res<Int, ActionException>
     fun show(additionalArgs: List<String>, quiet: Boolean = true): Res<Int, ActionException>
-    fun getTerraformConfig(): TerraformConfig
+    fun getTerraformConfig(): TerraformConfig?
 }

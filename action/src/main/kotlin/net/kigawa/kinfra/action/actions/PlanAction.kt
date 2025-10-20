@@ -17,11 +17,17 @@ class PlanAction(
             println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Failed to pull from git repository, continuing anyway...")
         }
 
+        // Terraform設定が取得できない場合は実行しない
+        val config = terraformService.getTerraformConfig()
+        if (config == null) {
+            println("${AnsiColors.RED}Error:${AnsiColors.RESET} Terraform configuration not found. Please check your kinfra.yaml file.")
+            return 1
+        }
+
         val result = terraformService.plan(args, quiet = false)
 
         // エラーが発生した場合、プロジェクト情報を表示
         if (result.isFailure()) {
-            val config = terraformService.getTerraformConfig()
             println("${AnsiColors.RED}Error in project:${AnsiColors.RESET} ${config.workingDirectory.absolutePath}")
         }
 

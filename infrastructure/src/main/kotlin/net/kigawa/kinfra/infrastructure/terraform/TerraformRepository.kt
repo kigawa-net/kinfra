@@ -11,7 +11,7 @@ import java.nio.file.Paths
  * Terraform設定の取得を担当するリポジトリ
  */
 interface TerraformRepository {
-    fun getTerraformConfig(): TerraformConfig
+    fun getTerraformConfig(): TerraformConfig?
 }
 
 class TerraformRepositoryImpl(
@@ -19,7 +19,7 @@ class TerraformRepositoryImpl(
     private val configRepository: ConfigRepository
 ) : TerraformRepository {
 
-    override fun getTerraformConfig(): TerraformConfig {
+    override fun getTerraformConfig(): TerraformConfig? {
         // プロジェクトルートを特定
         // Gradleから実行された場合、user.dirはappディレクトリを指すので親に移動
         val currentDir = File(System.getProperty("user.dir"))
@@ -32,9 +32,14 @@ class TerraformRepositoryImpl(
         // 設定ファイルからTerraform設定を読み込む
         val configPath = configRepository.getProjectConfigFilePath()
         val kinfraConfig = configRepository.loadKinfraConfig(Paths.get(configPath))
-        
+
+        // kinfraConfigがnullの場合はTerraform設定なしとみなす
+        if (kinfraConfig == null) {
+            return null
+        }
+
         // Terraformのワーキングディレクトリを決定
-        val terraformDir = if (kinfraConfig != null && kinfraConfig.rootProject.terraform != null) {
+        val terraformDir = if (kinfraConfig.rootProject.terraform != null) {
             // 設定ファイルからworkingDirectoryを読み込む
             val workingDirPath = kinfraConfig.rootProject.terraform!!.workingDirectory
             if (workingDirPath.startsWith("/")) {
@@ -45,8 +50,8 @@ class TerraformRepositoryImpl(
                 File(projectRoot, workingDirPath)
             }
         } else {
-            // 設定ファイルがない場合は現在のディレクトリを使用
-            currentDir
+            // Terraform設定がない場合はnullを返す
+            return null
         }
 
         // tfvarsファイルの存在確認（terraformディレクトリ内を検索）
