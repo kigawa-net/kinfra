@@ -3,7 +3,7 @@ package net.kigawa.kinfra.infrastructure.config
 import kotlinx.serialization.Serializable
 import net.kigawa.kinfra.model.conf.KinfraParentConfig
 import net.kigawa.kinfra.model.conf.KinfraParentConfigData
-import net.kigawa.kinfra.model.conf.SubProject
+import net.kigawa.kinfra.model.SubProject
 
 /**
  * Serializable implementation of KinfraParentConfig

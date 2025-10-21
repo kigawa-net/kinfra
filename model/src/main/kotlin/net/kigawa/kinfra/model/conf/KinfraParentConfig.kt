@@ -1,5 +1,6 @@
 package net.kigawa.kinfra.model.conf
 
+import net.kigawa.kinfra.model.SubProject
 import java.nio.file.Path
 
 /**

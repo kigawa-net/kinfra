@@ -1,7 +1,8 @@
 package net.kigawa.kinfra.action.execution
 
 import net.kigawa.kinfra.action.config.ConfigRepository
-import net.kigawa.kinfra.model.conf.SubProject
+import net.kigawa.kinfra.model.LoginRepo
+import net.kigawa.kinfra.model.SubProject
 import net.kigawa.kinfra.model.util.AnsiColors
 import java.io.File
 
@@ -9,18 +10,19 @@ import java.io.File
  * サブプロジェクトの実行を管理するクラス
  */
 class SubProjectExecutor(
-    private val configRepository: ConfigRepository
+    private val configRepository: ConfigRepository,
+    private val loginRepo: LoginRepo
 ) {
 
     /**
      * 親プロジェクトの設定からサブプロジェクトリストを取得
      *
-     * @param parentConfigPath 親プロジェクト設定ファイルのパス (デフォルト: kinfra-parent.yaml)
      * @return サブプロジェクトのリスト。親プロジェクト設定が存在しない場合は空リスト
      */
-    fun getSubProjects(parentConfigPath: String = "kinfra-parent.yaml"): List<SubProject> {
+    fun getSubProjects(): List<SubProject> {
+        val parentConfigPath = loginRepo.kinfraParentConfigPath().toString()
         if (!configRepository.kinfraParentConfigExists(parentConfigPath)) {
-            println("kinfra-parent.yaml not found. Skipping sub-project execution.")
+            println("kinfra-parent.yaml not found at $parentConfigPath. Skipping sub-project execution.")
             return emptyList()
         }
 
@@ -39,7 +41,6 @@ class SubProjectExecutor(
         subProjects: List<SubProject>,
         executor: (SubProject, File) -> Int
     ): Int {
-        val currentDir = File(".").absoluteFile
 
         for ((index, subProject) in subProjects.withIndex()) {
             println()
@@ -60,23 +61,21 @@ class SubProjectExecutor(
                 return 1
             }
 
-            // サブプロジェクトディレクトリに移動
-            System.setProperty("user.dir", subProjectDir.absolutePath)
+             try {
+                 val exitCode = executor(subProject, subProjectDir)
+                 if (exitCode != 0) {
+                     println()
+                     println("${AnsiColors.RED}✗${AnsiColors.RESET} Sub-project ${subProject.name} failed with exit code: $exitCode")
+                     return exitCode
+                 }
 
-            try {
-                val exitCode = executor(subProject, subProjectDir)
-                if (exitCode != 0) {
-                    println()
-                    println("${AnsiColors.RED}✗${AnsiColors.RESET} Sub-project ${subProject.name} failed with exit code: $exitCode")
-                    return exitCode
-                }
-
-                println()
-                println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Sub-project ${subProject.name} completed successfully")
-            } finally {
-                // 元のディレクトリに戻る
-                System.setProperty("user.dir", currentDir.absolutePath)
-            }
+                 println()
+                 println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Sub-project ${subProject.name} completed successfully")
+             } catch (e: Exception) {
+                 println()
+                 println("${AnsiColors.RED}✗${AnsiColors.RESET} Sub-project ${subProject.name} failed with exception: ${e.message}")
+                 return 1
+             }
         }
 
         return 0

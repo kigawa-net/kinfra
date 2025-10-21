@@ -3,7 +3,7 @@ package net.kigawa.kinfra.action.actions
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.LoginRepo
 import net.kigawa.kinfra.model.conf.KinfraParentConfigData
-import net.kigawa.kinfra.model.conf.SubProject
+import net.kigawa.kinfra.model.SubProjectImpl
 import net.kigawa.kinfra.model.util.AnsiColors
 
 class SubAddAction(
@@ -20,9 +20,9 @@ class SubAddAction(
         val subProjectInput = args[0]
         val subProject = if (':' in subProjectInput) {
             val parts = subProjectInput.split(':', limit = 2)
-            SubProject(parts[0].trim(), parts[1].trim())
+            SubProjectImpl(parts[0].trim(), parts[1].trim())
         } else {
-            SubProject(subProjectInput.trim())
+            SubProjectImpl(subProjectInput.trim())
         }
 
         val parentConfig = loginRepo.loadKinfraParentConfig()

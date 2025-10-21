@@ -7,6 +7,7 @@ import net.kigawa.kinfra.model.conf.LoginConfig
 import java.nio.file.Path
 
 interface LoginRepo {
+    val repoPath: Path
     val loginConfig: LoginConfig
     fun kinfraConfigPath(): Path
     fun loadKinfraConfig(): KinfraConfig?

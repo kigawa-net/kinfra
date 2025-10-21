@@ -1,10 +1,9 @@
 package net.kigawa.kinfra.action.actions
 
-import net.kigawa.kinfra.action.execution.ConfigEditor
 import net.kigawa.kinfra.action.logging.Logger
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.LoginRepo
-import net.kigawa.kinfra.model.conf.SubProject
+import net.kigawa.kinfra.model.SubProject
 import net.kigawa.kinfra.model.util.AnsiColors
 import java.io.File
 

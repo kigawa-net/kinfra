@@ -58,6 +58,13 @@
 - 2025-10-21: GitHub Actionsワークフローの構文エラーを修正。TARGET_NUM変数の代入方法を改善し、git diff HEAD~1の安全なチェックを追加。
 - 2025-10-21: planコマンド実行時に deprecated Gradle フィーチャー警告を表示するようにし、`--warning-mode all` の使用を推奨。
 - 2025-10-21: マージコンフリクトを解決。GlobalConfig.ktでLoginConfigのインターフェース定義を保持し、重複するデータクラス定義を削除。
+- 2025-10-21: サブプロジェクト実行時のkinfra-parent.yaml読み込みパスを修正。SubProjectExecutorにLoginRepoを注入し、正しいパスを使用するように変更。DeployActionとDeployActionWithSDKも同様に修正。
+- 2025-10-21: kinfra-parent.yamlのサブプロジェクト設定を修正。正しいサブプロジェクト名とパスを設定。
+- 2025-10-21: kubernetesディレクトリを作成し、サブプロジェクトとして設定。
+- 2025-10-21: SubProjectExecutorでSystem.setProperty("user.dir")を使わないように修正。ProcessBuilderでdirectoryを設定するように変更。
+- 2025-10-21: SubProjectをinterfaceに変更し、SubProjectImplを実装クラスとして作成。関連するクラスでSubProjectImplを使用するように修正。
+- 2025-10-21: SubProjectImplをmodelモジュールに移動し、循環依存を解消。
+- 2025-10-21: SubProjectImplをmodelモジュールに配置し、infrastructureモジュールから削除。
 - 2025-10-20: kinfra planで全てのプロジェクトでplanを実行する。親プロジェクトとサブプロジェクトの両方で terraform plan を実行。
 - 2025-10-20: kinfra sub planコマンドを追加。サブプロジェクトで terraform plan を実行できるようにする。
 - 2025-10-20: サブプロジェクト実行時にkinfra-parent.yamlがない場合にメッセージを表示。

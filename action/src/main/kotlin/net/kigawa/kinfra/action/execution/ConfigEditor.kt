@@ -4,7 +4,8 @@ import net.kigawa.kinfra.action.logging.Logger
 import net.kigawa.kinfra.model.LoginRepo
 import net.kigawa.kinfra.model.conf.KinfraParentConfig
 import net.kigawa.kinfra.model.conf.KinfraParentConfigData
-import net.kigawa.kinfra.model.conf.SubProject
+import net.kigawa.kinfra.model.SubProject
+import net.kigawa.kinfra.model.SubProjectImpl
 import net.kigawa.kinfra.model.util.AnsiColors
 import java.io.File
 import kotlin.io.path.exists
@@ -216,12 +217,11 @@ private class SubProjectManager(
 
         val subProjectInput = args[0]
         val subProject = if (':' in subProjectInput) {
-            // "name:path" format
             val parts = subProjectInput.split(':', limit = 2)
-            SubProject(parts[0].trim(), parts[1].trim())
+            SubProjectImpl(parts[0].trim(), parts[1].trim())
         } else {
             // Just name, use name as path
-            SubProject(subProjectInput.trim())
+            SubProjectImpl(subProjectInput.trim())
         }
         
         val parentConfig = getOrCreateParentConfig() ?: return 1

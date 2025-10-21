@@ -4,10 +4,7 @@ import net.kigawa.kinfra.action.config.ConfigRepository
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.LoginRepo
 import net.kigawa.kinfra.model.conf.FilePaths
-import net.kigawa.kinfra.model.conf.SubProject
 import net.kigawa.kinfra.model.util.AnsiColors
-import kotlin.io.path.absolute
-import kotlin.io.path.exists
 
 class SubShowAction(
     private val configRepository: ConfigRepository,
