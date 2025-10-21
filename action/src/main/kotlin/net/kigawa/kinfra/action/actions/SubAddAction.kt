@@ -3,7 +3,7 @@ package net.kigawa.kinfra.action.actions
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.LoginRepo
 import net.kigawa.kinfra.model.conf.KinfraParentConfigData
-import net.kigawa.kinfra.model.conf.SubProject
+import net.kigawa.kinfra.model.sub.SubProjectData
 import net.kigawa.kinfra.model.util.AnsiColors
 
 class SubAddAction(
@@ -17,16 +17,17 @@ class SubAddAction(
             return 1
         }
 
-        val subProjectInput = args[0]
-        val subProject = if (':' in subProjectInput) {
-            val parts = subProjectInput.split(':', limit = 2)
-            SubProject(parts[0].trim(), parts[1].trim())
-        } else {
-            SubProject(subProjectInput.trim())
+        if (baseConfig == null) {
+            println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Parent configuration not found")
+            println("${AnsiColors.BLUE}Creating new parent configuration...${AnsiColors.RESET}")
+            // create default...
+            // using defaultData
+            // create and return 0
         }
+        val subProject = if (':` in subProjectInput) { ... }
 
-        val parentConfig = loginRepo.loadKinfraParentConfig()
-        if (parentConfig == null) {
+
+        if (baseConfig == null) {
             println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Parent configuration not found")
             println("${AnsiColors.BLUE}Creating new parent configuration...${AnsiColors.RESET}")
 
@@ -39,7 +40,7 @@ class SubAddAction(
 
             try {
                 loginRepo.createKinfraParentConfig(defaultConfigData)
-                val displayText = if (subProject.path == subProject.name) {
+                val displayText = if (subProject.path == null) {
                     subProject.name
                 } else {
                     "${subProject.name}:${subProject.path}"
@@ -52,20 +53,20 @@ class SubAddAction(
             }
         }
 
-        if (parentConfig.subProjects.any { it.name == subProject.name }) {
+        if (baseConfig.subProjects.any { it.name == subProject.name }) {
             println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Sub-project '${subProject.name}' already exists")
             return 0
         }
 
         // Add the new sub-project
-        val currentData = parentConfig.toData()
+        val currentData = baseConfig.toData()
         val updatedData = currentData.copy(
             subProjects = currentData.subProjects + subProject
         )
 
         try {
-            parentConfig.saveData(updatedData)
-            val displayText = if (subProject.path == subProject.name) {
+            baseConfig.saveData(updatedData)
+            val displayText = if (subProject.path == null) {
                 subProject.name
             } else {
                 "${subProject.name}:${subProject.path}"

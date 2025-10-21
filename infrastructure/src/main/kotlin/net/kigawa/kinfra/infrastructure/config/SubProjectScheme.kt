@@ -1,7 +1,8 @@
 package net.kigawa.kinfra.infrastructure.config
 
 import kotlinx.serialization.Serializable
-import net.kigawa.kinfra.model.conf.SubProject
+import net.kigawa.kinfra.model.sub.SubProject
+import net.kigawa.kinfra.infrastructure.SubProjectImpl
 
 /**
  * Serializable implementation of SubProject
@@ -21,7 +22,7 @@ data class SubProjectScheme(
     }
 
     fun toSubProject(): SubProject {
-        return SubProject(
+        return SubProjectImpl(
             name = name,
             path = path
         )

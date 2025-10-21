@@ -6,6 +6,7 @@ import net.kigawa.kinfra.action.config.ConfigRepository
 import net.kigawa.kinfra.action.config.EnvFileLoader
 import net.kigawa.kinfra.action.execution.SubProjectExecutor
 import net.kigawa.kinfra.model.Action
+import net.kigawa.kinfra.model.LoginRepo
 import net.kigawa.kinfra.model.conf.R2BackendConfig
 import net.kigawa.kinfra.model.util.AnsiColors
 import net.kigawa.kinfra.model.util.exitCode
@@ -23,11 +24,12 @@ class DeployActionWithSDK(
     private val terraformService: TerraformService,
     private val secretManagerRepository: BitwardenSecretManagerRepository,
     private val configRepository: ConfigRepository,
+    private val loginRepo: LoginRepo,
     private val logger: Logger,
     private val envFileLoader: EnvFileLoader
 ): Action {
 
-    private val subProjectExecutor = SubProjectExecutor(configRepository)
+    private val subProjectExecutor = SubProjectExecutor(configRepository, loginRepo)
 
     override fun execute(args: List<String>): Int {
         logger.info("DeployActionWithSDK started with args: ${args.joinToString(" ")}")

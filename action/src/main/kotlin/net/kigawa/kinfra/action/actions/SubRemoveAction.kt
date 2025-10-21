@@ -2,7 +2,6 @@ package net.kigawa.kinfra.action.actions
 
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.LoginRepo
-import net.kigawa.kinfra.model.conf.KinfraParentConfigData
 import net.kigawa.kinfra.model.util.AnsiColors
 
 class SubRemoveAction(
@@ -18,7 +17,7 @@ class SubRemoveAction(
 
         val subProjectName = args[0].trim()
 
-        val parentConfig = loginRepo.loadKinfraParentConfig()
+        val parentConfig = loginRepo.loadKinfraBaseConfig()
         if (parentConfig == null) {
             println("${AnsiColors.RED}Error:${AnsiColors.RESET} Parent configuration not found")
             println("Use 'kinfra sub add <project-name>' to create a parent configuration first")

@@ -21,13 +21,7 @@ class ConfigAction(
     }
 
     private fun showProjectConfig(): Int {
-        val configPath = try {
-            loginRepo.kinfraConfigPath()
-        } catch (_: IllegalStateException) {
-            println("${AnsiColors.RED}Error:${AnsiColors.RESET} Login configuration not found")
-            println("${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Run 'kinfra login <github-repo>' first")
-            return 1
-        }
+        val configPath = loginRepo.kinfraBaseConfigPath()
 
         val configFile = configPath.toFile()
 
@@ -45,7 +39,7 @@ class ConfigAction(
     }
 
     private fun showParentConfig(): Int {
-        val config = loginRepo.loadKinfraParentConfig()
+        val config = loginRepo.loadKinfraBaseConfig()
         if (config == null) {
             println("${AnsiColors.RED}Error:${AnsiColors.RESET} Parent configuration not found")
             println(

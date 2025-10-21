@@ -9,7 +9,7 @@ class SubListAction(
 ) : Action {
 
     override fun execute(args: List<String>): Int {
-        val parentConfig = loginRepo.loadKinfraParentConfig()
+        val parentConfig = loginRepo.loadKinfraBaseConfig()
         if (parentConfig == null) {
             println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Parent configuration not found")
             println("${AnsiColors.BLUE}No sub-projects configured.${AnsiColors.RESET}")

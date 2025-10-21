@@ -9,6 +9,7 @@ import net.kigawa.kinfra.action.execution.ExecutionStep
 import net.kigawa.kinfra.action.execution.SubProjectExecutor
 import net.kigawa.kinfra.action.logging.Logger
 import net.kigawa.kinfra.model.Action
+import net.kigawa.kinfra.model.LoginRepo
 import net.kigawa.kinfra.model.conf.R2BackendConfig
 import net.kigawa.kinfra.model.util.AnsiColors
 import net.kigawa.kinfra.model.util.isSuccess
@@ -18,12 +19,13 @@ class DeployAction(
     private val terraformService: TerraformService,
     private val bitwardenRepository: BitwardenRepository,
     private val configRepository: ConfigRepository,
+    private val loginRepo: LoginRepo,
     private val logger: Logger
 ) : Action {
 
     private val executor = ActionExecutor(logger)
     private val pipeline = DeploymentPipeline(terraformService, bitwardenRepository)
-    private val subProjectExecutor = SubProjectExecutor(configRepository)
+    private val subProjectExecutor = SubProjectExecutor(configRepository, loginRepo)
 
     override fun execute(args: List<String>): Int {
         val additionalArgs = args.filter { it != "--auto-selected" }
