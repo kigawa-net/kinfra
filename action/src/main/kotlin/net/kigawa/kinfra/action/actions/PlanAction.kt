@@ -20,21 +20,25 @@ class PlanAction(
             println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Failed to pull from git repository, continuing anyway...")
         }
 
-        // Terraform設定が取得できない場合は静かにスキップ
+        // Terraform設定を取得
         val config = terraformService.getTerraformConfig()
-        if (config == null) {
-            return 0
-        }
 
-        // プロジェクト名を表示
-        println("${AnsiColors.BLUE}Planning Terraform changes for project:${AnsiColors.RESET} ${config.workingDirectory.absolutePath}")
+        // 親プロジェクトのplanを実行（設定がある場合のみ）
+        if (config != null) {
+            // プロジェクト名を表示
+            println("${AnsiColors.BLUE}Planning Terraform changes for project:${AnsiColors.RESET} ${config.workingDirectory.absolutePath}")
 
-        val result = terraformService.plan(args, quiet = false)
+            val result = terraformService.plan(args, quiet = false)
 
-        // エラーが発生した場合、プロジェクト情報を表示
-        if (result.isFailure()) {
-            println("${AnsiColors.RED}Error in project:${AnsiColors.RESET} ${config.workingDirectory.absolutePath}")
-            result.message()?.let { println("${AnsiColors.RED}Details: $it${AnsiColors.RESET}") }
+            // エラーが発生した場合、プロジェクト情報を表示
+            if (result.isFailure()) {
+                println("${AnsiColors.RED}Error in project:${AnsiColors.RESET} ${config.workingDirectory.absolutePath}")
+                result.message()?.let { println("${AnsiColors.RED}Details: $it${AnsiColors.RESET}") }
+            }
+
+            // 親プロジェクトが失敗した場合でもサブプロジェクトを実行するため、exitCodeは最後に返す
+        } else {
+            println("${AnsiColors.YELLOW}No Terraform configuration found for parent project, skipping${AnsiColors.RESET}")
         }
 
         // サブプロジェクトでもplanを実行
@@ -61,7 +65,8 @@ class PlanAction(
             }
         }
 
-        return result.exitCode()
+        // 親プロジェクトの結果を返す（設定がない場合は0）
+        return config?.let { terraformService.plan(args, quiet = true).exitCode() } ?: 0
     }
 
     override fun getDescription(): String {

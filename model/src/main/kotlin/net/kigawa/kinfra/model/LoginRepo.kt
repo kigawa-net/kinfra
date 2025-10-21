@@ -7,12 +7,13 @@ import net.kigawa.kinfra.model.conf.LoginConfig
 import java.nio.file.Path
 
 interface LoginRepo {
+    val repoPath: Path
     val loginConfig: LoginConfig
     fun kinfraConfigPath(): Path
     fun loadKinfraConfig(): KinfraConfig?
     fun saveKinfraConfig(config: KinfraConfig)
     fun kinfraConfigExists(): Boolean
-    fun loadKinfraParentConfig(): KinfraParentConfig?
+    fun loadKinfraBaseConfig(): KinfraParentConfig?
     fun createKinfraParentConfig(kinfraParentConfigData: KinfraParentConfigData): KinfraParentConfig
-    fun kinfraParentConfigPath(): Path
+    fun kinfraBaseConfigPath(): Path
 }

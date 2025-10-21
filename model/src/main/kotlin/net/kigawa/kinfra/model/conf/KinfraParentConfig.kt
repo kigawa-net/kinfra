@@ -1,5 +1,6 @@
 package net.kigawa.kinfra.model.conf
 
+import net.kigawa.kinfra.model.sub.SubProject
 import java.nio.file.Path
 
 /**
@@ -39,4 +40,5 @@ interface KinfraParentConfig {
     val filePath: Path
     fun toData(): KinfraParentConfigData
     fun saveData(updatedConfig: KinfraParentConfigData)
+    fun addSubProject(name: String, path: String): SubProject
 }

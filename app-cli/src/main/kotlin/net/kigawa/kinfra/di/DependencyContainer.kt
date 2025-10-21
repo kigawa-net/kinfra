@@ -117,7 +117,7 @@ class DependencyContainer {
 
     // Execution layer
     val actionExecutor: ActionExecutor by lazy { ActionExecutor(logger) }
-    val subProjectExecutor: SubProjectExecutor by lazy { SubProjectExecutor(configRepository) }
+    val subProjectExecutor: SubProjectExecutor by lazy { SubProjectExecutor(configRepository, loginRepo) }
 
     // Presentation layer
     val terraformRunner: TerraformRunner by lazy { TerraformRunner(this) }
@@ -145,6 +145,7 @@ class DependencyContainer {
                 terraformService,
                 bitwardenRepository,
                 configRepository,
+                loginRepo,
                 logger
             ))
             put(Pair(ActionType.PUSH.actionName, null), PushAction(gitHelper))
@@ -182,6 +183,7 @@ class DependencyContainer {
                     terraformService,
                     bitwardenSecretManagerRepository!!,
                     configRepository,
+                    loginRepo,
                     logger,
                     envFileLoader
                 ))

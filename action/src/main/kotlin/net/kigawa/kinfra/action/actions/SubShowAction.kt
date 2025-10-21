@@ -4,10 +4,7 @@ import net.kigawa.kinfra.action.config.ConfigRepository
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.LoginRepo
 import net.kigawa.kinfra.model.conf.FilePaths
-import net.kigawa.kinfra.model.conf.SubProject
 import net.kigawa.kinfra.model.util.AnsiColors
-import kotlin.io.path.absolute
-import kotlin.io.path.exists
 
 class SubShowAction(
     private val configRepository: ConfigRepository,
@@ -23,11 +20,11 @@ class SubShowAction(
         }
 
         val projectName = args[0]
-        val parentConfig = loginRepo.loadKinfraParentConfig()
+        val parentConfig = loginRepo.loadKinfraBaseConfig()
 
         if (parentConfig == null) {
             println(
-                "${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Parent configuration file not found: ${loginRepo.kinfraParentConfigPath()}"
+                "${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Parent configuration file not found: ${loginRepo.kinfraBaseConfigPath()}"
             )
             println(
                 "${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Run 'kinfra sub add <project-name>' to create a configuration file"

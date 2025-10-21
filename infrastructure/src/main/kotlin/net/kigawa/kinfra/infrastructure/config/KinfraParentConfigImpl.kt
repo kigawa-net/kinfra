@@ -1,7 +1,7 @@
 package net.kigawa.kinfra.infrastructure.config
 
 import com.charleskorn.kaml.Yaml
-import kotlinx.serialization.serializer
+import net.kigawa.kinfra.model.sub.SubProject
 import net.kigawa.kinfra.model.conf.*
 import java.io.File
 import java.nio.file.Path
