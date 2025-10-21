@@ -17,14 +17,15 @@ class SubAddAction(
             return 1
         }
 
-        val baseConfig = loginRepo.loadKinfraBaseConfig()
-        val subProjectInput = args[0]
-        val subProject = if (':' in subProjectInput) {
-            val parts = subProjectInput.split(':', limit = 2)
-            baseConfig.addSubProject(parts[0].trim(), loginRepo.repoPath.resolve(parts[1].trim()))
-        } else {
-            baseConfig.addSubProject(subProjectInput.trim(),loginRepo.repoPath.resolve(subProjectInput.trim()))
+        if (baseConfig == null) {
+            println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Parent configuration not found")
+            println("${AnsiColors.BLUE}Creating new parent configuration...${AnsiColors.RESET}")
+            // create default...
+            // using defaultData
+            // create and return 0
         }
+        val subProject = if (':` in subProjectInput) { ... }
+
 
         if (baseConfig == null) {
             println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Parent configuration not found")
