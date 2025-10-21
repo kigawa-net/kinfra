@@ -30,12 +30,12 @@ class LoginRepoImpl(
 
     }
 
-    override fun kinfraParentConfigPath(): Path {
+    override fun kinfraBaseConfigPath(): Path {
         return repoPath.resolve(filePaths.kinfraParentConfigFileName)
     }
 
-    val kinfraParentConfigFile: File by lazy { kinfraParentConfigPath().toFile() }
-    override fun loadKinfraParentConfig(): KinfraParentConfigImpl? {
+    val kinfraParentConfigFile: File by lazy { kinfraBaseConfigPath().toFile() }
+    override fun loadKinfraBaseConfig(): KinfraParentConfigImpl? {
         if (!kinfraParentConfigFile.exists()) {
             return null
         }

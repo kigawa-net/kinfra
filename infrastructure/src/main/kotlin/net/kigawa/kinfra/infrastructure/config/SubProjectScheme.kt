@@ -1,8 +1,8 @@
 package net.kigawa.kinfra.infrastructure.config
 
 import kotlinx.serialization.Serializable
-import net.kigawa.kinfra.model.SubProject
-import net.kigawa.kinfra.model.SubProjectImpl
+import net.kigawa.kinfra.model.sub.SubProject
+import net.kigawa.kinfra.infrastructure.SubProjectImpl
 
 /**
  * Serializable implementation of SubProject

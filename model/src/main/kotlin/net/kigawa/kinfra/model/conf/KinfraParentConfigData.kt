@@ -1,6 +1,6 @@
 package net.kigawa.kinfra.model.conf
 
-import net.kigawa.kinfra.model.SubProject
+import net.kigawa.kinfra.model.sub.SubProject
 
 data class KinfraParentConfigData(
     val projectName: String,

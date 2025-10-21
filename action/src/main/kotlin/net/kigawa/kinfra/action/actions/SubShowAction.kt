@@ -20,11 +20,11 @@ class SubShowAction(
         }
 
         val projectName = args[0]
-        val parentConfig = loginRepo.loadKinfraParentConfig()
+        val parentConfig = loginRepo.loadKinfraBaseConfig()
 
         if (parentConfig == null) {
             println(
-                "${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Parent configuration file not found: ${loginRepo.kinfraParentConfigPath()}"
+                "${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Parent configuration file not found: ${loginRepo.kinfraBaseConfigPath()}"
             )
             println(
                 "${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Run 'kinfra sub add <project-name>' to create a configuration file"

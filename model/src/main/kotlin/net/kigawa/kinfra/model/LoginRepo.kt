@@ -13,7 +13,7 @@ interface LoginRepo {
     fun loadKinfraConfig(): KinfraConfig?
     fun saveKinfraConfig(config: KinfraConfig)
     fun kinfraConfigExists(): Boolean
-    fun loadKinfraParentConfig(): KinfraParentConfig?
+    fun loadKinfraBaseConfig(): KinfraParentConfig?
     fun createKinfraParentConfig(kinfraParentConfigData: KinfraParentConfigData): KinfraParentConfig
-    fun kinfraParentConfigPath(): Path
+    fun kinfraBaseConfigPath(): Path
 }

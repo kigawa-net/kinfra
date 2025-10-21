@@ -1,11 +1,9 @@
 package net.kigawa.kinfra.action.execution
 
-import net.kigawa.kinfra.action.logging.Logger
 import net.kigawa.kinfra.model.LoginRepo
 import net.kigawa.kinfra.model.conf.KinfraParentConfig
 import net.kigawa.kinfra.model.conf.KinfraParentConfigData
-import net.kigawa.kinfra.model.SubProject
-import net.kigawa.kinfra.model.SubProjectImpl
+import net.kigawa.kinfra.model.sub.SubProject
 import net.kigawa.kinfra.model.util.AnsiColors
 import java.io.File
 import kotlin.io.path.exists
@@ -15,18 +13,11 @@ import kotlin.io.path.absolute
  * 設定ファイル編集の各機能を担当するクラス
  */
 class ConfigEditor(
-    private val loginRepo: LoginRepo,
-    private val logger: Logger
+    private val loginRepo: LoginRepo
 ) {
     
     fun editProjectConfig(): Int {
-        val configPath = try {
-            loginRepo.kinfraConfigPath()
-        } catch (_: IllegalStateException) {
-            println("${AnsiColors.RED}Error:${AnsiColors.RESET} Login configuration not found")
-            println("${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Run 'kinfra login <github-repo>' first")
-            return 1
-        }
+val configPath = ConfigUtils.getProjectConfigPath(loginRepo) ?: return 1
 
         val configFile = configPath.toFile()
 
@@ -39,7 +30,7 @@ class ConfigEditor(
     }
     
     fun editParentConfig(): Int {
-        val path = loginRepo.kinfraParentConfigPath()
+        val path = loginRepo.kinfraBaseConfigPath()
         
         // Create sample config if it doesn't exist
         if (!path.exists()) {
@@ -50,7 +41,7 @@ class ConfigEditor(
     }
     
     fun addSubProject(args: Array<String>): Int {
-        return SubProjectManager(loginRepo, logger).addSubProject(args)
+        return SubProjectManager(loginRepo).addSubProject(args)
     }
     
     private fun createSampleProjectConfig(configFile: File) {
@@ -205,8 +196,7 @@ class ConfigEditor(
  * サブプロジェクト管理を担当するクラス
  */
 private class SubProjectManager(
-    private val loginRepo: LoginRepo,
-    private val logger: Logger
+    private val loginRepo: LoginRepo
 ) {
     
     fun addSubProject(args: Array<String>): Int {
@@ -214,17 +204,17 @@ private class SubProjectManager(
             showUsage()
             return 1
         }
+        val parentConfig = getOrCreateBaseConfig()
+
 
         val subProjectInput = args[0]
         val subProject = if (':' in subProjectInput) {
             val parts = subProjectInput.split(':', limit = 2)
-            SubProjectImpl(parts[0].trim(), parts[1].trim())
+            parentConfig.addSubProject(parts[0].trim(), parts[1].trim())
         } else {
             // Just name, use name as path
-            SubProjectImpl(subProjectInput.trim())
+            parentConfig.addSubProject(subProjectInput.trim(), subProjectInput.trim(), )
         }
-        
-        val parentConfig = getOrCreateParentConfig() ?: return 1
 
         // Check if sub-project already exists
         if (parentConfig.subProjects.any { it.name == subProject.name }) {
@@ -247,8 +237,8 @@ private class SubProjectManager(
         return saveConfig(updatedConfig, subProject, parentConfig)
     }
     
-    private fun getOrCreateParentConfig(): KinfraParentConfig? {
-        val existingConfig = loginRepo.loadKinfraParentConfig()
+    private fun getOrCreateBaseConfig(): KinfraParentConfig {
+        val existingConfig = loginRepo.loadKinfraBaseConfig()
         if (existingConfig != null) {
             return existingConfig
         }

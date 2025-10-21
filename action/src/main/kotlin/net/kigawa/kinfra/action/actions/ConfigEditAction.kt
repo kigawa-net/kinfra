@@ -11,7 +11,7 @@ class ConfigEditAction(
     val logger: Logger,
 ): Action {
     
-    private val configEditor = ConfigEditor(loginRepo, logger)
+    private val configEditor = ConfigEditor(loginRepo)
 
     override fun execute(args: List<String>): Int {
         // Check for add-subproject subcommand

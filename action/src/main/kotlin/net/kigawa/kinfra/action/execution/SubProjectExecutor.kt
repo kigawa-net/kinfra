@@ -2,7 +2,7 @@ package net.kigawa.kinfra.action.execution
 
 import net.kigawa.kinfra.action.config.ConfigRepository
 import net.kigawa.kinfra.model.LoginRepo
-import net.kigawa.kinfra.model.SubProject
+import net.kigawa.kinfra.model.sub.SubProject
 import net.kigawa.kinfra.model.util.AnsiColors
 import java.io.File
 
@@ -20,7 +20,7 @@ class SubProjectExecutor(
      * @return サブプロジェクトのリスト。親プロジェクト設定が存在しない場合は空リスト
      */
     fun getSubProjects(): List<SubProject> {
-        val parentConfigPath = loginRepo.kinfraParentConfigPath().toString()
+        val parentConfigPath = loginRepo.kinfraBaseConfigPath().toString()
         if (!configRepository.kinfraParentConfigExists(parentConfigPath)) {
             println("kinfra-parent.yaml not found at $parentConfigPath. Skipping sub-project execution.")
             return emptyList()
