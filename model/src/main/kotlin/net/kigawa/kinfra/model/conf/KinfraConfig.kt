@@ -1,5 +1,7 @@
 package net.kigawa.kinfra.model.conf
 
+import net.kigawa.kinfra.model.conf.global.LoginConfig
+
 interface KinfraConfig {
      val rootProject: ProjectInfo
      val bitwarden: BitwardenSettings?

@@ -3,7 +3,7 @@ package net.kigawa.kinfra.model
 import net.kigawa.kinfra.model.conf.KinfraConfig
 import net.kigawa.kinfra.model.conf.KinfraParentConfig
 import net.kigawa.kinfra.model.conf.KinfraParentConfigData
-import net.kigawa.kinfra.model.conf.LoginConfig
+import net.kigawa.kinfra.model.conf.global.LoginConfig
 import java.nio.file.Path
 
 interface LoginRepo {

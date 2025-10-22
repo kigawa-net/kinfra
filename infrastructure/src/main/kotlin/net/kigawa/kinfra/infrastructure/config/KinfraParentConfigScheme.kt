@@ -44,8 +44,8 @@ data class KinfraParentConfigScheme(
         /**
          * 後方互換性のため、文字列形式のYAMLから変換する
          */
-        fun fromStringList(subProjects: List<String>): List<SubProjectScheme> {
-            return subProjects.map { SubProjectScheme.from(SubProject(it)) }
-        }
+         fun fromStringList(subProjects: List<String>): List<SubProjectScheme> {
+             return subProjects.map { SubProjectScheme(it) }
+         }
     }
 }
