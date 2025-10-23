@@ -55,6 +55,8 @@
 | todo-maintainer    | タスク管理を自動化するエージェント |
 
 ## 変更履歴
+- 2025-10-23: tfvars生成機能を削除。DeployActionWithSDK.kt、DeployAction.kt、DeploymentPipeline.ktからbackend setupコードを削除し、Terraformワークフローを簡素化。
+- 2025-10-22: .bws_tokenファイルを~/.local/kinfra/.bws_tokenに配置するように修正。
 - 2025-10-22: GlobalConfigCompleterインターフェースを実装し、設定補完機能を追加。
 - 2025-10-22: repoPathをログインしているリポジトリの実際の場所に設定。
 - 2025-10-22: repoPathのデフォルト構造を~/.local/kinfra/repos/<org>/<repo name>/に変更。

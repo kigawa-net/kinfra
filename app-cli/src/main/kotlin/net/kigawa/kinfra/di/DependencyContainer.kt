@@ -82,8 +82,8 @@ class DependencyContainer {
         System.getenv("BWS_ACCESS_TOKEN")?.also {
             println("✓ Using BWS_ACCESS_TOKEN from environment variable")
         } ?: run {
-            val tokenFile = java.io.File(filePaths.bwsTokenFileName)
-            if (tokenFile.exists() && tokenFile.canRead()) {
+            val tokenFile = filePaths.bwsTokenFile?.toFile()
+            if (tokenFile != null && tokenFile.exists() && tokenFile.canRead()) {
                 tokenFile.readText().trim().takeIf { it.isNotBlank() }?.also {
                     println("✓ Loaded BWS_ACCESS_TOKEN from .bws_token file")
                 }
