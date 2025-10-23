@@ -1,7 +1,7 @@
 package net.kigawa.kinfra.infrastructure.config
 
 import kotlinx.serialization.Serializable
-import net.kigawa.kinfra.model.conf.LoginConfig
+import net.kigawa.kinfra.model.conf.global.LoginConfig
 import net.kigawa.kinfra.model.conf.RepositoryName
 import java.nio.file.Path
 
@@ -30,13 +30,18 @@ data class LoginConfigImpl(
 @Serializable
 data class LoginConfigScheme(
     val repo: String = "",
+    val repoPath: String = "",
     val enabledProjects: List<String> = emptyList(),
-    val repoPath: String = ""
 ) {
-    fun toLoginConfig(): LoginConfig {
+    fun toLoginConfig(basePath: Path): LoginConfig {
+        val resolvedRepoPath = if (repoPath.isNotBlank()) {
+            Path.of(repoPath)
+        } else {
+            basePath.resolve(repo)
+        }
         return LoginConfigImpl(
             repo = RepositoryName(repo),
-            repoPath = Path.of(repoPath),
+            repoPath = resolvedRepoPath,
             enabledProjects = enabledProjects
         )
     }

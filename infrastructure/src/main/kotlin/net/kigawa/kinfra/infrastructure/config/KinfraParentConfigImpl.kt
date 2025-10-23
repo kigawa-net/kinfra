@@ -1,6 +1,7 @@
 package net.kigawa.kinfra.infrastructure.config
 
 import com.charleskorn.kaml.Yaml
+import net.kigawa.kinfra.infrastructure.SubProjectImpl
 import net.kigawa.kinfra.model.sub.SubProject
 import net.kigawa.kinfra.model.conf.*
 import java.io.File
@@ -36,14 +37,18 @@ class KinfraParentConfigImpl(
         )
     }
 
-    override fun saveData(updatedConfig: KinfraParentConfigData) {
-        kinfraParentConfigScheme = KinfraParentConfigScheme.from(updatedConfig)
-        file.writeText(
-            Yaml.default.encodeToString(
-                KinfraParentConfigScheme.serializer(), kinfraParentConfigScheme
-            )
-        )
-    }
+     override fun saveData(updatedConfig: KinfraParentConfigData) {
+         kinfraParentConfigScheme = KinfraParentConfigScheme.from(updatedConfig)
+         file.writeText(
+             Yaml.default.encodeToString(
+                 KinfraParentConfigScheme.serializer(), kinfraParentConfigScheme
+             )
+         )
+     }
+
+     override fun addSubProject(name: String, path: String): SubProject {
+         return SubProjectImpl(name, path)
+     }
     
     companion object {
         /**

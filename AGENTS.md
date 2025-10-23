@@ -55,6 +55,17 @@
 | todo-maintainer    | タスク管理を自動化するエージェント |
 
 ## 変更履歴
+- 2025-10-23: tfvars生成機能を削除。DeployActionWithSDK.kt、DeployAction.kt、DeploymentPipeline.ktからbackend setupコードを削除し、Terraformワークフローを簡素化。
+- 2025-10-22: .bws_tokenファイルを~/.local/kinfra/.bws_tokenに配置するように修正。
+- 2025-10-22: GlobalConfigCompleterインターフェースを実装し、設定補完機能を追加。
+- 2025-10-22: repoPathをログインしているリポジトリの実際の場所に設定。
+- 2025-10-22: repoPathのデフォルト構造を~/.local/kinfra/repos/<org>/<repo name>/に変更。
+- 2025-10-22: kinfra-parent.yamlをリポジトリルートに配置するように修正。
+- 2025-10-22: kinfra sub addコマンドを<name> <path>形式で受け取るように修正。
+- 2025-10-22: SubProjectExecutorでサブプロジェクトのパス解決を修正。repoPathを基準にした絶対パスを使用するように変更。
+- 2025-10-22: kubernetesサブプロジェクトでterraform initを実行し、dependency lock fileを初期化。
+- 2025-10-22: repoPath設定を修正し、kinfra-parent.yamlをプロジェクトルートに配置。kubernetesサブプロジェクトに基本的なTerraform設定ファイルを追加。
+- 2025-10-21: KinfraParentConfigImpl.ktにSubProjectImplのimportを追加し、ビルドエラーを修正。
 - 2025-10-21: GitHub Actionsワークフローの構文エラーを修正。TARGET_NUM変数の代入方法を改善し、git diff HEAD~1の安全なチェックを追加。
 - 2025-10-21: planコマンド実行時に deprecated Gradle フィーチャー警告を表示するようにし、`--warning-mode all` の使用を推奨。
 - 2025-10-21: マージコンフリクトを解決。GlobalConfig.ktでLoginConfigのインターフェース定義を保持し、重複するデータクラス定義を削除。

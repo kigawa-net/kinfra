@@ -19,20 +19,7 @@ class DeploymentPipeline(
     private val bitwardenRepository: BitwardenRepository
 ) {
     
-    fun setupBackendIfNeeded(): Int {
-        val backendFile = File("backend.tfvars")
 
-        // Check if backend.tfvars already exists and is valid
-        if (backendFile.exists()) {
-            val content = backendFile.readText()
-            if (!content.contains("<account-id>") && !content.contains("your-r2-")) {
-                println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Backend configuration already exists")
-                return 0
-            }
-        }
-
-        return BackendSetup(bitwardenRepository).setup()
-    }
     
     fun initializeTerraform(additionalArgs: List<String>): Int {
         val result = terraformService.init(quiet = false, additionalArgs = additionalArgs)
