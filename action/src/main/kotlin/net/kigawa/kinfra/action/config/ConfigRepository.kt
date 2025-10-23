@@ -1,6 +1,6 @@
 package net.kigawa.kinfra.action.config
 
-import net.kigawa.kinfra.model.conf.GlobalConfig
+import net.kigawa.kinfra.model.conf.global.GlobalConfig
 import net.kigawa.kinfra.model.conf.KinfraConfig
 import net.kigawa.kinfra.model.conf.KinfraParentConfig
 import java.nio.file.Path

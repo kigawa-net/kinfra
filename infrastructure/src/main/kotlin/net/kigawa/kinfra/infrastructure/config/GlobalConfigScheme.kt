@@ -1,13 +1,13 @@
 package net.kigawa.kinfra.infrastructure.config
 
 import kotlinx.serialization.Serializable
-import net.kigawa.kinfra.model.conf.GlobalConfig
-import net.kigawa.kinfra.model.conf.LoginConfig
+import net.kigawa.kinfra.model.conf.global.GlobalConfig
+import net.kigawa.kinfra.model.conf.global.IncompleteGlobalConfig
 
 @Serializable
 data class GlobalConfigScheme(
     val login: LoginConfigScheme? = null,
-) {
+) : IncompleteGlobalConfig {
     fun toGlobalConfig(): GlobalConfig {
         return GlobalConfigImpl(this, java.nio.file.Path.of(""))
     }
