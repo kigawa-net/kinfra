@@ -3,6 +3,8 @@ package net.kigawa.kinfra.infrastructure.config
 import com.charleskorn.kaml.Yaml
 import net.kigawa.kinfra.model.LoginRepo
 import net.kigawa.kinfra.model.conf.*
+import net.kigawa.kinfra.model.conf.global.GlobalConfig
+import net.kigawa.kinfra.model.conf.global.LoginConfig
 import java.io.File
 import java.nio.file.Path
 
@@ -14,13 +16,13 @@ class LoginRepoImpl(
     override val loginConfig: LoginConfig
         get() = globalConfig.login ?: throw IllegalStateException("Login config not available. Please run 'kinfra login <repository>' first.")
     
-   override val repoPath: Path by lazy {
+    override val repoPath: Path by lazy {
         if (loginConfig.repoPath.toString().isNotEmpty()) {
             loginConfig.repoPath
         } else {
             File(
                 "${filePaths.baseConfigDir}/${filePaths.reposDir}/" +
-                    loginConfig.repo.getShortName()
+                    loginConfig.repo.value
             ).toPath()
         }
     }

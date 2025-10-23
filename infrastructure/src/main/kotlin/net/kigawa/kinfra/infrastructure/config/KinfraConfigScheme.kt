@@ -4,6 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import net.kigawa.kinfra.model.conf.*
+import net.kigawa.kinfra.model.conf.global.LoginConfig
 
 @Serializable
 data class ProjectInfoScheme(
@@ -114,7 +115,7 @@ data class KinfraConfigScheme(
 
     @Deprecated("Login configuration should be in GlobalConfig. This property is kept for backward compatibility.")
     override val login: LoginConfig?
-        get() = loginScheme?.toLoginConfig()
+        get() = loginScheme?.toLoginConfig(java.nio.file.Path.of("."))
     companion object {
         fun from(kinfraConfig: KinfraConfig): KinfraConfigScheme {
             if (kinfraConfig is KinfraConfigScheme) {

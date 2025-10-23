@@ -16,9 +16,9 @@ import net.kigawa.kinfra.git.GitHelperImpl
 import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenRepositoryImpl
 import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenSecretManagerRepositoryImpl
 import net.kigawa.kinfra.infrastructure.config.ConfigRepositoryImpl
+import net.kigawa.kinfra.infrastructure.config.GlobalConfigCompleterImpl
+import net.kigawa.kinfra.model.conf.GlobalConfigCompleter
 import net.kigawa.kinfra.infrastructure.config.EnvFileLoaderImpl
-import net.kigawa.kinfra.infrastructure.config.GlobalConfigImpl
-import net.kigawa.kinfra.infrastructure.config.GlobalConfigScheme
 import net.kigawa.kinfra.infrastructure.config.LoginRepoImpl
 import net.kigawa.kinfra.infrastructure.file.FileRepositoryImpl
 import net.kigawa.kinfra.infrastructure.file.SystemHomeDirGetter
@@ -35,7 +35,7 @@ import net.kigawa.kinfra.model.GitHelper
 import net.kigawa.kinfra.model.LoginRepo
 import net.kigawa.kinfra.model.SubActionType
 import net.kigawa.kinfra.model.conf.FilePaths
-import net.kigawa.kinfra.model.conf.GlobalConfig
+import net.kigawa.kinfra.model.conf.global.GlobalConfig
 import net.kigawa.kinfra.model.conf.HomeDirGetter
 import net.kigawa.kinfra.model.service.TerraformService
 import net.kigawa.kinfra.service.ActionRegistry
@@ -62,7 +62,8 @@ class DependencyContainer {
     val envFileLoader: EnvFileLoader by lazy { EnvFileLoaderImpl() }
     val fileRepository by lazy { FileRepositoryImpl() }
     val processExecutor by lazy { ProcessExecutorImpl() }
-    val configRepository: ConfigRepository by lazy { ConfigRepositoryImpl(filePaths, logger) }
+    val globalConfigCompleter: GlobalConfigCompleter by lazy { GlobalConfigCompleterImpl(filePaths) }
+    val configRepository: ConfigRepository by lazy { ConfigRepositoryImpl(filePaths, logger, globalConfigCompleter) }
     val terraformRepository by lazy { TerraformRepositoryImpl(fileRepository, configRepository) }
     val terraformService: TerraformService by lazy { TerraformServiceImpl(processExecutor, terraformRepository) }
     val bitwardenRepository: BitwardenRepository by lazy { BitwardenRepositoryImpl(processExecutor, filePaths) }
@@ -81,8 +82,8 @@ class DependencyContainer {
         System.getenv("BWS_ACCESS_TOKEN")?.also {
             println("✓ Using BWS_ACCESS_TOKEN from environment variable")
         } ?: run {
-            val tokenFile = java.io.File(filePaths.bwsTokenFileName)
-            if (tokenFile.exists() && tokenFile.canRead()) {
+            val tokenFile = filePaths.bwsTokenFile?.toFile()
+            if (tokenFile != null && tokenFile.exists() && tokenFile.canRead()) {
                 tokenFile.readText().trim().takeIf { it.isNotBlank() }?.also {
                     println("✓ Loaded BWS_ACCESS_TOKEN from .bws_token file")
                 }

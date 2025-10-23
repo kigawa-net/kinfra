@@ -36,6 +36,7 @@ class FilePaths(
      */
      val bwSessionFileName = ".bw_session"
      val bwsTokenFileName = ".bws_token"
+     val bwsTokenFile: Path? = baseConfigDir?.resolve(bwsTokenFileName)
 
     /**
      * リポジトリディレクトリ名

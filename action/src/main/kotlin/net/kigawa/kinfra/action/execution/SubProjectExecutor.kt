@@ -50,14 +50,14 @@ class SubProjectExecutor(
             println("${AnsiColors.CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${AnsiColors.RESET}")
             println()
 
-            val subProjectDir = File(subProject.path)
+            val subProjectDir = loginRepo.repoPath.resolve(subProject.path).toFile()
             if (!subProjectDir.exists()) {
-                println("${AnsiColors.RED}Error:${AnsiColors.RESET} Sub-project directory not found: ${subProject.path}")
+                println("${AnsiColors.RED}Error:${AnsiColors.RESET} Sub-project directory not found: ${subProjectDir.absolutePath}")
                 return 1
             }
 
             if (!subProjectDir.isDirectory) {
-                println("${AnsiColors.RED}Error:${AnsiColors.RESET} Not a directory: ${subProject.path}")
+                println("${AnsiColors.RED}Error:${AnsiColors.RESET} Not a directory: ${subProjectDir.absolutePath}")
                 return 1
             }
 

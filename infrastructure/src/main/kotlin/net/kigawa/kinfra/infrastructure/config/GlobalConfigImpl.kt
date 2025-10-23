@@ -1,7 +1,7 @@
 package net.kigawa.kinfra.infrastructure.config
 
-import net.kigawa.kinfra.model.conf.GlobalConfig
-import net.kigawa.kinfra.model.conf.LoginConfig
+import net.kigawa.kinfra.model.conf.global.GlobalConfig
+import net.kigawa.kinfra.model.conf.global.LoginConfig
 import java.nio.file.Path
 
 class GlobalConfigImpl(
@@ -9,5 +9,5 @@ class GlobalConfigImpl(
     val kinfraReposPath: Path,
 ): GlobalConfig {
     override val login: LoginConfig?
-        get() = globalConfigScheme.login?.toLoginConfig()
+        get() = globalConfigScheme.login?.toLoginConfig(kinfraReposPath)
 }

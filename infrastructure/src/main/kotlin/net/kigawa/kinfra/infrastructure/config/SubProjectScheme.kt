@@ -21,10 +21,10 @@ data class SubProjectScheme(
         }
     }
 
-    fun toSubProject(): SubProject {
-        return SubProjectImpl(
-            name = name,
-            path = path
-        )
-    }
+     fun toSubProject(): SubProject {
+         return SubProjectImpl(
+             name = name,
+             relativePath = path
+         )
+     }
 }

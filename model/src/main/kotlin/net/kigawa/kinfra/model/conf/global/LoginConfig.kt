@@ -1,10 +1,7 @@
-package net.kigawa.kinfra.model.conf
+package net.kigawa.kinfra.model.conf.global
 
+import net.kigawa.kinfra.model.conf.RepositoryName
 import java.nio.file.Path
-
-interface GlobalConfig {
-    val login: LoginConfig?
-}
 
 interface LoginConfig {
     val repo: RepositoryName

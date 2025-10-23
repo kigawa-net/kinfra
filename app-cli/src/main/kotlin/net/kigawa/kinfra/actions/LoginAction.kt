@@ -114,8 +114,14 @@ class LoginAction(
         println("${AnsiColors.BLUE}=== Secret Manager Setup ===${AnsiColors.RESET}")
         println()
 
+        // Check if token file path is available
+        val tokenFile = filePaths.bwsTokenFile?.toFile()
+        if (tokenFile == null) {
+            println("${AnsiColors.RED}Error:${AnsiColors.RESET} Cannot determine token file location")
+            return 1
+        }
+
         // Check if token already exists
-        val tokenFile = File(filePaths.bwsTokenFileName)
         if (tokenFile.exists()) {
             println("${AnsiColors.YELLOW}BWS_ACCESS_TOKEN file already exists${AnsiColors.RESET}")
             print("Overwrite? (y/N): ")
@@ -154,7 +160,7 @@ class LoginAction(
             println()
             println("${AnsiColors.BLUE}The token will be automatically loaded on next run.${AnsiColors.RESET}")
             println("${AnsiColors.BLUE}You can also set it manually:${AnsiColors.RESET}")
-            println("  export BWS_ACCESS_TOKEN=\$(cat ${filePaths.bwsTokenFileName})")
+            println("  export BWS_ACCESS_TOKEN=\$(cat ${filePaths.bwsTokenFile?.toString() ?: filePaths.bwsTokenFileName})")
 
             return 0
         } catch (e: Exception) {
