@@ -6,6 +6,10 @@ import net.kigawa.kinfra.model.conf.TerraformConfig
 import net.kigawa.kinfra.model.err.ActionException
 import net.kigawa.kinfra.model.err.Res
 import net.kigawa.kinfra.model.service.TerraformService
+import net.kigawa.kinfra.action.bitwarden.BitwardenSecretManagerRepository
+import net.kigawa.kinfra.action.config.ConfigRepository
+import java.io.File
+import java.nio.file.Paths
 
 /**
  * TerraformServiceの実装
@@ -13,6 +17,8 @@ import net.kigawa.kinfra.model.service.TerraformService
 class TerraformServiceImpl(
     private val processExecutor: ProcessExecutor,
     private val terraformRepository: TerraformRepository,
+    private val configRepository: ConfigRepository,
+    private val bitwardenSecretManagerRepository: BitwardenSecretManagerRepository? = null,
 ): TerraformService {
 
     override fun init(additionalArgs: List<String>, quiet: Boolean): Res<Int, ActionException> {
@@ -37,10 +43,21 @@ class TerraformServiceImpl(
             return Res.Err(ActionException(1, "Terraform configuration not found"))
         }
 
-        val varFileArgs = if (config.hasVarFile()) {
-            arrayOf("-var-file=${config.varFile!!.absolutePath}")
-        } else {
-            emptyArray()
+        // Bitwardenシークレットから.tfvarsファイルを生成
+        val generatedTfvarsFile = generateTfvarsFromBitwarden()?.let { content ->
+            saveTfvarsFile(config, content)
+        }
+
+        val varFileArgs = mutableListOf<String>()
+
+        // 既存のvarFileがある場合
+        if (config.hasVarFile()) {
+            varFileArgs.add("-var-file=${config.varFile!!.absolutePath}")
+        }
+
+        // 生成された.tfvarsファイルがある場合
+        if (generatedTfvarsFile != null) {
+            varFileArgs.add("-var-file=${generatedTfvarsFile.absolutePath}")
         }
 
         val args = arrayOf("terraform", "plan") + varFileArgs + additionalArgs
@@ -61,12 +78,24 @@ class TerraformServiceImpl(
             return Res.Err(ActionException(1, "Terraform configuration not found"))
         }
 
-        val baseArgs = arrayOf("terraform", "apply")
-        val varFileArgs = if (planFile == null && config.hasVarFile()) {
-            arrayOf("-var-file=${config.varFile!!.absolutePath}")
-        } else {
-            emptyArray()
+        // Bitwardenシークレットから.tfvarsファイルを生成
+        val generatedTfvarsFile = generateTfvarsFromBitwarden()?.let { content ->
+            saveTfvarsFile(config, content)
         }
+
+        val baseArgs = arrayOf("terraform", "apply")
+        val varFileArgs = mutableListOf<String>()
+
+        // 既存のvarFileがある場合（planFileがない場合のみ）
+        if (planFile == null && config.hasVarFile()) {
+            varFileArgs.add("-var-file=${config.varFile!!.absolutePath}")
+        }
+
+        // 生成された.tfvarsファイルがある場合
+        if (generatedTfvarsFile != null) {
+            varFileArgs.add("-var-file=${generatedTfvarsFile.absolutePath}")
+        }
+
         val planArgs = if (planFile != null) arrayOf(planFile) else emptyArray()
 
         val args = baseArgs + additionalArgs + varFileArgs + planArgs
@@ -133,5 +162,37 @@ class TerraformServiceImpl(
 
     override fun getTerraformConfig(): TerraformConfig? {
         return terraformRepository.getTerraformConfig()
+    }
+
+    /**
+     * Bitwardenシークレットから.tfvarsファイルを生成
+     */
+    private fun generateTfvarsFromBitwarden(): String? {
+        val configPath = configRepository.getProjectConfigFilePath()
+        val kinfraConfig = configRepository.loadKinfraConfig(Paths.get(configPath)) ?: return null
+
+        val settings = kinfraConfig.rootProject.terraform ?: return null
+        if (settings.variableMappings.isEmpty() || bitwardenSecretManagerRepository == null) {
+            return null
+        }
+
+        val tfvarsContent = StringBuilder()
+        for (mapping in settings.variableMappings) {
+            val secret = bitwardenSecretManagerRepository.findSecretByKey(mapping.bitwardenSecretKey)
+            if (secret != null) {
+                tfvarsContent.append("${mapping.terraformVariable} = \"${secret.value}\"\n")
+            }
+        }
+
+        return if (tfvarsContent.isNotEmpty()) tfvarsContent.toString() else null
+    }
+
+    /**
+     * .tfvarsファイルを保存
+     */
+    private fun saveTfvarsFile(config: TerraformConfig, content: String): File {
+        val tfvarsFile = File(config.workingDirectory, "secrets.tfvars")
+        tfvarsFile.writeText(content)
+        return tfvarsFile
     }
 }
