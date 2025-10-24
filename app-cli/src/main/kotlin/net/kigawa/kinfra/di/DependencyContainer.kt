@@ -65,7 +65,7 @@ class DependencyContainer {
     val globalConfigCompleter: GlobalConfigCompleter by lazy { GlobalConfigCompleterImpl(filePaths) }
     val configRepository: ConfigRepository by lazy { ConfigRepositoryImpl(filePaths, logger, globalConfigCompleter) }
     val terraformRepository by lazy { TerraformRepositoryImpl(fileRepository, configRepository) }
-    val terraformService: TerraformService by lazy { TerraformServiceImpl(processExecutor, terraformRepository) }
+    val terraformService: TerraformService by lazy { TerraformServiceImpl(processExecutor, terraformRepository, configRepository, bitwardenSecretManagerRepository) }
     val bitwardenRepository: BitwardenRepository by lazy { BitwardenRepositoryImpl(processExecutor, filePaths) }
 
     val globalConfig: GlobalConfig by lazy {

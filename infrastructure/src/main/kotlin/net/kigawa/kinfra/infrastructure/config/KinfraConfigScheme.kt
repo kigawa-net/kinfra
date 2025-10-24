@@ -32,10 +32,19 @@ data class ProjectInfoScheme(
     }
 }
 
+
+
+@Serializable
+data class TerraformVariableMappingScheme(
+    override val terraformVariable: String,
+    override val bitwardenSecretKey: String
+) : TerraformVariableMapping
+
 @Serializable
 data class TerraformSettingsScheme(
     override val version: String = "",
-    override val workingDirectory: String = "."
+    override val workingDirectory: String = ".",
+    override val variableMappings: List<TerraformVariableMappingScheme> = emptyList()
 ) : TerraformSettings {
     companion object {
         fun from(settings: TerraformSettings): TerraformSettingsScheme {
@@ -44,11 +53,17 @@ data class TerraformSettingsScheme(
             }
             return TerraformSettingsScheme(
                 version = settings.version,
-                workingDirectory = settings.workingDirectory
+                workingDirectory = settings.workingDirectory,
+                variableMappings = settings.variableMappings.map {
+                    TerraformVariableMappingScheme(
+                        terraformVariable = it.terraformVariable,
+                        bitwardenSecretKey = it.bitwardenSecretKey
+                    )
+                }
             )
         }
     }
-    
+
     fun toTerraformSettings(): TerraformSettings = this
 }
 
