@@ -50,6 +50,20 @@ class SubPlanAction(
 
         // サブプロジェクトでplanを実行
         val result = subProjectExecutor.executeInSubProjects(listOf(subProject)) { _, subProjectDir ->
+            // plan前にinitを実行
+            println("${AnsiColors.BLUE}Initializing Terraform for sub-project ${subProject.name}...${AnsiColors.RESET}")
+            val initProcess = ProcessBuilder("terraform", "init")
+                .directory(subProjectDir)
+                .redirectOutput(ProcessBuilder.Redirect.INHERIT)
+                .redirectError(ProcessBuilder.Redirect.INHERIT)
+                .start()
+
+            val initExitCode = initProcess.waitFor()
+            if (initExitCode != 0) {
+                println("${AnsiColors.RED}Terraform init failed for sub-project ${subProject.name}${AnsiColors.RESET}")
+                return@executeInSubProjects initExitCode
+            }
+
             // サブプロジェクトディレクトリでterraform planを実行
             val process = ProcessBuilder("terraform", "plan")
                 .directory(subProjectDir)
