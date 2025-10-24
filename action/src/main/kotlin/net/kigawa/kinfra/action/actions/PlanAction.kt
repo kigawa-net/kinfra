@@ -28,6 +28,15 @@ class PlanAction(
             // プロジェクト名を表示
             println("${AnsiColors.BLUE}Planning Terraform changes for project:${AnsiColors.RESET} ${config.workingDirectory.absolutePath}")
 
+            // plan実行前に自動でinitを実行
+            println("${AnsiColors.BLUE}Initializing Terraform...${AnsiColors.RESET}")
+            val initResult = terraformService.init(emptyList(), quiet = false)
+            if (initResult.isFailure()) {
+                println("${AnsiColors.RED}Terraform init failed for parent project${AnsiColors.RESET}")
+                initResult.message()?.let { println("${AnsiColors.RED}Details: $it${AnsiColors.RESET}") }
+                return initResult.exitCode()
+            }
+
             val result = terraformService.plan(args, quiet = false)
 
             // エラーが発生した場合、プロジェクト情報を表示
@@ -49,6 +58,20 @@ class PlanAction(
 
             val subResult = subProjectExecutor.executeInSubProjects(subProjects) { subProject, subProjectDir ->
                 println("${AnsiColors.BLUE}Planning Terraform changes for sub-project:${AnsiColors.RESET} ${subProject.name} (${subProjectDir.absolutePath})")
+
+                // サブプロジェクトでもplan前にinitを実行
+                println("${AnsiColors.BLUE}Initializing Terraform for sub-project...${AnsiColors.RESET}")
+                val initProcess = ProcessBuilder("terraform", "init")
+                    .directory(subProjectDir)
+                    .redirectOutput(ProcessBuilder.Redirect.INHERIT)
+                    .redirectError(ProcessBuilder.Redirect.INHERIT)
+                    .start()
+
+                val initExitCode = initProcess.waitFor()
+                if (initExitCode != 0) {
+                    println("${AnsiColors.RED}Terraform init failed for sub-project ${subProject.name}${AnsiColors.RESET}")
+                    return@executeInSubProjects initExitCode
+                }
 
                 val process = ProcessBuilder("terraform", "plan")
                     .directory(subProjectDir)
