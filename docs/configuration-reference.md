@@ -89,6 +89,12 @@ export KINFRA_LOG_DIR=/var/log/kinfra
 
 **例** (新しい形式):
 
+**variableMappings**: BitwardenのシークレットとTerraform変数のマッピングを定義します。各マッピングは以下のフィールドを持ちます:
+- `terraformVariable`: Terraformで使用する変数名
+- `bitwardenSecretKey`: Bitwardenのシークレットキー
+
+plan/apply実行時に、これらのマッピングに基づいて`secrets.tfvars`ファイルが自動生成され、Terraform変数として使用されます。
+
 ```yaml
 project:
   projectId: "my-infrastructure"
@@ -96,6 +102,11 @@ project:
   terraform:
     version: "1.5.0"
     workingDirectory: "."
+    variableMappings:
+      - terraformVariable: "cloudflare_api_token"
+        bitwardenSecretKey: "cloudflare-api-token"
+      - terraformVariable: "aws_access_key"
+        bitwardenSecretKey: "aws-access-key"
 
 bitwarden:
   projectId: "your-bitwarden-project-id"
