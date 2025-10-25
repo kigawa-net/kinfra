@@ -6,7 +6,8 @@ enum class SubActionType(val actionName: String) {
     SHOW("show"),
     EDIT("edit"),
     REMOVE("rm"),
-    PLAN("plan");
+    PLAN("plan"),
+    GENERATE("generate");
 
     companion object {
         fun fromString(name: String): SubActionType? {

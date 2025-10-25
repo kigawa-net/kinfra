@@ -2,6 +2,7 @@ package net.kigawa.kinfra.di
 
 import net.kigawa.kinfra.TerraformRunner
 import net.kigawa.kinfra.action.actions.*
+import net.kigawa.kinfra.action.actions.CurrentPlanAction
 import net.kigawa.kinfra.action.bitwarden.BitwardenRepository
 import net.kigawa.kinfra.action.bitwarden.BitwardenSecretManagerRepository
 import net.kigawa.kinfra.action.config.ConfigRepository
@@ -159,6 +160,8 @@ class DependencyContainer {
                 loginRepo,
                 logger
             ))
+            put(Pair(ActionType.CURRENT.actionName, SubActionType.GENERATE), CurrentGenerateVariableAction(configRepository))
+            put(Pair(ActionType.CURRENT.actionName, SubActionType.PLAN), CurrentPlanAction())
 
             // Subcommands
             put(Pair(ActionType.SUB.actionName, SubActionType.LIST), SubListAction(loginRepo))
@@ -198,7 +201,7 @@ class DependencyContainer {
             // Help action needs access to all actions (without help itself)
             val actionsForHelp = buildMap {
                 ActionType.entries.forEach { actionType ->
-                    if (actionType == ActionType.SUB) {
+                    if (actionType == ActionType.SUB || actionType == ActionType.CURRENT) {
                         SubActionType.entries.forEach { subActionType ->
                             actionsWithoutHelp[Pair(actionType.actionName, subActionType)]?.let {
                                 put("${actionType.actionName} ${subActionType.actionName}", it)
@@ -222,7 +225,7 @@ class DependencyContainer {
     fun getAllActions(): Map<String, Action> {
         return buildMap {
             ActionType.entries.forEach { actionType ->
-                if (actionType == ActionType.SUB) {
+                if (actionType == ActionType.SUB || actionType == ActionType.CURRENT) {
                     SubActionType.entries.forEach { subActionType ->
                         actions[Pair(actionType.actionName, subActionType)]?.let {
                             put("${actionType.actionName} ${subActionType.actionName}", it)
