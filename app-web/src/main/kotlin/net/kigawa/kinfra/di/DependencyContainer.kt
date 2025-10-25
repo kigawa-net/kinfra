@@ -58,7 +58,7 @@ class DependencyContainer {
     val processExecutor: ProcessExecutor by lazy { ProcessExecutorImpl() }
     val configRepository: ConfigRepository by lazy { ConfigRepositoryImpl(filePaths, logger, globalConfigCompleter) }
     val terraformRepository: TerraformRepository by lazy { TerraformRepositoryImpl(fileRepository, configRepository) }
-    val terraformService: TerraformService by lazy { TerraformServiceImpl(processExecutor, terraformRepository, configRepository, bitwardenSecretManagerRepository) }
+    val terraformService: TerraformService by lazy { TerraformServiceImpl(processExecutor, terraformRepository, configRepository, bitwardenSecretManagerRepository, bitwardenRepository) }
     val bitwardenRepository: BitwardenRepository by lazy { BitwardenRepositoryImpl(processExecutor, filePaths) }
 
     // Bitwarden Secret Manager
