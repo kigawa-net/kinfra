@@ -17,11 +17,13 @@ class CurrentGenerateVariableAction(private val configRepository: ConfigReposito
         // Parse options
         val (options, remainingArgs) = parseOptions(args.drop(1))
         val outputDir = options["output-dir"] ?: System.getProperty("user.dir")
+        val withOutputs = options.containsKey("with-outputs")
         val outputDirFile = File(outputDir)
         if (!outputDirFile.exists()) {
             outputDirFile.mkdirs()
         }
         val variablesFile = File(outputDirFile, "variables.tf")
+        val outputsFile = File(outputDirFile, "outputs.tf")
 
         val variablesToGenerate = if (remainingArgs.isEmpty()) {
             // Generate all variables from kinfra.yaml or kinfra-parent.yaml
@@ -76,6 +78,64 @@ class CurrentGenerateVariableAction(private val configRepository: ConfigReposito
         } else {
             println("${AnsiColors.GREEN}✓ Generated ${variablesToGenerate.size} variables in ${variablesFile.absolutePath}${AnsiColors.RESET}")
         }
+
+        // Generate outputs.tf if --with-outputs option is specified
+        if (withOutputs) {
+            val outputsToGenerate = if (remainingArgs.isEmpty()) {
+                // Generate all outputs from kinfra.yaml or kinfra-parent.yaml
+                val currentDir = System.getProperty("user.dir")
+                val kinfraConfigPath = Paths.get(currentDir, "kinfra.yaml")
+                val kinfraParentConfigPath = Paths.get(currentDir, "kinfra-parent.yaml")
+
+                val outputMappings = if (configRepository.kinfraConfigExists(kinfraConfigPath.toString())) {
+                    val kinfraConfig = configRepository.loadKinfraConfig(kinfraConfigPath)
+                    kinfraConfig?.rootProject?.terraform?.outputMappings ?: emptyList()
+                } else if (configRepository.kinfraParentConfigExists(kinfraParentConfigPath.toString())) {
+                    val kinfraParentConfig = configRepository.loadKinfraParentConfig(kinfraParentConfigPath.toString())
+                    kinfraParentConfig?.terraform?.outputMappings ?: emptyList()
+                } else {
+                    emptyList()
+                }
+
+                if (outputMappings.isEmpty()) {
+                    println("${AnsiColors.YELLOW}Warning: No output mappings found in kinfra.yaml or kinfra-parent.yaml${AnsiColors.RESET}")
+                    return 0
+                }
+                outputMappings.map { it.terraformOutput }
+            } else if (remainingArgs.size == 1) {
+                // Generate output with the same name as the variable
+                listOf(remainingArgs[0])
+            } else {
+                emptyList()
+            }
+
+            if (outputsToGenerate.isNotEmpty()) {
+                val outputsContent = outputsToGenerate.joinToString("\n\n") { outputName ->
+                    """
+                    |output "$outputName" {
+                    |  description = "Generated output: $outputName"
+                    |  value       = var.$outputName
+                    |  sensitive   = true
+                    |}
+                    """.trimMargin()
+                } + "\n"
+
+                if (outputsFile.exists()) {
+                    // Append to existing file
+                    outputsFile.appendText("\n$outputsContent")
+                } else {
+                    // Create new file
+                    outputsFile.writeText(outputsContent)
+                }
+
+                if (outputsToGenerate.size == 1) {
+                    println("${AnsiColors.GREEN}✓ Generated output '${outputsToGenerate[0]}' in ${outputsFile.absolutePath}${AnsiColors.RESET}")
+                } else {
+                    println("${AnsiColors.GREEN}✓ Generated ${outputsToGenerate.size} outputs in ${outputsFile.absolutePath}${AnsiColors.RESET}")
+                }
+            }
+        }
+
         return 0
     }
 
@@ -93,6 +153,10 @@ class CurrentGenerateVariableAction(private val configRepository: ConfigReposito
                         println("${AnsiColors.RED}Error: --output-dir requires a value${AnsiColors.RESET}")
                         return Pair(emptyMap(), emptyList())
                     }
+                }
+                "--with-outputs" -> {
+                    options["with-outputs"] = "true"
+                    i++
                 }
                 else -> {
                     remainingArgs.add(args[i])
@@ -115,11 +179,15 @@ class CurrentGenerateVariableAction(private val configRepository: ConfigReposito
         println()
         println("${AnsiColors.BLUE}Options:${AnsiColors.RESET}")
         println("  --output-dir, -o <dir>    Output directory for variables.tf (default: current directory)")
+        println("  --with-outputs            Also generate outputs.tf with corresponding outputs")
         println()
         println("${AnsiColors.BLUE}Examples:${AnsiColors.RESET}")
-        println("  kinfra current generate variable                           # Generate all variables")
-        println("  kinfra current generate variable my_var                    # Generate specific variable")
-        println("  kinfra current generate variable --output-dir /tmp        # Generate to /tmp")
-        println("  kinfra current generate variable -o /path/to/dir my_var   # Generate specific variable to dir")
+        println("  kinfra current generate variable                               # Generate all variables")
+        println("  kinfra current generate variable my_var                        # Generate specific variable")
+        println("  kinfra current generate variable --with-outputs                # Generate all variables and outputs")
+        println("  kinfra current generate variable --with-outputs my_var         # Generate specific variable and output")
+        println("  kinfra current generate variable --output-dir /tmp             # Generate to /tmp")
+        println("  kinfra current generate variable -o /path/to/dir my_var        # Generate specific variable to dir")
+        println("  kinfra current generate variable --with-outputs -o /tmp        # Generate variables and outputs to /tmp")
     }
 }
