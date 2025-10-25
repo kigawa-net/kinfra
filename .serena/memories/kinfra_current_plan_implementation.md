@@ -1,0 +1,1 @@
+kinfra current planコマンドを実装。カレントディレクトリでTerraformのplanを実行する機能。CurrentPlanActionクラスを作成し、DependencyContainerに登録。Terraformファイルの存在チェックを改善し、main.tfの存在を必須に。variables.tfのエラーを修正し、テスト用のmain.tfを作成。コマンドが正常に動作することを確認。
