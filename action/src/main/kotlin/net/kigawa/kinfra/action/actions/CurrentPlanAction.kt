@@ -9,31 +9,20 @@ class CurrentPlanAction : Action {
         val currentDir = File(".").absoluteFile
 
         // カレントディレクトリにTerraformファイルがあるかチェック
-        val requiredFiles = listOf("main.tf")
-        val optionalFiles = listOf("variables.tf", "outputs.tf", "terraform.tfvars")
-        val hasRequiredFiles = requiredFiles.all { File(currentDir, it).exists() }
-        val hasOptionalFiles = optionalFiles.any { File(currentDir, it).exists() }
+        val terraformFiles = listOf("main.tf", "variables.tf", "outputs.tf", "terraform.tfvars")
+        val hasTerraformFiles = terraformFiles.any { File(currentDir, it).exists() }
 
-        if (!hasRequiredFiles) {
-            println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} No Terraform configuration found in current directory (${currentDir.absolutePath})")
-            println("Required files: ${requiredFiles.joinToString(", ")}")
-            if (hasOptionalFiles) {
-                println("Optional files found: ${optionalFiles.filter { File(currentDir, it).exists() }.joinToString(", ")}")
-            }
+        if (!hasTerraformFiles) {
+            println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} No Terraform files found in current directory (${currentDir.absolutePath})")
+            println("Expected files: ${terraformFiles.joinToString(", ")}")
             return 1
         }
 
-        if (!hasRequiredFiles) {
-            println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} No Terraform configuration found in current directory (${currentDir.absolutePath})")
-            println("Required files: ${requiredFiles.joinToString(", ")}")
-            if (hasOptionalFiles) {
-                println("Optional files found: ${optionalFiles.filter { File(currentDir, it).exists() }.joinToString(", ")}")
-            }
-            return 1
-        }
+        // プロジェクト名を表示
+        println("${AnsiColors.BLUE}Planning Terraform changes for current directory:${AnsiColors.RESET} ${currentDir.absolutePath}")
 
         // plan実行前に自動でinitを実行
-        println("${AnsiColors.BLUE}Initializing Terraform in current directory...${AnsiColors.RESET}")
+        println("${AnsiColors.BLUE}Initializing Terraform...${AnsiColors.RESET}")
         val initProcess = ProcessBuilder("terraform", "init", "-input=false")
             .directory(currentDir)
             .redirectOutput(ProcessBuilder.Redirect.INHERIT)
@@ -54,15 +43,20 @@ class CurrentPlanAction : Action {
             listOf("terraform", "plan", "-input=false") + args
         }
 
-        println("${AnsiColors.BLUE}Planning Terraform changes in current directory:${AnsiColors.RESET} ${currentDir.absolutePath}")
-
         val process = ProcessBuilder(planArgs)
             .directory(currentDir)
             .redirectOutput(ProcessBuilder.Redirect.INHERIT)
             .redirectError(ProcessBuilder.Redirect.INHERIT)
             .start()
 
-        return process.waitFor()
+        val exitCode = process.waitFor()
+
+        // エラーが発生した場合、ディレクトリ情報を表示
+        if (exitCode != 0) {
+            println("${AnsiColors.RED}Error in current directory:${AnsiColors.RESET} ${currentDir.absolutePath}")
+        }
+
+        return exitCode
     }
 
     override fun getDescription(): String {

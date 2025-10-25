@@ -4,12 +4,8 @@ variable "variable" {
   default     = ""
 }
 
-
 variable "test_var" {
   description = "Generated variable: test_var"
   type        = string
   default     = ""
 }
-
-
-

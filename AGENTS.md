@@ -110,3 +110,4 @@
 - 2025-10-14: config-editコマンドを追加。
 - 2025-10-19: TerraformRunnerクラスのリファクタリングを実施。
 - 2025-10-25: `kinfra current plan` コマンドを追加。カレントディレクトリで terraform plan を実行できるようにした。CurrentPlanActionを実装し、DependencyContainerに登録。
+- 2025-10-25: PR #143 を作成。kinfra current planコマンドの実装を提出。
