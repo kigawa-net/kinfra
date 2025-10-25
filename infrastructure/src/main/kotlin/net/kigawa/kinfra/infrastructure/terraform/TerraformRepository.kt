@@ -65,7 +65,8 @@ class TerraformRepositoryImpl(
         return TerraformConfig(
             workingDirectory = terraformDir,
             varFile = varFile,
-            sshConfigPath = sshConfigPath
+            sshConfigPath = sshConfigPath,
+            backendConfig = kinfraConfig.rootProject.terraform?.backendConfig ?: emptyMap()
         )
     }
 }

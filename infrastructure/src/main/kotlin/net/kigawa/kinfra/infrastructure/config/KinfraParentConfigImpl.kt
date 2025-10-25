@@ -57,7 +57,7 @@ class KinfraParentConfigImpl(
          */
         fun fromFile(file: File): KinfraParentConfigImpl {
             val content = file.readText()
-            
+
             return try {
                 // まずオブジェクト形式としてデコードを試行
                 val config = Yaml.default.decodeFromString(KinfraParentConfigScheme.serializer(), content)

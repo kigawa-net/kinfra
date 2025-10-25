@@ -31,6 +31,21 @@ class SubProjectExecutor(
     }
 
     /**
+     * 親プロジェクトのbackendConfigを取得
+     *
+     * @return backendConfig。設定が存在しない場合は空のMap
+     */
+    fun getBackendConfig(): Map<String, String> {
+        val parentConfigPath = loginRepo.kinfraBaseConfigPath().toString()
+        if (!configRepository.kinfraParentConfigExists(parentConfigPath)) {
+            return emptyMap()
+        }
+
+        val parentConfig = configRepository.loadKinfraParentConfig(parentConfigPath)
+        return parentConfig?.terraform?.backendConfig ?: emptyMap()
+    }
+
+    /**
      * 各サブプロジェクトでコマンドを実行
      *
      * @param subProjects サブプロジェクトのリスト

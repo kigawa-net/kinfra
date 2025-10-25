@@ -8,7 +8,8 @@ import java.io.File
 data class TerraformConfig(
     val workingDirectory: File,
     val varFile: File?,
-    val sshConfigPath: String
+    val sshConfigPath: String,
+    val backendConfig: Map<String, String> = emptyMap()
 ) {
     fun hasVarFile(): Boolean = varFile?.exists() == true
 }

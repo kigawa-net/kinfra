@@ -5,6 +5,10 @@ terraform {
       version = "~> 3.0"
     }
   }
+
+  backend "s3" {
+    # Backend config will be provided via -backend-config
+  }
 }
 
 resource "null_resource" "test" {
