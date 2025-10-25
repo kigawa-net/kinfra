@@ -1,5 +1,0 @@
-rootProject:
-  terraform:
-    workingDirectory: "."
-    backendConfig:
-      path: "terraform.tfstate"

@@ -39,12 +39,15 @@ class DeploymentPipeline(
     }
     
     fun createExecutionPlan(additionalArgs: List<String>): Int {
+        println("${AnsiColors.BLUE}Calling terraformService.plan${AnsiColors.RESET}")
         val result = terraformService.plan(additionalArgs, quiet = false)
+        println("${AnsiColors.BLUE}terraformService.plan returned: $result${AnsiColors.RESET}")
         return if (result.isFailure()) {
             // Terraform設定がない場合はスキップとして成功扱い
             if (result.message()?.contains("Terraform configuration not found") == true) {
                 0
             } else {
+                println("${AnsiColors.RED}Terraform plan failed: ${result.message()} (exit code: ${result.exitCode()})${AnsiColors.RESET}")
                 result.exitCode()
             }
         } else {
@@ -58,12 +61,15 @@ class DeploymentPipeline(
         } else {
             additionalArgs + "-auto-approve"
         }
+        println("${AnsiColors.BLUE}Calling terraformService.apply with args: $applyArgsWithAutoApprove${AnsiColors.RESET}")
         val result = terraformService.apply(additionalArgs = applyArgsWithAutoApprove, quiet = false)
+        println("${AnsiColors.BLUE}terraformService.apply returned: $result${AnsiColors.RESET}")
         return if (result.isFailure()) {
             // Terraform設定がない場合はスキップとして成功扱い
             if (result.message()?.contains("Terraform configuration not found") == true) {
                 0
             } else {
+                println("${AnsiColors.RED}Terraform apply failed: ${result.message()} (exit code: ${result.exitCode()})${AnsiColors.RESET}")
                 result.exitCode()
             }
         } else {

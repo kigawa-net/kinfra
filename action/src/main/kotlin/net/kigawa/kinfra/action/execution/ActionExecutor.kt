@@ -17,8 +17,11 @@ class ActionExecutor(private val logger: Logger) {
             
             val result = step.execute()
             if (result != 0) {
+                println("${AnsiColors.RED}✗${AnsiColors.RESET} Step '${step.description}' failed with exit code: $result")
                 logger.error("Step '${step.description}' failed with exit code: $result")
                 return result
+            } else {
+                println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Step '${step.description}' completed successfully")
             }
             
             if (index < steps.size - 1) {

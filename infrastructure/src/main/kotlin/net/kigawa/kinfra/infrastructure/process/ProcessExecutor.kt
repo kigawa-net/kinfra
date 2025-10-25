@@ -73,7 +73,22 @@ class ProcessExecutorImpl : ProcessExecutor {
             if (exitCode == 0) {
                 Res.Ok(exitCode)
             } else {
-                Res.Err(ActionException(exitCode, error.ifBlank { output }))
+                // エラーの場合はより詳細な情報を含める
+                val errorMessage = buildString {
+                    appendLine("Command failed with exit code $exitCode")
+                    appendLine("Command: ${args.joinToString(" ")}")
+                    if (workingDir != null) {
+                        appendLine("Working directory: $workingDir")
+                    }
+                    if (error.isNotBlank()) {
+                        appendLine("Error output:")
+                        appendLine(error)
+                    } else if (output.isNotBlank()) {
+                        appendLine("Output:")
+                        appendLine(output)
+                    }
+                }
+                Res.Err(ActionException(exitCode, errorMessage))
             }
         } catch (e: IOException) {
             Res.Err(ActionException(1, "Error executing command: ${e.message}"))
