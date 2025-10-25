@@ -12,6 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - [UI: ANSIカラー](#ui-ansiカラー)
 - [設定](#設定)
 - [Web API (Ktor, :8080)](#web-api-ktor-8080)
+- [GitHub Actions](#github-actions)
 - [実装ノート](#実装ノート)
 
 ## プロジェクト概要
@@ -75,6 +76,34 @@ model (依存なし) → action (契約) → infrastructure (実装) → app-cli
 ## Web API (Ktor, :8080)
 
 `POST /terraform/{init,plan,apply,destroy,validate,format}` - リクエスト: `{"command":"apply"}`
+
+## GitHub Actions
+
+KInfraは`action.yml`を含んでおり、GitHub Actionとして他のリポジトリで使用可能です。
+
+**基本的な使い方**:
+```yaml
+- uses: kigawa-net/kinfra@v1
+  with:
+    command: deploy
+    working-directory: ./terraform
+    bws-access-token: ${{ secrets.BWS_ACCESS_TOKEN }}
+    bw-project: ${{ secrets.BW_PROJECT }}
+```
+
+**主要なインプット**:
+- `command` (必須): 実行するコマンド (init, plan, apply, deploy, destroy, validate, format)
+- `working-directory` (任意): Terraformファイルのディレクトリ (デフォルト: `.`)
+- `bws-access-token` (任意): Bitwarden Secret Managerトークン
+- `bw-project` (任意): BitwardenプロジェクトID
+- `log-level` (任意): ログレベル (デフォルト: INFO)
+- `java-version` (任意): Javaバージョン (デフォルト: 21)
+
+**実装詳細**:
+- `action.yml` - GitHub Action定義ファイル
+- composite actionとして実装（JDK/Gradleセットアップ、ビルド、実行）
+
+詳細はREADMEのGitHub Actionsセクションを参照。
 
 ## 実装ノート
 

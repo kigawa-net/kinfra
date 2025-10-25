@@ -12,6 +12,7 @@ Kotlinベースの Terraform ラッパー。Bitwarden Secret Manager 統合に�
 - [使い方](#使い方)
   - [CLI](#cli)
   - [Web API](#web-api)
+  - [GitHub Actions](#github-actions)
 - [環境変数](#環境変数)
 - [開発](#開発)
   - [要件](#要件)
@@ -100,6 +101,94 @@ APIエンドポイント:
 - `POST /terraform/plan` - Terraform実行計画
 - `POST /terraform/apply` - リソース作成
 - `POST /terraform/destroy` - リソース削除
+
+### GitHub Actions
+
+KInfraはGitHub Actionとして使用できます。
+
+#### 基本的な使い方
+
+```yaml
+name: Deploy Infrastructure
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy with KInfra
+        uses: kigawa-net/kinfra@v1
+        with:
+          command: deploy
+          working-directory: ./terraform
+          bws-access-token: ${{ secrets.BWS_ACCESS_TOKEN }}
+          bw-project: ${{ secrets.BW_PROJECT }}
+```
+
+#### 利用可能なインプット
+
+| インプット | 必須 | デフォルト | 説明 |
+|----------|------|-----------|------|
+| `command` | はい | - | 実行するTerraformコマンド (init, plan, apply, deploy, destroy, validate, format) |
+| `working-directory` | いいえ | `.` | Terraformファイルがあるディレクトリ |
+| `bws-access-token` | いいえ | - | Bitwarden Secret Managerアクセストークン |
+| `bw-project` | いいえ | - | BitwardenプロジェクトID |
+| `log-level` | いいえ | `INFO` | ログレベル (DEBUG, INFO, WARN, ERROR) |
+| `java-version` | いいえ | `21` | 使用するJavaバージョン |
+
+#### 出力
+
+| 出力 | 説明 |
+|------|------|
+| `exit-code` | KInfraコマンドの終了コード |
+
+#### より詳細な例
+
+```yaml
+name: Terraform Workflow
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Terraform Plan
+        uses: kigawa-net/kinfra@v1
+        with:
+          command: plan
+          working-directory: ./terraform
+          bws-access-token: ${{ secrets.BWS_ACCESS_TOKEN }}
+          bw-project: ${{ secrets.BW_PROJECT }}
+          log-level: DEBUG
+
+  apply:
+    runs-on: ubuntu-latest
+    needs: plan
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Terraform Apply
+        uses: kigawa-net/kinfra@v1
+        with:
+          command: apply
+          working-directory: ./terraform
+          bws-access-token: ${{ secrets.BWS_ACCESS_TOKEN }}
+          bw-project: ${{ secrets.BW_PROJECT }}
+```
+
 
 ## 環境変数
 

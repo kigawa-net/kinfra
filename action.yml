@@ -1,0 +1,73 @@
+name: 'KInfra - Terraform Wrapper with Bitwarden'
+description: 'Terraform operations with Bitwarden Secret Manager integration'
+author: 'kigawa-net'
+
+branding:
+  icon: 'cloud'
+  color: 'blue'
+
+inputs:
+  command:
+    description: 'Terraform command to execute (init, plan, apply, deploy, destroy, validate, format)'
+    required: true
+  working-directory:
+    description: 'Working directory where Terraform files are located'
+    required: false
+    default: '.'
+  bws-access-token:
+    description: 'Bitwarden Secret Manager access token'
+    required: false
+  bw-project:
+    description: 'Bitwarden project ID'
+    required: false
+  log-level:
+    description: 'Log level (DEBUG, INFO, WARN, ERROR)'
+    required: false
+    default: 'INFO'
+  java-version:
+    description: 'Java version to use'
+    required: false
+    default: '21'
+
+outputs:
+  exit-code:
+    description: 'Exit code of the KInfra command'
+    value: ${{ steps.kinfra.outputs.exit-code }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up JDK
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ inputs.java-version }}
+        distribution: 'temurin'
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v3
+
+    - name: Make gradlew executable
+      shell: bash
+      run: |
+        cd ${{ github.action_path }}
+        chmod +x gradlew
+
+    - name: Build KInfra
+      shell: bash
+      run: |
+        cd ${{ github.action_path }}
+        ./gradlew :app-cli:shadowJar --no-daemon
+
+    - name: Run KInfra
+      id: kinfra
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        BWS_ACCESS_TOKEN: ${{ inputs.bws-access-token }}
+        BW_PROJECT: ${{ inputs.bw-project }}
+        KINFRA_LOG_LEVEL: ${{ inputs.log-level }}
+      run: |
+        EXIT_CODE=0
+        java -jar ${{ github.action_path }}/app-cli/build/libs/kinfra-cli-*.jar ${{ inputs.command }} || EXIT_CODE=$?
+        echo "exit-code=$EXIT_CODE" >> $GITHUB_OUTPUT
+        exit $EXIT_CODE
