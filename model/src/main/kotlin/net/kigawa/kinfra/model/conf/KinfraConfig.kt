@@ -22,10 +22,17 @@ interface TerraformVariableMapping {
     val bitwardenSecretKey: String
 }
 
+interface TerraformOutputMapping {
+    val terraformOutput: String
+    val bitwardenSecretKey: String
+}
+
 interface TerraformSettings {
     val version: String
     val workingDirectory: String
     val variableMappings: List<TerraformVariableMapping>
+        get() = emptyList()
+    val outputMappings: List<TerraformOutputMapping>
         get() = emptyList()
     val backendConfig: Map<String, String>
         get() = emptyMap()
