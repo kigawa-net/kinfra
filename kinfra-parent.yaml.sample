@@ -11,12 +11,19 @@ description: "Parent project for managing multiple infrastructure components"
 terraform:
   version: "1.5.0"
   workingDirectory: "."
+  backendConfig:
+    bucket: "my-terraform-state-bucket"
+    key: "terraform.tfstate"
+    region: "us-east-1"
 
 # List of sub-project paths or identifiers
 subProjects:
-  - "project-a"
-  - "project-b"
-  - "project-c"
+  - projectId: "project-a"
+    description: "Project A"
+  - projectId: "project-b"
+    description: "Project B"
+  - projectId: "project-c"
+    description: "Project C"
 
 # Common Bitwarden settings
 bitwarden:

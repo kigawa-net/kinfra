@@ -60,9 +60,19 @@ class PlanAction(
             val subResult = subProjectExecutor.executeInSubProjects(subProjects) { subProject, subProjectDir ->
                 println("${AnsiColors.BLUE}Planning Terraform changes for sub-project:${AnsiColors.RESET} ${subProject.name} (${subProjectDir.absolutePath})")
 
+                // サブプロジェクトのbackendConfigを読み込み
+                val backendConfig = subProjectExecutor.getBackendConfig()
+
                 // サブプロジェクトでもplan前にinitを実行
                 println("${AnsiColors.BLUE}Initializing Terraform for sub-project...${AnsiColors.RESET}")
-                val initProcess = ProcessBuilder("terraform", "init", "-input=false")
+                val initArgs = mutableListOf("terraform", "init", "-input=false")
+
+                // backendConfigから-backend-configオプションを追加
+                backendConfig.forEach { (key, value) ->
+                    initArgs.add("-backend-config=$key=$value")
+                }
+
+                val initProcess = ProcessBuilder(initArgs)
                     .directory(subProjectDir)
                     .redirectOutput(ProcessBuilder.Redirect.INHERIT)
                     .redirectError(ProcessBuilder.Redirect.INHERIT)
@@ -74,12 +84,11 @@ class PlanAction(
                     return@executeInSubProjects initExitCode
                 }
 
-                // backend.tfvarsファイルが存在するかチェック
-                val backendTfvarsFile = File(subProjectDir, "backend.tfvars")
-                val planArgs = if (backendTfvarsFile.exists()) {
-                    listOf("terraform", "plan", "-input=false", "-backend-config=backend.tfvars")
-                } else {
-                    listOf("terraform", "plan", "-input=false")
+                val planArgs = mutableListOf("terraform", "plan", "-input=false")
+
+                // backendConfigから-backend-configオプションを追加
+                backendConfig.forEach { (key, value) ->
+                    planArgs.add("-backend-config=$key=$value")
                 }
 
                 val process = ProcessBuilder(planArgs)
