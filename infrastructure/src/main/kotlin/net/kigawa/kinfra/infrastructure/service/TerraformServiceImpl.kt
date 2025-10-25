@@ -29,7 +29,7 @@ class TerraformServiceImpl(
             return Res.Err(ActionException(1, "Terraform configuration not found"))
         }
 
-        val args = arrayOf("terraform", "init") + additionalArgs
+        val args = arrayOf("terraform", "init", "-input=false") + additionalArgs
 
         return processExecutor.execute(
             args = args,
@@ -76,7 +76,7 @@ class TerraformServiceImpl(
             emptyArray()
         }
 
-        val args = arrayOf("terraform", "plan") + backendArgs + varFileArgs + additionalArgs
+        val args = arrayOf("terraform", "plan", "-input=false") + backendArgs + varFileArgs + additionalArgs
 
         return processExecutor.execute(
             args = args,
@@ -128,7 +128,7 @@ class TerraformServiceImpl(
             emptyArray()
         }
 
-        val args = baseArgs + backendArgs + additionalArgs + varFileArgs + planArgs
+        val args = baseArgs + arrayOf("-input=false") + backendArgs + additionalArgs + varFileArgs + planArgs
 
         return processExecutor.execute(
             args = args,

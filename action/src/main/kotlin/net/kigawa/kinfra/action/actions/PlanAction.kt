@@ -62,7 +62,7 @@ class PlanAction(
 
                 // サブプロジェクトでもplan前にinitを実行
                 println("${AnsiColors.BLUE}Initializing Terraform for sub-project...${AnsiColors.RESET}")
-                val initProcess = ProcessBuilder("terraform", "init")
+                val initProcess = ProcessBuilder("terraform", "init", "-input=false")
                     .directory(subProjectDir)
                     .redirectOutput(ProcessBuilder.Redirect.INHERIT)
                     .redirectError(ProcessBuilder.Redirect.INHERIT)
@@ -77,9 +77,9 @@ class PlanAction(
                 // backend.tfvarsファイルが存在するかチェック
                 val backendTfvarsFile = File(subProjectDir, "backend.tfvars")
                 val planArgs = if (backendTfvarsFile.exists()) {
-                    listOf("terraform", "plan", "-backend-config=backend.tfvars")
+                    listOf("terraform", "plan", "-input=false", "-backend-config=backend.tfvars")
                 } else {
-                    listOf("terraform", "plan")
+                    listOf("terraform", "plan", "-input=false")
                 }
 
                 val process = ProcessBuilder(planArgs)
