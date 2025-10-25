@@ -11,6 +11,7 @@ data class ParsedCommand(
     val subActionType: SubActionType? = null,
     val actionArgs: List<String>,
     val showHelp: Boolean = false,
+    val workingDir: String? = null,
 )
 
 class CommandInterpreter(private val logger: Logger) {
@@ -24,7 +25,16 @@ class CommandInterpreter(private val logger: Logger) {
         var actionName = args[0]
         var subActionType: SubActionType? = null
         var actionArgs = args.drop(1)
+        var workingDir: String? = null
         logger.debug("Original action: $actionName")
+
+        // Extract --working-dir or --path option
+        val workingDirIndex = actionArgs.indexOfFirst { it == "--working-dir" || it == "--path" }
+        if (workingDirIndex != -1 && workingDirIndex + 1 < actionArgs.size) {
+            workingDir = actionArgs[workingDirIndex + 1]
+            actionArgs = actionArgs.filterIndexed { index, _ -> index != workingDirIndex && index != workingDirIndex + 1 }
+            logger.debug("Working directory specified: $workingDir")
+        }
 
         // Handle subcommands
         if ((actionName == ActionType.SUB.actionName || actionName == ActionType.CURRENT.actionName) && args.size > 1) {
@@ -88,7 +98,8 @@ class CommandInterpreter(private val logger: Logger) {
             actionName = actionName,
             subActionType = subActionType,
             actionArgs = actionArgs,
-            showHelp = showHelp
+            showHelp = showHelp,
+            workingDir = workingDir
         )
     }
 

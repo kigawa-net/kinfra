@@ -1,6 +1,7 @@
 package net.kigawa.kinfra
 
 import net.kigawa.kinfra.di.DependencyContainer
+import net.kigawa.kinfra.infrastructure.file.SystemHomeDirGetter
 import kotlin.system.exitProcess
 
 class TerraformRunner(private val container: DependencyContainer) {
@@ -19,6 +20,13 @@ class TerraformRunner(private val container: DependencyContainer) {
                 actionRegistry.getHelpAction()?.execute(emptyList())
                 exitProcess(1)
             }
+
+        // Set default working directory if not specified
+        val workingDir = parsedCommand.workingDir ?: getDefaultWorkingDir()
+        logger.debug("Using working directory: $workingDir")
+        
+        // Set system property for working directory
+        System.setProperty("user.dir", workingDir)
 
         // Get the action
         val action = actionRegistry.getAction(parsedCommand.actionName, parsedCommand.subActionType)
@@ -45,7 +53,7 @@ class TerraformRunner(private val container: DependencyContainer) {
 
         // Execute the action
         logger.info(
-            "Executing action: ${parsedCommand.actionName} with args: ${parsedCommand.actionArgs.joinToString(" ")}"
+            "Executing action: ${parsedCommand.actionName} with args: ${parsedCommand.actionArgs.joinToString(" ")} in directory: $workingDir"
         )
         val exitCode = action.execute(parsedCommand.actionArgs)
         logger.info("Action ${parsedCommand.actionName} finished with exit code: $exitCode")
@@ -57,5 +65,23 @@ class TerraformRunner(private val container: DependencyContainer) {
             logger.error("Action ${parsedCommand.actionName} failed with exit code: $exitCode")
             exitProcess(exitCode)
         }
+    }
+
+    private fun getDefaultWorkingDir(): String {
+        val homeDirGetter = SystemHomeDirGetter()
+        val homeDir = homeDirGetter.getHomeDir()
+        val kinfraDir = "$homeDir/.local/kinfra/repos"
+        
+        // Try to find the first repository directory
+        val reposDir = java.io.File(kinfraDir)
+        if (reposDir.exists() && reposDir.isDirectory) {
+            val firstRepo = reposDir.listFiles()?.find { it.isDirectory && java.io.File(it, ".git").exists() }
+            if (firstRepo != null) {
+                return firstRepo.absolutePath
+            }
+        }
+        
+        // Fallback to current directory
+        return System.getProperty("user.dir")
     }
 }

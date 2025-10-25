@@ -2,6 +2,7 @@ package net.kigawa.kinfra.infrastructure.terraform
 
 import net.kigawa.kinfra.model.conf.TerraformConfig
 import net.kigawa.kinfra.model.conf.KinfraConfig
+import net.kigawa.kinfra.infrastructure.config.KinfraConfigScheme
 import net.kigawa.kinfra.infrastructure.file.FileRepository
 import net.kigawa.kinfra.action.config.ConfigRepository
 import java.io.File
@@ -21,6 +22,14 @@ class TerraformRepositoryImpl(
 ) : TerraformRepository {
 
     override fun getTerraformConfig(): TerraformConfig? {
+        // まず現在のワーキングディレクトリをチェック
+        val currentDir = File(System.getProperty("user.dir"))
+        val localKinfraConfig = loadLocalKinfraConfig(currentDir)
+        
+        if (localKinfraConfig != null) {
+            return createTerraformConfig(localKinfraConfig, currentDir)
+        }
+        
         // 設定ファイルからTerraform設定を読み込む
         val kinfraConfig = loginRepo.loadKinfraConfig()
 
@@ -51,6 +60,53 @@ class TerraformRepositoryImpl(
 
         // SSH設定ファイルのパス（プロジェクトルートを基準）
         val sshConfigFile = File(loginRepo.repoPath.toFile(), "ssh_config")
+        val sshConfigPath = fileRepository.getAbsolutePath(sshConfigFile)
+
+        return TerraformConfig(
+            workingDirectory = terraformDir,
+            varFile = varFile,
+            sshConfigPath = sshConfigPath,
+            backendConfig = kinfraConfig.rootProject.terraform?.backendConfig ?: emptyMap()
+        )
+    }
+    
+    private fun loadLocalKinfraConfig(dir: File): KinfraConfig? {
+        val kinfraFile = File(dir, "kinfra.yaml")
+        if (!kinfraFile.exists()) {
+            return null
+        }
+        
+        return try {
+            val yamlContent = kinfraFile.readText()
+            com.charleskorn.kaml.Yaml.default.decodeFromString(KinfraConfigScheme.serializer(), yamlContent)
+        } catch (e: Exception) {
+            null
+        }
+    }
+    
+    private fun createTerraformConfig(kinfraConfig: KinfraConfig, baseDir: File): TerraformConfig? {
+        // Terraformのワーキングディレクトリを決定
+        val terraformDir = if (kinfraConfig.rootProject.terraform != null) {
+            // 設定ファイルからworkingDirectoryを読み込む
+            val workingDirPath = kinfraConfig.rootProject.terraform!!.workingDirectory
+            if (workingDirPath.startsWith("/")) {
+                // 絶対パス
+                File(workingDirPath)
+            } else {
+                // 相対パス：ベースディレクトリからの相対パス
+                File(baseDir, workingDirPath)
+            }
+        } else {
+            // Terraform設定がない場合はnullを返す
+            return null
+        }
+
+        // tfvarsファイルの存在確認（terraformディレクトリ内を検索）
+        val tfvarsFile = File(terraformDir, "terraform.tfvars")
+        val varFile = if (fileRepository.exists(tfvarsFile)) tfvarsFile else null
+
+        // SSH設定ファイルのパス（ベースディレクトリを基準）
+        val sshConfigFile = File(baseDir, "ssh_config")
         val sshConfigPath = fileRepository.getAbsolutePath(sshConfigFile)
 
         return TerraformConfig(

@@ -55,6 +55,7 @@
 | todo-maintainer    | タスク管理を自動化するエージェント |
 
 ## 変更履歴
+- 2025-10-26: PR #159 を作成。Claudeワークフロー修正とプロジェクトドキュメント更新を実装。
 - 2025-10-26: ClaudeワークフローのGit操作エラーを修正。Create Pull Request Or Commentステップでのexit code 128エラーを解決。
 - 2025-10-26: PR #153 を作成。Terraformのバックエンド設定サポートとデプロイパイプラインの改善を実装。
 - 2025-10-25: kinfra deploy コマンド実行時に "Parent project deployment failed" エラーが発生。原因は kinfra.yaml が存在せず、Terraform 設定がないため。kinfra はインフラ管理ツールであり、自分自身のデプロイには使用できない。
@@ -117,3 +118,4 @@
 - 2025-10-25: PR #143 を作成。kinfra current planコマンドの実装を提出。
 - 2025-10-25: CurrentPlanActionをリファクタリング。PlanActionのロジックを再利用して実装を簡素化。PR #143 を更新。
 - 2025-10-25: PR #143 をマージ。kinfra current planコマンドの実装が完了。
+- 2025-10-26: kinfra deploy コマンド実行時に "Parent project deployment failed" エラーが発生。原因は kinfra.yaml が存在せず、Terraform 設定がないため。kinfra はインフラ管理ツールであり、自分自身のデプロイには使用できない。
