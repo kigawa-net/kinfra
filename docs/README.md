@@ -16,6 +16,13 @@
   - sudo権限の設定方法
   - セキュリティベストプラクティス
 
+### 開発ツール
+
+- **[serena-setup.md](serena-setup.md)** - Serena MCPサーバーのセットアップ
+  - Claude Codeでの高度なコード解析
+  - シンボルレベルのコード検索・編集
+  - インストールと設定方法
+
 ### コンポーネント別設定
 
 - **[node-exporter.md](node-exporter.md)** - Prometheus Node Exporterの設定
