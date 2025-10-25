@@ -2,6 +2,42 @@
 
 このドキュメントでは、kinfra Web API の詳細なリファレンスを提供します。
 
+## 目次
+
+- [概要](#概要)
+- [サーバー起動](#サーバー起動)
+  - [Gradleから起動](#gradleから起動)
+  - [JAR から起動](#jar-から起動)
+- [認証](#認証)
+- [エンドポイント](#エンドポイント)
+  - [ヘルスチェック](#ヘルスチェック)
+    - [GET /](#get-)
+    - [GET /health](#get-health)
+  - [Terraform Init](#terraform-init)
+  - [Terraform Plan](#terraform-plan)
+  - [Terraform Apply](#terraform-apply)
+  - [Terraform Destroy](#terraform-destroy)
+  - [Terraform Validate](#terraform-validate)
+  - [Terraform Format](#terraform-format)
+- [エラーレスポンス](#エラーレスポンス)
+  - [エラーレスポンス形式](#エラーレスポンス形式)
+  - [一般的なエラー](#一般的なエラー)
+- [CORS設定](#cors設定)
+- [レート制限](#レート制限)
+- [データ型](#データ型)
+  - [TerraformRequest](#terraformrequest)
+  - [TerraformResponse](#terraformresponse)
+- [セキュリティ考慮事項](#セキュリティ考慮事項)
+- [使用例](#使用例)
+  - [Python](#python)
+  - [JavaScript (Node.js)](#javascript-nodejs)
+  - [cURL スクリプト例](#curl-スクリプト例)
+- [トラブルシューティング](#トラブルシューティング)
+  - [サーバーが起動しない](#サーバーが起動しない)
+  - [JSONパースエラー](#jsonパースエラー)
+  - [タイムアウト](#タイムアウト)
+- [関連ドキュメント](#関連ドキュメント)
+
 ## 概要
 
 kinfra Web APIは、Ktor フレームワークを使用して構築されたRESTful APIです。TerraformコマンドをHTTP経由で実行できます。
