@@ -29,7 +29,7 @@ class TerraformServiceImpl(
             return Res.Err(ActionException(1, "Terraform configuration not found"))
         }
 
-        val args = arrayOf("terraform", "init") + additionalArgs
+        val args = arrayOf("terraform", "init", "-input=false") + additionalArgs
 
         return processExecutor.execute(
             args = args,
@@ -76,7 +76,7 @@ class TerraformServiceImpl(
             emptyArray()
         }
 
-        val args = arrayOf("terraform", "plan") + backendArgs + varFileArgs + additionalArgs
+        val args = arrayOf("terraform", "plan", "-input=false") + backendArgs + varFileArgs + additionalArgs
 
         return processExecutor.execute(
             args = args,
@@ -128,7 +128,7 @@ class TerraformServiceImpl(
             emptyArray()
         }
 
-        val args = baseArgs + backendArgs + additionalArgs + varFileArgs + planArgs
+        val args = baseArgs + arrayOf("-input=false") + backendArgs + additionalArgs + varFileArgs + planArgs
 
         return processExecutor.execute(
             args = args,
@@ -221,26 +221,42 @@ class TerraformServiceImpl(
      * Bitwardenシークレットからbackend.tfvarsファイルを生成
      */
     private fun generateBackendTfvarsFromBitwarden(): String? {
+        println("DEBUG: Attempting to generate backend.tfvars from Bitwarden")
         if (bitwardenRepository == null) {
+            println("DEBUG: BitwardenRepository is null")
             return null
         }
 
         // BitwardenからR2バックエンド設定を取得
         if (!bitwardenRepository.isLoggedIn()) {
+            println("DEBUG: Not logged in to Bitwarden")
             return null
         }
 
         val session = bitwardenRepository.getSessionFromFile()
             ?: bitwardenRepository.getSessionFromEnv()
-            ?: return null
+        if (session == null) {
+            println("DEBUG: No Bitwarden session found")
+            return null
+        }
 
-        val item = bitwardenRepository.getItem("Cloudflare R2 Terraform Backend", session) ?: return null
+        val item = bitwardenRepository.getItem("Cloudflare R2 Terraform Backend", session)
+        if (item == null) {
+            println("DEBUG: Bitwarden item 'Cloudflare R2 Terraform Backend' not found")
+            return null
+        }
 
-        val accessKey = item.getFieldValue("access_key") ?: return null
-        val secretKey = item.getFieldValue("secret_key") ?: return null
-        val accountId = item.getFieldValue("account_id") ?: return null
+        val accessKey = item.getFieldValue("access_key")
+        val secretKey = item.getFieldValue("secret_key")
+        val accountId = item.getFieldValue("account_id")
         val bucketName = item.getFieldValue("bucket_name") ?: "kigawa-infra-state"
 
+        if (accessKey == null || secretKey == null || accountId == null) {
+            println("DEBUG: Missing required fields in Bitwarden item: access_key=$accessKey, secret_key=${secretKey != null}, account_id=$accountId")
+            return null
+        }
+
+        println("DEBUG: Successfully retrieved backend config from Bitwarden")
         val config = net.kigawa.kinfra.model.conf.R2BackendConfig(
             bucket = bucketName,
             key = "terraform.tfstate",
@@ -267,6 +283,7 @@ class TerraformServiceImpl(
     private fun saveBackendTfvarsFile(config: TerraformConfig, content: String): File {
         val backendTfvarsFile = File(config.workingDirectory, "backend.tfvars")
         backendTfvarsFile.writeText(content)
+        println("DEBUG: Created backend.tfvars file at ${backendTfvarsFile.absolutePath}")
         return backendTfvarsFile
     }
 }

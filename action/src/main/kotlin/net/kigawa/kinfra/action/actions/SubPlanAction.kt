@@ -4,6 +4,7 @@ import net.kigawa.kinfra.action.execution.SubProjectExecutor
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.LoginRepo
 import net.kigawa.kinfra.model.util.AnsiColors
+import java.io.File
 
 class SubPlanAction(
     private val loginRepo: LoginRepo,
@@ -52,7 +53,7 @@ class SubPlanAction(
         val result = subProjectExecutor.executeInSubProjects(listOf(subProject)) { _, subProjectDir ->
             // plan前にinitを実行
             println("${AnsiColors.BLUE}Initializing Terraform for sub-project ${subProject.name}...${AnsiColors.RESET}")
-            val initProcess = ProcessBuilder("terraform", "init")
+            val initProcess = ProcessBuilder("terraform", "init", "-input=false")
                 .directory(subProjectDir)
                 .redirectOutput(ProcessBuilder.Redirect.INHERIT)
                 .redirectError(ProcessBuilder.Redirect.INHERIT)
@@ -64,8 +65,16 @@ class SubPlanAction(
                 return@executeInSubProjects initExitCode
             }
 
+            // backend.tfvarsファイルが存在するかチェック
+            val backendTfvarsFile = File(subProjectDir, "backend.tfvars")
+            val planArgs = if (backendTfvarsFile.exists()) {
+                listOf("terraform", "plan", "-input=false", "-backend-config=backend.tfvars")
+            } else {
+                listOf("terraform", "plan", "-input=false")
+            }
+
             // サブプロジェクトディレクトリでterraform planを実行
-            val process = ProcessBuilder("terraform", "plan")
+            val process = ProcessBuilder(planArgs)
                 .directory(subProjectDir)
                 .redirectOutput(ProcessBuilder.Redirect.INHERIT)
                 .redirectError(ProcessBuilder.Redirect.INHERIT)
