@@ -12,6 +12,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - [UI: ANSIカラー](#ui-ansiカラー)
 - [設定](#設定)
 - [Web API (Ktor, :8080)](#web-api-ktor-8080)
+- [開発ツール](#開発ツール)
+  - [Serena (MCP Server)](#serena-mcp-server)
 - [実装ノート](#実装ノート)
 
 ## プロジェクト概要
@@ -75,6 +77,21 @@ model (依存なし) → action (契約) → infrastructure (実装) → app-cli
 ## Web API (Ktor, :8080)
 
 `POST /terraform/{init,plan,apply,destroy,validate,format}` - リクエスト: `{"command":"apply"}`
+
+## 開発ツール
+
+### Serena (MCP Server)
+
+Serenaは、Claude Codeに高度なコード解析機能を提供するMCPサーバー。シンボルレベルのコード検索・編集が可能。
+
+**セットアップ**:
+```bash
+claude mcp add serena -- uvx --from git+https://github.com/oraios/serena serena start-mcp-server --context ide-assistant --project "$(pwd)"
+```
+
+**設定**: `.serena/project.yml` - Gradleビルド成果物を除外する設定済み
+
+**詳細**: [docs/serena-setup.md](./docs/serena-setup.md)
 
 ## 実装ノート
 

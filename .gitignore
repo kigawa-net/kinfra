@@ -88,3 +88,7 @@ build
 terraform/hosts.auto.tfvars
 /logs/*.log
 /app-cli/logs/*.log
+
+# Serena MCP server files
+.serena/memories/
+.serena/*.db
