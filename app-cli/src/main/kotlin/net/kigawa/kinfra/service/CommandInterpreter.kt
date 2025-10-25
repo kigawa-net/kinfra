@@ -39,6 +39,13 @@ class CommandInterpreter(private val logger: Logger) {
             }
         }
 
+        // Filter out --working-dir and --path options
+        val workingDirIndex = actionArgs.indexOfFirst { it == "--working-dir" || it == "--path" }
+        if (workingDirIndex != -1 && workingDirIndex + 1 < actionArgs.size) {
+            actionArgs = actionArgs.filterIndexed { index, _ -> index != workingDirIndex && index != workingDirIndex + 1 }
+            logger.debug("Ignoring --working-dir/--path option, using logged-in repository")
+        }
+
         // Map --help and -h flags to help action
         if (actionName == "--help" || actionName == "-h") {
             actionName = ActionType.HELP.actionName
