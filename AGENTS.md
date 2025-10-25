@@ -55,6 +55,8 @@
 | todo-maintainer    | タスク管理を自動化するエージェント |
 
 ## 変更履歴
+- 2025-10-25: kubernetesサブプロジェクトを追加。Terraform設定ファイル（providers.tf, main.tf）とbackend.tfvarsテンプレートを作成。kinfra-parent.yamlにk8sサブプロジェクトを設定。
+- 2025-10-25: backend.tfvars生成機能を追加。BitwardenからR2バックエンド設定を取得してbackend.tfvarsを自動生成。サブプロジェクトでのbackend.tfvarsサポートを追加。Terraformコマンドに-input=falseを追加してインタラクティブ入力を無効化。PR #140をマージ。
 - 2025-10-24: plan実行時に自動でterraform initを実行する機能を追加。PlanActionとSubPlanActionでplan前にinitを実行するように変更。
 - 2025-10-23: tfvars生成機能を削除。DeployActionWithSDK.kt、DeployAction.kt、DeploymentPipeline.ktからbackend setupコードを削除し、Terraformワークフローを簡素化。
 - 2025-10-22: .bws_tokenファイルを~/.local/kinfra/.bws_tokenに配置するように修正。
