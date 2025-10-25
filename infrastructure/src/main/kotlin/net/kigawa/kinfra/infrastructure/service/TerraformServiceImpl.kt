@@ -7,6 +7,7 @@ import net.kigawa.kinfra.model.err.ActionException
 import net.kigawa.kinfra.model.err.Res
 import net.kigawa.kinfra.model.service.TerraformService
 import net.kigawa.kinfra.action.bitwarden.BitwardenSecretManagerRepository
+import net.kigawa.kinfra.action.bitwarden.BitwardenRepository
 import net.kigawa.kinfra.action.config.ConfigRepository
 import java.io.File
 import java.nio.file.Paths
@@ -19,6 +20,7 @@ class TerraformServiceImpl(
     private val terraformRepository: TerraformRepository,
     private val configRepository: ConfigRepository,
     private val bitwardenSecretManagerRepository: BitwardenSecretManagerRepository? = null,
+    private val bitwardenRepository: BitwardenRepository? = null,
 ): TerraformService {
 
     override fun init(additionalArgs: List<String>, quiet: Boolean): Res<Int, ActionException> {
@@ -48,6 +50,14 @@ class TerraformServiceImpl(
             saveTfvarsFile(config, content)
         }
 
+        // Bitwardenシークレットからbackend.tfvarsファイルを生成
+        val generatedBackendTfvarsFile = generateBackendTfvarsFromBitwarden()?.let { content ->
+            saveBackendTfvarsFile(config, content)
+        } ?: run {
+            if (!quiet) println("Warning: Could not generate backend.tfvars from Bitwarden secrets")
+            null
+        }
+
         val varFileArgs = mutableListOf<String>()
 
         // 既存のvarFileがある場合
@@ -60,7 +70,13 @@ class TerraformServiceImpl(
             varFileArgs.add("-var-file=${generatedTfvarsFile.absolutePath}")
         }
 
-        val args = arrayOf("terraform", "plan") + varFileArgs + additionalArgs
+        val backendArgs = if (generatedBackendTfvarsFile != null) {
+            arrayOf("-backend-config=${generatedBackendTfvarsFile.absolutePath}")
+        } else {
+            emptyArray()
+        }
+
+        val args = arrayOf("terraform", "plan") + backendArgs + varFileArgs + additionalArgs
 
         return processExecutor.execute(
             args = args,
@@ -83,6 +99,14 @@ class TerraformServiceImpl(
             saveTfvarsFile(config, content)
         }
 
+        // Bitwardenシークレットからbackend.tfvarsファイルを生成
+        val generatedBackendTfvarsFile = generateBackendTfvarsFromBitwarden()?.let { content ->
+            saveBackendTfvarsFile(config, content)
+        } ?: run {
+            if (!quiet) println("Warning: Could not generate backend.tfvars from Bitwarden secrets")
+            null
+        }
+
         val baseArgs = arrayOf("terraform", "apply")
         val varFileArgs = mutableListOf<String>()
 
@@ -98,7 +122,13 @@ class TerraformServiceImpl(
 
         val planArgs = if (planFile != null) arrayOf(planFile) else emptyArray()
 
-        val args = baseArgs + additionalArgs + varFileArgs + planArgs
+        val backendArgs = if (generatedBackendTfvarsFile != null) {
+            arrayOf("-backend-config=${generatedBackendTfvarsFile.absolutePath}")
+        } else {
+            emptyArray()
+        }
+
+        val args = baseArgs + backendArgs + additionalArgs + varFileArgs + planArgs
 
         return processExecutor.execute(
             args = args,
@@ -188,11 +218,55 @@ class TerraformServiceImpl(
     }
 
     /**
+     * Bitwardenシークレットからbackend.tfvarsファイルを生成
+     */
+    private fun generateBackendTfvarsFromBitwarden(): String? {
+        if (bitwardenRepository == null) {
+            return null
+        }
+
+        // BitwardenからR2バックエンド設定を取得
+        if (!bitwardenRepository.isLoggedIn()) {
+            return null
+        }
+
+        val session = bitwardenRepository.getSessionFromFile()
+            ?: bitwardenRepository.getSessionFromEnv()
+            ?: return null
+
+        val item = bitwardenRepository.getItem("Cloudflare R2 Terraform Backend", session) ?: return null
+
+        val accessKey = item.getFieldValue("access_key") ?: return null
+        val secretKey = item.getFieldValue("secret_key") ?: return null
+        val accountId = item.getFieldValue("account_id") ?: return null
+        val bucketName = item.getFieldValue("bucket_name") ?: "kigawa-infra-state"
+
+        val config = net.kigawa.kinfra.model.conf.R2BackendConfig(
+            bucket = bucketName,
+            key = "terraform.tfstate",
+            endpoint = "https://$accountId.r2.cloudflarestorage.com",
+            accessKey = accessKey,
+            secretKey = secretKey
+        )
+
+        return config.toTfvarsContent()
+    }
+
+    /**
      * .tfvarsファイルを保存
      */
     private fun saveTfvarsFile(config: TerraformConfig, content: String): File {
         val tfvarsFile = File(config.workingDirectory, "secrets.tfvars")
         tfvarsFile.writeText(content)
         return tfvarsFile
+    }
+
+    /**
+     * backend.tfvarsファイルを保存
+     */
+    private fun saveBackendTfvarsFile(config: TerraformConfig, content: String): File {
+        val backendTfvarsFile = File(config.workingDirectory, "backend.tfvars")
+        backendTfvarsFile.writeText(content)
+        return backendTfvarsFile
     }
 }
