@@ -37,6 +37,7 @@ class DeployActionWithSDK(
         val additionalArgs = args.filter { it != "--auto-selected" }
 
         println("${AnsiColors.BLUE}Starting full deployment pipeline${AnsiColors.RESET}")
+        println("${AnsiColors.BLUE}Current working directory: ${System.getProperty("user.dir")}${AnsiColors.RESET}")
         println()
 
         // Execute parent project first
@@ -51,6 +52,7 @@ class DeployActionWithSDK(
         val initResult = terraformService.init(emptyList())
         if (initResult.isFailure()) {
             logger.error("Terraform init failed with exit code: ${initResult.exitCode()}")
+            println("${AnsiColors.RED}Terraform init failed: ${initResult.message()} (exit code: ${initResult.exitCode()})${AnsiColors.RESET}")
             println("${AnsiColors.RED}Parent project deployment failed${AnsiColors.RESET}")
             return initResult.exitCode()
         }
@@ -61,9 +63,10 @@ class DeployActionWithSDK(
         // Step 2: Plan
         logger.info("Step 2: Creating execution plan")
         println("${AnsiColors.BLUE}Step 2/3: Creating execution plan${AnsiColors.RESET}")
-        val planResult = terraformService.plan(additionalArgs)
+        val planResult = terraformService.plan(additionalArgs, planFile = "tfplan")
         if (planResult.isFailure()) {
             logger.error("Terraform plan failed with exit code: ${planResult.exitCode()}")
+            println("${AnsiColors.RED}Terraform plan failed: ${planResult.message()} (exit code: ${planResult.exitCode()})${AnsiColors.RESET}")
             println("${AnsiColors.RED}Parent project deployment failed${AnsiColors.RESET}")
             return planResult.exitCode()
         }
@@ -79,10 +82,11 @@ class DeployActionWithSDK(
         } else {
             additionalArgs + "-auto-approve"
         }
-        val applyResult = terraformService.apply(additionalArgs = applyArgsWithAutoApprove)
+        val applyResult = terraformService.apply(planFile = "tfplan", additionalArgs = applyArgsWithAutoApprove)
 
         if (applyResult.isFailure()) {
             logger.error("Terraform apply failed with exit code: ${applyResult.exitCode()}")
+            println("${AnsiColors.RED}Terraform apply failed: ${applyResult.message()} (exit code: ${applyResult.exitCode()})${AnsiColors.RESET}")
             println("${AnsiColors.RED}Parent project deployment failed${AnsiColors.RESET}")
             return applyResult.exitCode()
         }

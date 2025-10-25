@@ -50,20 +50,30 @@ class ProcessExecutorImpl : ProcessExecutor {
             }
 
             if (quiet) {
-                // 出力を抑制
                 processBuilder.redirectOutput(ProcessBuilder.Redirect.DISCARD)
                 processBuilder.redirectError(ProcessBuilder.Redirect.DISCARD)
             } else {
-                processBuilder.inheritIO()
+                processBuilder.redirectOutput(ProcessBuilder.Redirect.PIPE)
+                processBuilder.redirectError(ProcessBuilder.Redirect.PIPE)
             }
 
             val process = processBuilder.start()
+            val output = if (quiet) "" else process.inputStream.bufferedReader().readText()
+            val error = if (quiet) "" else process.errorStream.bufferedReader().readText()
             val exitCode = process.waitFor()
+
+            if (!quiet) {
+                // quietでない場合、outputを出力
+                print(output)
+                if (error.isNotBlank()) {
+                    print(error)
+                }
+            }
 
             if (exitCode == 0) {
                 Res.Ok(exitCode)
             } else {
-                Res.Err(ActionException(exitCode))
+                Res.Err(ActionException(exitCode, error.ifBlank { output }))
             }
         } catch (e: IOException) {
             Res.Err(ActionException(1, "Error executing command: ${e.message}"))

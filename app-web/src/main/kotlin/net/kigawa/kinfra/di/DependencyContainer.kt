@@ -26,6 +26,8 @@ import net.kigawa.kinfra.infrastructure.terraform.TerraformRepositoryImpl
 import net.kigawa.kinfra.model.conf.FilePaths
 import net.kigawa.kinfra.model.conf.global.GlobalConfig
 import net.kigawa.kinfra.model.conf.HomeDirGetter
+import net.kigawa.kinfra.model.LoginRepo
+import net.kigawa.kinfra.infrastructure.config.LoginRepoImpl
 import net.kigawa.kinfra.model.service.TerraformService
 
 class DependencyContainer {
@@ -33,13 +35,7 @@ class DependencyContainer {
     val homeDirGetter: HomeDirGetter by lazy { SystemHomeDirGetter() }
     val filePaths: FilePaths by lazy { FilePaths(homeDirGetter) }
 
-    val globalConfig: GlobalConfig by lazy {
-        runCatching { configRepository.loadGlobalConfig() }.getOrNull() ?: run {
-            val reposPath = filePaths.baseConfigDir?.resolve(filePaths.reposDir)
-                ?: throw IllegalStateException("Config directory not available")
-            GlobalConfigImpl(GlobalConfigScheme(), reposPath)
-        }
-    }
+
 
     val logger: Logger by lazy {
         val logDir = System.getenv("KINFRA_LOG_DIR") ?: "logs"
@@ -57,7 +53,14 @@ class DependencyContainer {
     val fileRepository: FileRepository by lazy { FileRepositoryImpl() }
     val processExecutor: ProcessExecutor by lazy { ProcessExecutorImpl() }
     val configRepository: ConfigRepository by lazy { ConfigRepositoryImpl(filePaths, logger, globalConfigCompleter) }
-    val terraformRepository: TerraformRepository by lazy { TerraformRepositoryImpl(fileRepository, configRepository) }
+
+    val globalConfig: GlobalConfig by lazy {
+        configRepository.loadGlobalConfig()
+    }
+
+    val loginRepo: LoginRepo by lazy { LoginRepoImpl(filePaths, globalConfig) }
+
+    val terraformRepository: TerraformRepository by lazy { TerraformRepositoryImpl(fileRepository, configRepository, loginRepo) }
     val terraformService: TerraformService by lazy { TerraformServiceImpl(processExecutor, terraformRepository, configRepository, bitwardenSecretManagerRepository, bitwardenRepository) }
     val bitwardenRepository: BitwardenRepository by lazy { BitwardenRepositoryImpl(processExecutor, filePaths) }
 

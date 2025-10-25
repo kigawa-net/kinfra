@@ -41,12 +41,12 @@ class TerraformServiceImpl(
         return processExecutor.execute(
             args = args.toTypedArray(),
             workingDir = config.workingDirectory,
-            environment = mapOf("SSH_CONFIG" to config.sshConfigPath),
+            environment = emptyMap(),
             quiet = quiet
         )
     }
 
-    override fun plan(additionalArgs: List<String>, quiet: Boolean): Res<Int, ActionException> {
+    override fun plan(additionalArgs: List<String>, quiet: Boolean, planFile: String?): Res<Int, ActionException> {
         val config = terraformRepository.getTerraformConfig()
         if (config == null) {
             return Res.Err(ActionException(1, "Terraform configuration not found"))
@@ -76,6 +76,11 @@ class TerraformServiceImpl(
             args.add("-backend-config=$key=$value")
         }
 
+        // plan file
+        if (planFile != null) {
+            args.add("-out=$planFile")
+        }
+
         args.addAll(varFileArgs)
         args.addAll(additionalArgs)
 
@@ -88,7 +93,7 @@ class TerraformServiceImpl(
     }
 
     override fun apply(
-        planFile: String?, additionalArgs: List<String>, quiet: Boolean,
+        planFile: String?, additionalArgs: List<String>, quiet: Boolean
     ): Res<Int, ActionException> {
         val config = terraformRepository.getTerraformConfig()
         if (config == null) {
@@ -120,7 +125,7 @@ class TerraformServiceImpl(
             baseArgs.add("-backend-config=$key=$value")
         }
 
-        val args = baseArgs + listOf("-input=false") + additionalArgs + varFileArgs + planArgs
+        val args = baseArgs + listOf("-input=false") + planArgs + additionalArgs + varFileArgs
 
         return processExecutor.execute(
             args = args.toTypedArray(),

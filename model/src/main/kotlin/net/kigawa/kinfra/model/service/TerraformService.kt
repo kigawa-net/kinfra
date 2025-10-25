@@ -9,7 +9,7 @@ import net.kigawa.kinfra.model.err.Res
  */
 interface TerraformService {
     fun init(additionalArgs: List<String> , quiet: Boolean = true): Res<Int, ActionException>
-    fun plan(additionalArgs: List<String>, quiet: Boolean = true): Res<Int, ActionException>
+    fun plan(additionalArgs: List<String>, quiet: Boolean = true, planFile: String? = null): Res<Int, ActionException>
     fun apply(planFile: String? = null, additionalArgs: List<String>, quiet: Boolean = true): Res<Int, ActionException>
     fun destroy(additionalArgs: List<String>, quiet: Boolean = true): Res<Int, ActionException>
     fun format(recursive: Boolean = true, quiet: Boolean = true): Res<Int, ActionException>
