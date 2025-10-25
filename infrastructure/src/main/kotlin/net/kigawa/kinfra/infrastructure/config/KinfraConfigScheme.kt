@@ -41,10 +41,17 @@ data class TerraformVariableMappingScheme(
 ) : TerraformVariableMapping
 
 @Serializable
+data class TerraformOutputMappingScheme(
+    override val terraformOutput: String,
+    override val bitwardenSecretKey: String
+) : TerraformOutputMapping
+
+@Serializable
 data class TerraformSettingsScheme(
     override val version: String = "",
     override val workingDirectory: String = ".",
     override val variableMappings: List<TerraformVariableMappingScheme> = emptyList(),
+    override val outputMappings: List<TerraformOutputMappingScheme> = emptyList(),
     override val backendConfig: Map<String, String> = emptyMap()
 ) : TerraformSettings {
     companion object {
@@ -58,6 +65,12 @@ data class TerraformSettingsScheme(
                 variableMappings = settings.variableMappings.map {
                     TerraformVariableMappingScheme(
                         terraformVariable = it.terraformVariable,
+                        bitwardenSecretKey = it.bitwardenSecretKey
+                    )
+                },
+                outputMappings = settings.outputMappings.map {
+                    TerraformOutputMappingScheme(
+                        terraformOutput = it.terraformOutput,
                         bitwardenSecretKey = it.bitwardenSecretKey
                     )
                 },
