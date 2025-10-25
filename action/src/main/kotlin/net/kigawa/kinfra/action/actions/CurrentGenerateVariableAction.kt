@@ -16,7 +16,24 @@ class CurrentGenerateVariableAction(private val configRepository: ConfigReposito
 
         // Parse options
         val (options, remainingArgs) = parseOptions(args.drop(1))
-        val outputDir = options["output-dir"] ?: System.getProperty("user.dir")
+
+        // Determine output directory: CLI flag > kinfra.yaml > current directory
+        val outputDir = options["output-dir"] ?: run {
+            val currentDir = System.getProperty("user.dir")
+            val kinfraConfigPath = Paths.get(currentDir, "kinfra.yaml")
+            val kinfraParentConfigPath = Paths.get(currentDir, "kinfra-parent.yaml")
+
+            if (configRepository.kinfraConfigExists(kinfraConfigPath.toString())) {
+                val kinfraConfig = configRepository.loadKinfraConfig(kinfraConfigPath)
+                kinfraConfig?.rootProject?.terraform?.generateOutputDir
+            } else if (configRepository.kinfraParentConfigExists(kinfraParentConfigPath.toString())) {
+                val kinfraParentConfig = configRepository.loadKinfraParentConfig(kinfraParentConfigPath.toString())
+                kinfraParentConfig?.terraform?.generateOutputDir
+            } else {
+                null
+            } ?: currentDir
+        }
+
         val withOutputs = options.containsKey("with-outputs")
         val outputDirFile = File(outputDir)
         if (!outputDirFile.exists()) {
@@ -178,8 +195,14 @@ class CurrentGenerateVariableAction(private val configRepository: ConfigReposito
         println("  If variable_name is not specified, generates all variables from kinfra.yaml")
         println()
         println("${AnsiColors.BLUE}Options:${AnsiColors.RESET}")
-        println("  --output-dir, -o <dir>    Output directory for variables.tf (default: current directory)")
+        println("  --output-dir, -o <dir>    Output directory for variables.tf")
+        println("                            Priority: CLI flag > kinfra.yaml terraform.generateOutputDir > current directory")
         println("  --with-outputs            Also generate outputs.tf with corresponding outputs")
+        println()
+        println("${AnsiColors.BLUE}Configuration (kinfra.yaml):${AnsiColors.RESET}")
+        println("  project:")
+        println("    terraform:")
+        println("      generateOutputDir: /path/to/output  # Default output directory for generated files")
         println()
         println("${AnsiColors.BLUE}Examples:${AnsiColors.RESET}")
         println("  kinfra current generate variable                               # Generate all variables")
