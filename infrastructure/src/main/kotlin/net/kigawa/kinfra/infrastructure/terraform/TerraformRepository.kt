@@ -16,22 +16,13 @@ interface TerraformRepository {
 
 class TerraformRepositoryImpl(
     private val fileRepository: FileRepository,
-    private val configRepository: ConfigRepository
+    private val configRepository: ConfigRepository,
+    private val loginRepo: net.kigawa.kinfra.model.LoginRepo
 ) : TerraformRepository {
 
     override fun getTerraformConfig(): TerraformConfig? {
-        // プロジェクトルートを特定
-        // Gradleから実行された場合、user.dirはappディレクトリを指すので親に移動
-        val currentDir = File(System.getProperty("user.dir"))
-        val projectRoot = if (currentDir.name == "app") {
-            currentDir.parentFile
-        } else {
-            currentDir
-        }
-
         // 設定ファイルからTerraform設定を読み込む
-        val configPath = configRepository.getProjectConfigFilePath()
-        val kinfraConfig = configRepository.loadKinfraConfig(Paths.get(configPath))
+        val kinfraConfig = loginRepo.loadKinfraConfig()
 
         // kinfraConfigがnullの場合はTerraform設定なしとみなす
         if (kinfraConfig == null) {
@@ -47,7 +38,7 @@ class TerraformRepositoryImpl(
                 File(workingDirPath)
             } else {
                 // 相対パス：プロジェクトルートからの相対パス
-                File(projectRoot, workingDirPath)
+                File(loginRepo.repoPath.toFile(), workingDirPath)
             }
         } else {
             // Terraform設定がない場合はnullを返す
@@ -59,7 +50,7 @@ class TerraformRepositoryImpl(
         val varFile = if (fileRepository.exists(tfvarsFile)) tfvarsFile else null
 
         // SSH設定ファイルのパス（プロジェクトルートを基準）
-        val sshConfigFile = File(projectRoot, "ssh_config")
+        val sshConfigFile = File(loginRepo.repoPath.toFile(), "ssh_config")
         val sshConfigPath = fileRepository.getAbsolutePath(sshConfigFile)
 
         return TerraformConfig(
