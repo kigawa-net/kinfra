@@ -127,6 +127,14 @@ APIエンドポイント:
 
 詳細は [CLAUDE.md](./CLAUDE.md) を参照してください。
 
+## 開発ツール
+
+### Serena（Claude Code用）
+
+Serenaは、Claude Codeに高度なコード解析機能を提供するMCPサーバーです。シンボルレベルのコード検索・編集が可能になります。
+
+セットアップ方法は [docs/serena-setup.md](./docs/serena-setup.md) を参照してください。
+
 ## ライセンス
 
 MIT License
