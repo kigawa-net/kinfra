@@ -27,6 +27,8 @@ interface TerraformSettings {
     val workingDirectory: String
     val variableMappings: List<TerraformVariableMapping>
         get() = emptyList()
+    val backendConfig: Map<String, String>
+        get() = emptyMap()
 }
 
 interface BitwardenSettings {

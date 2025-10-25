@@ -29,10 +29,17 @@ class TerraformServiceImpl(
             return Res.Err(ActionException(1, "Terraform configuration not found"))
         }
 
-        val args = arrayOf("terraform", "init", "-input=false") + additionalArgs
+        val args = mutableListOf("terraform", "init", "-input=false")
+
+        // backendConfigから-backend-configオプションを追加
+        config.backendConfig.forEach { (key, value) ->
+            args.add("-backend-config=$key=$value")
+        }
+
+        args.addAll(additionalArgs)
 
         return processExecutor.execute(
-            args = args,
+            args = args.toTypedArray(),
             workingDir = config.workingDirectory,
             environment = mapOf("SSH_CONFIG" to config.sshConfigPath),
             quiet = quiet
@@ -50,14 +57,6 @@ class TerraformServiceImpl(
             saveTfvarsFile(config, content)
         }
 
-        // Bitwardenシークレットからbackend.tfvarsファイルを生成
-        val generatedBackendTfvarsFile = generateBackendTfvarsFromBitwarden()?.let { content ->
-            saveBackendTfvarsFile(config, content)
-        } ?: run {
-            if (!quiet) println("Warning: Could not generate backend.tfvars from Bitwarden secrets")
-            null
-        }
-
         val varFileArgs = mutableListOf<String>()
 
         // 既存のvarFileがある場合
@@ -70,16 +69,18 @@ class TerraformServiceImpl(
             varFileArgs.add("-var-file=${generatedTfvarsFile.absolutePath}")
         }
 
-        val backendArgs = if (generatedBackendTfvarsFile != null) {
-            arrayOf("-backend-config=${generatedBackendTfvarsFile.absolutePath}")
-        } else {
-            emptyArray()
+        val args = mutableListOf("terraform", "plan", "-input=false")
+
+        // backendConfigから-backend-configオプションを追加
+        config.backendConfig.forEach { (key, value) ->
+            args.add("-backend-config=$key=$value")
         }
 
-        val args = arrayOf("terraform", "plan", "-input=false") + backendArgs + varFileArgs + additionalArgs
+        args.addAll(varFileArgs)
+        args.addAll(additionalArgs)
 
         return processExecutor.execute(
-            args = args,
+            args = args.toTypedArray(),
             workingDir = config.workingDirectory,
             environment = mapOf("SSH_CONFIG" to config.sshConfigPath),
             quiet = quiet
@@ -99,15 +100,7 @@ class TerraformServiceImpl(
             saveTfvarsFile(config, content)
         }
 
-        // Bitwardenシークレットからbackend.tfvarsファイルを生成
-        val generatedBackendTfvarsFile = generateBackendTfvarsFromBitwarden()?.let { content ->
-            saveBackendTfvarsFile(config, content)
-        } ?: run {
-            if (!quiet) println("Warning: Could not generate backend.tfvars from Bitwarden secrets")
-            null
-        }
-
-        val baseArgs = arrayOf("terraform", "apply")
+        val baseArgs = mutableListOf("terraform", "apply")
         val varFileArgs = mutableListOf<String>()
 
         // 既存のvarFileがある場合（planFileがない場合のみ）
@@ -120,18 +113,17 @@ class TerraformServiceImpl(
             varFileArgs.add("-var-file=${generatedTfvarsFile.absolutePath}")
         }
 
-        val planArgs = if (planFile != null) arrayOf(planFile) else emptyArray()
+        val planArgs = if (planFile != null) listOf(planFile) else emptyList()
 
-        val backendArgs = if (generatedBackendTfvarsFile != null) {
-            arrayOf("-backend-config=${generatedBackendTfvarsFile.absolutePath}")
-        } else {
-            emptyArray()
+        // backendConfigから-backend-configオプションで追加
+        config.backendConfig.forEach { (key, value) ->
+            baseArgs.add("-backend-config=$key=$value")
         }
 
-        val args = baseArgs + arrayOf("-input=false") + backendArgs + additionalArgs + varFileArgs + planArgs
+        val args = baseArgs + listOf("-input=false") + additionalArgs + varFileArgs + planArgs
 
         return processExecutor.execute(
-            args = args,
+            args = args.toTypedArray(),
             workingDir = config.workingDirectory,
             environment = mapOf("SSH_CONFIG" to config.sshConfigPath),
             quiet = quiet

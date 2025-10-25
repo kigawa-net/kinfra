@@ -55,6 +55,7 @@
 | todo-maintainer    | タスク管理を自動化するエージェント |
 
 ## 変更履歴
+- 2025-10-25: kinfra.yamlおよびkinfra-parent.yamlのbackendConfig設定を読み込み、Terraformコマンドに-backend-configオプションとして渡す機能を追加。Terraformのバックエンド設定を自動適用。
 - 2025-10-25: `kinfra current generate variable` コマンドに--output-dirオプションを追加。variables.tfの出力ディレクトリを指定できるようにした。
 - 2025-10-25: `kinfra current generate variable` コマンドを拡張。kinfra.yamlまたはkinfra-parent.yamlのvariableMappingsから全ての変数を生成できるようにした。引数なしで実行すると全ての変数を生成、引数ありで特定の変数を生成。
 - 2025-10-24: plan実行時に自動でterraform initを実行する機能を追加。PlanActionとSubPlanActionでplan前にinitを実行するように変更。
@@ -111,3 +112,5 @@
 - 2025-10-19: TerraformRunnerクラスのリファクタリングを実施。
 - 2025-10-25: `kinfra current plan` コマンドを追加。カレントディレクトリで terraform plan を実行できるようにした。CurrentPlanActionを実装し、DependencyContainerに登録。
 - 2025-10-25: PR #143 を作成。kinfra current planコマンドの実装を提出。
+- 2025-10-25: CurrentPlanActionをリファクタリング。PlanActionのロジックを再利用して実装を簡素化。PR #143 を更新。
+- 2025-10-25: PR #143 をマージ。kinfra current planコマンドの実装が完了。

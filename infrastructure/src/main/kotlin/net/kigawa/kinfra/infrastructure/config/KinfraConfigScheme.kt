@@ -44,7 +44,8 @@ data class TerraformVariableMappingScheme(
 data class TerraformSettingsScheme(
     override val version: String = "",
     override val workingDirectory: String = ".",
-    override val variableMappings: List<TerraformVariableMappingScheme> = emptyList()
+    override val variableMappings: List<TerraformVariableMappingScheme> = emptyList(),
+    override val backendConfig: Map<String, String> = emptyMap()
 ) : TerraformSettings {
     companion object {
         fun from(settings: TerraformSettings): TerraformSettingsScheme {
@@ -59,7 +60,8 @@ data class TerraformSettingsScheme(
                         terraformVariable = it.terraformVariable,
                         bitwardenSecretKey = it.bitwardenSecretKey
                     )
-                }
+                },
+                backendConfig = settings.backendConfig
             )
         }
     }
