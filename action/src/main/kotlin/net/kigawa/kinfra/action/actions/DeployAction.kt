@@ -31,6 +31,7 @@ class DeployAction(
         val additionalArgs = args.filter { it != "--auto-selected" }
 
         println("${AnsiColors.BLUE}Starting full deployment pipeline${AnsiColors.RESET}")
+        println("${AnsiColors.BLUE}Current working directory: ${System.getProperty("user.dir")}${AnsiColors.RESET}")
         println()
 
         // Execute parent project first
@@ -40,9 +41,9 @@ class DeployAction(
         println()
 
         val steps = listOf(
-            ExecutionStep("Initialize Terraform") { pipeline.initializeTerraform(additionalArgs) },
-            ExecutionStep("Create execution plan") { pipeline.createExecutionPlan(additionalArgs) },
-            ExecutionStep("Apply changes") { pipeline.applyChanges(additionalArgs) }
+            ExecutionStep("Initialize Terraform") { executor.executeWithErrorHandling("Initialize Terraform", { pipeline.initializeTerraform(additionalArgs) }) },
+            ExecutionStep("Create execution plan") { executor.executeWithErrorHandling("Create execution plan", { pipeline.createExecutionPlan(additionalArgs) }) },
+            ExecutionStep("Apply changes") { executor.executeWithErrorHandling("Apply changes", { pipeline.applyChanges(additionalArgs) }) }
         )
 
         val result = executor.executeSteps(steps)

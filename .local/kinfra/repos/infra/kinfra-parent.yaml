@@ -1,0 +1,29 @@
+# Kinfra Parent Project Configuration
+# This file defines common settings for multi-project setups
+
+# Project name
+projectName: "kigawa-infra"
+
+# Optional project description
+description: "Parent project for managing multiple infrastructure components"
+
+# Common Terraform settings applied to all sub-projects
+
+# List of sub-project paths or identifiers
+subProjects:
+  - projectId: "project-a"
+    description: "Project A"
+  - projectId: "project-b"
+    description: "Project B"
+  - projectId: "project-c"
+    description: "Project C"
+
+# Common Bitwarden settings
+bitwarden:
+  projectId: "your-bitwarden-project-id"
+
+# Update settings for auto-update functionality
+update:
+  autoUpdate: true
+  checkInterval: 86400000  # 24 hours in milliseconds
+  githubRepo: "kigawa-net/kinfra"
