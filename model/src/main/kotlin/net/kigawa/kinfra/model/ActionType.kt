@@ -17,6 +17,7 @@ enum class ActionType(val actionName: String) {
     PUSH("push"),
     CONFIG("config"),
     CONFIG_EDIT("config-edit"),
+    CURRENT("current"),
     SUB("sub");
 
     companion object {

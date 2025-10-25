@@ -27,7 +27,7 @@ class CommandInterpreter(private val logger: Logger) {
         logger.debug("Original action: $actionName")
 
         // Handle subcommands
-        if (actionName == ActionType.SUB.actionName && args.size > 1) {
+        if ((actionName == ActionType.SUB.actionName || actionName == ActionType.CURRENT.actionName) && args.size > 1) {
             val subActionName = args[1]
             subActionType = SubActionType.fromString(subActionName)
             if (subActionType != null) {
@@ -78,8 +78,8 @@ class CommandInterpreter(private val logger: Logger) {
             }
         }
 
-        // Check if --help or -h is in the arguments (but not the first argument)
-        val showHelp = actionArgs.isNotEmpty() && (actionArgs[0] == "--help" || actionArgs[0] == "-h")
+        // Check if --help or -h is in the arguments
+        val showHelp = actionArgs.contains("--help") || actionArgs.contains("-h")
         if (showHelp) {
             logger.debug("Showing help for action: $actionName")
         }
@@ -101,6 +101,7 @@ class CommandInterpreter(private val logger: Logger) {
             || actionName == ActionType.CONFIG.actionName
             || actionName == ActionType.CONFIG_EDIT.actionName
             || actionName == ActionType.SUB.actionName
+            || actionName == ActionType.CURRENT.actionName
     }
 
     fun handleUnknownAction(actionName: String, helpAction: (() -> Unit)? = null) {
