@@ -2,6 +2,43 @@
 
 kinfra CLIの全コマンドリファレンス。
 
+## 目次
+
+- [基本構文](#基本構文)
+- [コマンド一覧](#コマンド一覧)
+  - [help](#help)
+  - [hello](#hello)
+  - [login](#login)
+- [サブプロジェクトコマンド](#サブプロジェクトコマンド)
+  - [sub list](#sub-list)
+  - [sub add](#sub-add)
+  - [sub plan](#sub-plan)
+- [Terraformコマンド](#terraformコマンド)
+  - [init](#init)
+  - [plan](#plan)
+  - [apply](#apply)
+  - [destroy](#destroy)
+  - [deploy](#deploy)
+  - [validate](#validate)
+  - [fmt](#fmt)
+- [Bitwardenコマンド](#bitwardenコマンド)
+- [環境変数](#環境変数)
+  - [BWS_ACCESS_TOKEN](#bws_access_token)
+  - [KINFRA_LOG_LEVEL](#kinfra_log_level)
+  - [KINFRA_LOG_DIR](#kinfra_log_dir)
+- [設定ファイル](#設定ファイル)
+  - [~/.local/kinfra/project.json](#localkinfraprojectjson)
+  - [kinfra.yaml](#kinfrayaml)
+- [使用例](#使用例)
+  - [基本ワークフロー](#基本ワークフロー)
+  - [SDKモードでのデプロイ](#sdkモードでのデプロイ)
+  - [設定確認](#設定確認)
+- [終了コード](#終了コード)
+- [トラブルシューティング](#トラブルシューティング)
+  - [コマンドが見つからない](#コマンドが見つからない)
+  - [Terraformディレクトリが見つからない](#terraformディレクトリが見つからない)
+  - [ログの確認](#ログの確認)
+
 ## 基本構文
 
 ```bash

@@ -2,6 +2,30 @@
 
 kinfraの設定ファイルと環境変数のリファレンス。
 
+## 目次
+
+- [環境変数](#環境変数)
+  - [BWS_ACCESS_TOKEN](#bws_access_token)
+  - [BW_PROJECT](#bw_project)
+  - [KINFRA_LOG_LEVEL](#kinfra_log_level)
+  - [KINFRA_LOG_DIR](#kinfra_log_dir)
+- [設定ファイル](#設定ファイル)
+  - [kinfra.yaml](#kinfrayaml)
+  - [~/.local/kinfra/project.json](#localkinfraprojectjson)
+- [Terraform設定](#terraform設定)
+- [ログ設定](#ログ設定)
+  - [ログファイル](#ログファイル)
+  - [ログ形式](#ログ形式)
+  - [ログレベル](#ログレベル)
+- [ディレクトリ構造](#ディレクトリ構造)
+- [セキュリティ考慮事項](#セキュリティ考慮事項)
+  - [シークレット管理](#シークレット管理)
+  - [ファイルパーミッション](#ファイルパーミッション)
+- [トラブルシューティング](#トラブルシューティング)
+  - [設定ファイルが見つからない](#設定ファイルが見つからない)
+  - [ログが出力されない](#ログが出力されない)
+  - [環境変数が反映されない](#環境変数が反映されない)
+
 ## 環境変数
 
 ### BWS_ACCESS_TOKEN
