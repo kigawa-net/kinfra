@@ -55,6 +55,8 @@
 | todo-maintainer    | タスク管理を自動化するエージェント |
 
 ## 変更履歴
+- 2025-10-26: ClaudeワークフローのGit操作エラーを修正。Create Pull Request Or Commentステップでのexit code 128エラーを解決。
+- 2025-10-26: PR #153 を作成。Terraformのバックエンド設定サポートとデプロイパイプラインの改善を実装。
 - 2025-10-25: kinfra deploy コマンド実行時に "Parent project deployment failed" エラーが発生。原因は kinfra.yaml が存在せず、Terraform 設定がないため。kinfra はインフラ管理ツールであり、自分自身のデプロイには使用できない。
 - 2025-10-25: kinfra.yamlおよびkinfra-parent.yamlのbackendConfig設定を読み込み、Terraformコマンドに-backend-configオプションとして渡す機能を追加。Terraformのバックエンド設定を自動適用。
 - 2025-10-25: `kinfra current generate variable` コマンドに--output-dirオプションを追加。variables.tfの出力ディレクトリを指定できるようにした。
