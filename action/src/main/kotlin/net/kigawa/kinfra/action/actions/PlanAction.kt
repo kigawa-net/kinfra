@@ -1,6 +1,7 @@
 package net.kigawa.kinfra.action.actions
 import net.kigawa.kinfra.model.util.exitCode
 import net.kigawa.kinfra.model.util.message
+import java.io.File
 
 import net.kigawa.kinfra.model.GitHelper
 import net.kigawa.kinfra.model.service.TerraformService
@@ -73,7 +74,15 @@ class PlanAction(
                     return@executeInSubProjects initExitCode
                 }
 
-                val process = ProcessBuilder("terraform", "plan")
+                // backend.tfvarsファイルが存在するかチェック
+                val backendTfvarsFile = File(subProjectDir, "backend.tfvars")
+                val planArgs = if (backendTfvarsFile.exists()) {
+                    listOf("terraform", "plan", "-backend-config=backend.tfvars")
+                } else {
+                    listOf("terraform", "plan")
+                }
+
+                val process = ProcessBuilder(planArgs)
                     .directory(subProjectDir)
                     .redirectOutput(ProcessBuilder.Redirect.INHERIT)
                     .redirectError(ProcessBuilder.Redirect.INHERIT)
