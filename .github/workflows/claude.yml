@@ -134,64 +134,65 @@ jobs:
 
           claude_args: '--allowed-tools Bash(gh pr:*) Edit --dangerously-skip-permissions'
 
-      - name: Create Pull Request Or Comment
-        run: |
-          # Gitの設定を確実に行う
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+       - name: Create Pull Request Or Comment
+         run: |
+           # Gitの設定を確実に行う
+           git config user.name "github-actions[bot]"
+           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          git add . -A
-          if git diff --cached --quiet; then
-            echo "変更はありません。コメントを投稿します。"
-            # TARGET_NUMを安全に設定
-            if [ -n "${{ github.event.issue.number }}" ]; then
-              TARGET_NUM="${{ github.event.issue.number }}"
-            elif [ -n "${{ github.event.pull_request.number }}" ]; then
-              TARGET_NUM="${{ github.event.pull_request.number }}"
-            else
-              TARGET_NUM=""
-            fi
-            
-            if [ -n "$TARGET_NUM" ]; then
-              gh issue comment "$TARGET_NUM" --body "Claude Code: 変更はありませんでした。"
-            fi
-          else
-            echo "変更をコミットします..."
-            git commit -m "Claude Code Result"
+           git add . -A
+           if git diff --cached --quiet; then
+             echo "変更はありません。コメントを投稿します。"
+             # TARGET_NUMを安全に設定
+             if [ -n "${{ github.event.issue.number }}" ]; then
+               TARGET_NUM="${{ github.event.issue.number }}"
+             elif [ -n "${{ github.event.pull_request.number }}" ]; then
+               TARGET_NUM="${{ github.event.pull_request.number }}"
+             else
+               TARGET_NUM=""
+             fi
 
-            echo "リモートの変更を取得します..."
-            git fetch origin
+             if [ -n "$TARGET_NUM" ]; then
+               gh issue comment "$TARGET_NUM" --body "Claude Code: 変更はありませんでした。"
+             fi
+           else
+             echo "変更をコミットします..."
+             git commit -m "Claude Code Result"
 
-            echo "リモートブランチにプッシュします..."
-            if ! git push origin claude-code-action-${{ github.run_id }}; then
-              echo "プッシュに失敗しました。force pushを試みます..."
-              git push --force-with-lease origin claude-code-action-${{ github.run_id }}
-            fi
+             echo "リモートの変更を取得します..."
+             git fetch origin
 
-            echo "Pull Requestを作成します..."
-            # デフォルトブランチを取得
-            DEFAULT_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD | sed 's@^.*/@@')
-            echo "Creating PR to base branch: $DEFAULT_BRANCH"
+             echo "リモートブランチにプッシュします..."
+             BRANCH_NAME="claude-code-action-${{ github.run_id }}"
+             if ! git push origin "$BRANCH_NAME"; then
+               echo "プッシュに失敗しました。force pushを試みます..."
+               git push --force-with-lease origin "$BRANCH_NAME"
+             fi
 
-            # create-pull-requestアクション用のファイルを作成
-            echo "Claude Codeによる自動修正結果です。" > pr_body.md
-            echo "" >> pr_body.md
-            echo "## 変更内容" >> pr_body.md
-            echo "" >> pr_body.md
-            echo "Claude Codeが以下の変更を行いました：" >> pr_body.md
-            echo "" >> pr_body.md
-            
-            # 安全に差分を取得
-            if git rev-parse HEAD~1 >/dev/null 2>&1; then
-              git diff HEAD~1 --name-only | while read file; do
-                echo "- \`$file\`" >> pr_body.md
-              done
-            else
-              git diff --name-only | while read file; do
-                echo "- \`$file\`" >> pr_body.md
-              done
-            fi
-          fi
+             echo "Pull Requestを作成します..."
+             # デフォルトブランチを取得
+             DEFAULT_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD | sed 's@^.*/@@')
+             echo "Creating PR to base branch: $DEFAULT_BRANCH"
+
+             # create-pull-requestアクション用のファイルを作成
+             echo "Claude Codeによる自動修正結果です。" > pr_body.md
+             echo "" >> pr_body.md
+             echo "## 変更内容" >> pr_body.md
+             echo "" >> pr_body.md
+             echo "Claude Codeが以下の変更を行いました：" >> pr_body.md
+             echo "" >> pr_body.md
+
+             # 安全に差分を取得
+             if git rev-parse HEAD~1 >/dev/null 2>&1; then
+               git diff HEAD~1 --name-only | while read -r file; do
+                 echo "- \`$file\`" >> pr_body.md
+               done
+             else
+               git diff --name-only | while read -r file; do
+                 echo "- \`$file\`" >> pr_body.md
+               done
+             fi
+           fi
 
       - name: Create Pull Request
         if: steps.claude.outcome == 'success'
