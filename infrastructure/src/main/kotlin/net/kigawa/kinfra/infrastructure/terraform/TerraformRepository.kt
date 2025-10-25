@@ -2,6 +2,7 @@ package net.kigawa.kinfra.infrastructure.terraform
 
 import net.kigawa.kinfra.model.conf.TerraformConfig
 import net.kigawa.kinfra.model.conf.KinfraConfig
+import net.kigawa.kinfra.infrastructure.config.KinfraConfigScheme
 import net.kigawa.kinfra.infrastructure.file.FileRepository
 import net.kigawa.kinfra.action.config.ConfigRepository
 import java.io.File
@@ -60,4 +61,6 @@ class TerraformRepositoryImpl(
             backendConfig = kinfraConfig.rootProject.terraform?.backendConfig ?: emptyMap()
         )
     }
+    
+    
 }

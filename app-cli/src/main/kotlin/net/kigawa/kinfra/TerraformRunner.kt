@@ -1,6 +1,7 @@
 package net.kigawa.kinfra
 
 import net.kigawa.kinfra.di.DependencyContainer
+import net.kigawa.kinfra.infrastructure.file.SystemHomeDirGetter
 import kotlin.system.exitProcess
 
 class TerraformRunner(private val container: DependencyContainer) {
@@ -9,6 +10,7 @@ class TerraformRunner(private val container: DependencyContainer) {
     private val commandInterpreter = container.commandInterpreter
     private val systemRequirement = container.systemRequirement
     private val updateHandler = container.updateHandler
+    private val loginRepo = container.loginRepo
 
     fun run(args: Array<String>) {
         logger.info("Starting Terraform Runner with args: ${args.joinToString(" ")}")
@@ -19,6 +21,13 @@ class TerraformRunner(private val container: DependencyContainer) {
                 actionRegistry.getHelpAction()?.execute(emptyList())
                 exitProcess(1)
             }
+
+        // Always use the logged-in repository path
+        val workingDir = getLoggedInRepoPath()
+        logger.debug("Using working directory: $workingDir")
+        
+        // Set system property for working directory
+        System.setProperty("user.dir", workingDir)
 
         // Get the action
         val action = actionRegistry.getAction(parsedCommand.actionName, parsedCommand.subActionType)
@@ -45,7 +54,7 @@ class TerraformRunner(private val container: DependencyContainer) {
 
         // Execute the action
         logger.info(
-            "Executing action: ${parsedCommand.actionName} with args: ${parsedCommand.actionArgs.joinToString(" ")}"
+            "Executing action: ${parsedCommand.actionName} with args: ${parsedCommand.actionArgs.joinToString(" ")} in directory: $workingDir"
         )
         val exitCode = action.execute(parsedCommand.actionArgs)
         logger.info("Action ${parsedCommand.actionName} finished with exit code: $exitCode")
@@ -57,5 +66,11 @@ class TerraformRunner(private val container: DependencyContainer) {
             logger.error("Action ${parsedCommand.actionName} failed with exit code: $exitCode")
             exitProcess(exitCode)
         }
+    }
+
+    private fun getLoggedInRepoPath(): String {
+        // Get the logged-in repository path from the container
+        val loginRepo = container.loginRepo
+        return loginRepo.repoPath.toString()
     }
 }

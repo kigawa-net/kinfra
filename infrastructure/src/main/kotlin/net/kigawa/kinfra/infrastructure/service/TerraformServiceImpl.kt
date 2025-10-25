@@ -71,11 +71,6 @@ class TerraformServiceImpl(
 
         val args = mutableListOf("terraform", "plan", "-input=false")
 
-        // backendConfigから-backend-configオプションを追加
-        config.backendConfig.forEach { (key, value) ->
-            args.add("-backend-config=$key=$value")
-        }
-
         // plan file
         if (planFile != null) {
             args.add("-out=$planFile")
