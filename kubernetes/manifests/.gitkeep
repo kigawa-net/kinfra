@@ -1,0 +1,6 @@
+# Kubernetes manifests will be placed here
+# Example:
+# - prometheus/
+# - grafana/
+# - node-exporter/
+# - monitoring-stack/

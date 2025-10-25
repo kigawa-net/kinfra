@@ -1,0 +1,27 @@
+# Kinfra Parent Project Configuration
+
+# Project name
+projectName: "kinfra"
+
+# Optional project description
+description: "Kubernetes infrastructure management with Terraform"
+
+# Common Terraform settings applied to all sub-projects
+terraform:
+  version: "1.5.0"
+  workingDirectory: "."
+
+# List of sub-project paths or identifiers
+subProjects:
+  - name: "k8s"
+    path: "kubernetes"
+
+# Common Bitwarden settings
+bitwarden:
+  projectId: "kinfra"
+
+# Update settings for auto-update functionality
+update:
+  autoUpdate: true
+  checkInterval: 86400000  # 24 hours in milliseconds
+  githubRepo: "kigawa-net/kinfra"
