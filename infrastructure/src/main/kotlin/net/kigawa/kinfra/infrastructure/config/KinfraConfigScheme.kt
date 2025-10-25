@@ -52,7 +52,8 @@ data class TerraformSettingsScheme(
     override val workingDirectory: String = ".",
     override val variableMappings: List<TerraformVariableMappingScheme> = emptyList(),
     override val outputMappings: List<TerraformOutputMappingScheme> = emptyList(),
-    override val backendConfig: Map<String, String> = emptyMap()
+    override val backendConfig: Map<String, String> = emptyMap(),
+    override val generateOutputDir: String? = null
 ) : TerraformSettings {
     companion object {
         fun from(settings: TerraformSettings): TerraformSettingsScheme {
@@ -74,7 +75,8 @@ data class TerraformSettingsScheme(
                         bitwardenSecretKey = it.bitwardenSecretKey
                     )
                 },
-                backendConfig = settings.backendConfig
+                backendConfig = settings.backendConfig,
+                generateOutputDir = settings.generateOutputDir
             )
         }
     }
