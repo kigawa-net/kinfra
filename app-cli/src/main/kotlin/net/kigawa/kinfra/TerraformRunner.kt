@@ -10,6 +10,7 @@ class TerraformRunner(private val container: DependencyContainer) {
     private val commandInterpreter = container.commandInterpreter
     private val systemRequirement = container.systemRequirement
     private val updateHandler = container.updateHandler
+    private val loginRepo = container.loginRepo
 
     fun run(args: Array<String>) {
         logger.info("Starting Terraform Runner with args: ${args.joinToString(" ")}")
@@ -21,8 +22,8 @@ class TerraformRunner(private val container: DependencyContainer) {
                 exitProcess(1)
             }
 
-        // Set default working directory if not specified
-        val workingDir = parsedCommand.workingDir ?: getDefaultWorkingDir()
+        // Always use the logged-in repository path
+        val workingDir = getLoggedInRepoPath()
         logger.debug("Using working directory: $workingDir")
         
         // Set system property for working directory
@@ -67,21 +68,9 @@ class TerraformRunner(private val container: DependencyContainer) {
         }
     }
 
-    private fun getDefaultWorkingDir(): String {
-        val homeDirGetter = SystemHomeDirGetter()
-        val homeDir = homeDirGetter.getHomeDir()
-        val kinfraDir = "$homeDir/.local/kinfra/repos"
-        
-        // Try to find the first repository directory
-        val reposDir = java.io.File(kinfraDir)
-        if (reposDir.exists() && reposDir.isDirectory) {
-            val firstRepo = reposDir.listFiles()?.find { it.isDirectory && java.io.File(it, ".git").exists() }
-            if (firstRepo != null) {
-                return firstRepo.absolutePath
-            }
-        }
-        
-        // Fallback to current directory
-        return System.getProperty("user.dir")
+    private fun getLoggedInRepoPath(): String {
+        // Get the logged-in repository path from the container
+        val loginRepo = container.loginRepo
+        return loginRepo.repoPath.toString()
     }
 }
