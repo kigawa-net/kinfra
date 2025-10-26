@@ -58,18 +58,48 @@ class ProcessExecutorImpl : ProcessExecutor {
             }
 
             val process = processBuilder.start()
-            val output = if (quiet) "" else process.inputStream.bufferedReader().readText()
-            val error = if (quiet) "" else process.errorStream.bufferedReader().readText()
-            val exitCode = process.waitFor()
-
-            if (!quiet) {
-                // quietでない場合、outputを出力
-                print(output)
-                if (error.isNotBlank()) {
-                    print(error)
+            
+            // リアルタイムで出力をストリーミング
+            val outputBuilder = StringBuilder()
+            val errorBuilder = StringBuilder()
+            
+            val exitCode = if (!quiet) {
+                // 標準出力をリアルタイムで表示
+                val outputThread = Thread {
+                    process.inputStream.bufferedReader().use { reader ->
+                        reader.forEachLine { line ->
+                            println(line)
+                            outputBuilder.appendLine(line)
+                        }
+                    }
                 }
+                
+                // 標準エラーをリアルタイムで表示
+                val errorThread = Thread {
+                    process.errorStream.bufferedReader().use { reader ->
+                        reader.forEachLine { line ->
+                            System.err.println(line)
+                            errorBuilder.appendLine(line)
+                        }
+                    }
+                }
+                
+                outputThread.start()
+                errorThread.start()
+                
+                val code = process.waitFor()
+                
+                outputThread.join()
+                errorThread.join()
+                
+                code
+            } else {
+                process.waitFor()
             }
 
+            val output = if (quiet) "" else outputBuilder.toString()
+            val error = if (quiet) "" else errorBuilder.toString()
+            
             if (exitCode == 0) {
                 Res.Ok(exitCode)
             } else {
