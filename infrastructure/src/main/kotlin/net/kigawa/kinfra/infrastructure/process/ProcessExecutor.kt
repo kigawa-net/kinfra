@@ -13,7 +13,7 @@ interface ProcessExecutor {
         args: Array<String>,
         workingDir: File? = null,
         environment: Map<String, String> = emptyMap(),
-        quiet: Boolean = true
+        quiet: Boolean = false
     ): Res<Int, ActionException>
 
     fun executeWithOutput(

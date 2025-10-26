@@ -23,7 +23,7 @@ class DeploymentPipeline(
     
     fun initializeTerraform(additionalArgs: List<String>): Int {
         println("${AnsiColors.BLUE}Calling terraformService.init${AnsiColors.RESET}")
-        val result = terraformService.init(quiet = false, additionalArgs = additionalArgs)
+        val result = terraformService.init(additionalArgs = additionalArgs)
         println("${AnsiColors.BLUE}terraformService.init returned: $result${AnsiColors.RESET}")
         return if (result.isFailure()) {
             // Terraform設定がない場合はスキップとして成功扱い
@@ -40,7 +40,7 @@ class DeploymentPipeline(
     
     fun createExecutionPlan(additionalArgs: List<String>): Int {
         println("${AnsiColors.BLUE}Calling terraformService.plan${AnsiColors.RESET}")
-        val result = terraformService.plan(additionalArgs, quiet = false)
+        val result = terraformService.plan(additionalArgs)
         println("${AnsiColors.BLUE}terraformService.plan returned: $result${AnsiColors.RESET}")
         return if (result.isFailure()) {
             // Terraform設定がない場合はスキップとして成功扱い
@@ -62,7 +62,7 @@ class DeploymentPipeline(
             additionalArgs + "-auto-approve"
         }
         println("${AnsiColors.BLUE}Calling terraformService.apply with args: $applyArgsWithAutoApprove${AnsiColors.RESET}")
-        val result = terraformService.apply(additionalArgs = applyArgsWithAutoApprove, quiet = false)
+        val result = terraformService.apply(additionalArgs = applyArgsWithAutoApprove)
         println("${AnsiColors.BLUE}terraformService.apply returned: $result${AnsiColors.RESET}")
         return if (result.isFailure()) {
             // Terraform設定がない場合はスキップとして成功扱い
