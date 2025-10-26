@@ -49,7 +49,8 @@ class DeployAction(
         val result = executor.executeSteps(steps)
 
         if (result != 0) {
-            println("${AnsiColors.RED}Parent project deployment failed${AnsiColors.RESET}")
+            println("${AnsiColors.RED}Parent project deployment failed with exit code: $result${AnsiColors.RESET}")
+            println("${AnsiColors.YELLOW}Check the logs above for detailed error information${AnsiColors.RESET}")
             return result
         }
 

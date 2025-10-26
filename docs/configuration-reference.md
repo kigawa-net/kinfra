@@ -2,6 +2,13 @@
 
 kinfraの設定ファイルと環境変数のリファレンス。
 
+## 📚 関連ドキュメント
+
+- **[ドキュメントトップ](README.md)** - 全ドキュメントの一覧
+- **[コマンドリファレンス](command-reference.md)** - CLIコマンドの詳細
+- **[APIリファレンス](api-reference.md)** - Web APIの詳細
+- **[SSH設定](ssh-configuration.md)** - SSH接続の設定方法
+
 ## 目次
 
 - [環境変数](#環境変数)
@@ -126,6 +133,7 @@ project:
   terraform:
     version: "1.5.0"
     workingDirectory: "."
+    generateOutputDir: "./generated"  # generateコマンドの出力ディレクトリ
     variableMappings:
       - terraformVariable: "cloudflare_api_token"
         bitwardenSecretKey: "cloudflare-api-token"
@@ -201,6 +209,8 @@ update:
 |-----------|-----|------|----------|
 | version | string | Terraformバージョン | "1.5.0" |
 | workingDirectory | string | 作業ディレクトリ | "." |
+| generateOutputDir | string | generateコマンドの出力ディレクトリ | null (カレントディレクトリ) |
+| variableMappings | array | BitwardenシークレットとTerraform変数のマッピング | [] |
 
 #### Bitwarden設定
 
@@ -215,6 +225,37 @@ update:
 | autoUpdate | boolean | 自動更新有効 | true |
 | checkInterval | number | チェック間隔 (ミリ秒) | 86400000 (24時間) |
 | githubRepo | string | GitHubリポジトリ | "kigawa-net/kinfra" |
+
+### generateOutputDir設定
+
+**説明**: `kinfra current generate variable`コマンドで生成されるファイルの出力ディレクトリを指定します。
+
+**優先順位**:
+1. `--output-dir` / `-o` CLIフラグ (最高優先度)
+2. `kinfra.yaml`の`terraform.generateOutputDir`設定
+3. カレントディレクトリ (フォールバック)
+
+**使用例**:
+
+```yaml
+# kinfra.yaml
+project:
+  terraform:
+    generateOutputDir: "./generated/variables"
+```
+
+```bash
+# CLIフラグで上書き
+kinfra current generate variable --output-dir /tmp/variables
+
+# 設定を使用
+kinfra current generate variable
+
+# カレントディレクトリに出力 (設定なしの場合)
+kinfra current generate variable
+```
+
+**注意**: 相対パスの場合はプロジェクトルートからの相対パスとして解釈されます。
 
 ---
 
