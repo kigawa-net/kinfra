@@ -120,7 +120,8 @@ class TerraformServiceImpl(
             baseArgs.add("-backend-config=$key=$value")
         }
 
-        val args = baseArgs + listOf("-input=false") + planArgs + additionalArgs + varFileArgs
+        // 引数の順序を修正: terraform apply [options] [plan-file]
+        val args = baseArgs + listOf("-input=false") + additionalArgs + varFileArgs + planArgs
 
         return processExecutor.execute(
             args = args.toTypedArray(),

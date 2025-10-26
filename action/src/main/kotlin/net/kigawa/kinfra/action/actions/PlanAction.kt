@@ -31,14 +31,14 @@ class PlanAction(
 
             // plan実行前に自動でinitを実行
             println("${AnsiColors.BLUE}Initializing Terraform...${AnsiColors.RESET}")
-            val initResult = terraformService.init(emptyList(), quiet = false)
+            val initResult = terraformService.init(emptyList())
             if (initResult.isFailure()) {
                 println("${AnsiColors.RED}Terraform init failed for parent project${AnsiColors.RESET}")
                 initResult.message()?.let { println("${AnsiColors.RED}Details: $it${AnsiColors.RESET}") }
                 return initResult.exitCode()
             }
 
-            val result = terraformService.plan(args, quiet = false)
+            val result = terraformService.plan(args)
 
             // エラーが発生した場合、プロジェクト情報を表示
             if (result.isFailure()) {
@@ -107,7 +107,7 @@ class PlanAction(
         }
 
         // 親プロジェクトの結果を返す（設定がない場合は0）
-        return config?.let { terraformService.plan(args, quiet = true).exitCode() } ?: 0
+        return config?.let { terraformService.plan(args).exitCode() } ?: 0
     }
 
     override fun getDescription(): String {
