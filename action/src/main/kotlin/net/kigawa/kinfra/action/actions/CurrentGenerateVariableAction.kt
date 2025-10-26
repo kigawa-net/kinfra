@@ -23,7 +23,7 @@ class CurrentGenerateVariableAction(private val configRepository: ConfigReposito
             val kinfraConfigPath = Paths.get(currentDir, "kinfra.yaml")
             val kinfraParentConfigPath = Paths.get(currentDir, "kinfra-parent.yaml")
 
-            if (configRepository.kinfraConfigExists(kinfraConfigPath.toString())) {
+            val configOutputDir = if (configRepository.kinfraConfigExists(kinfraConfigPath.toString())) {
                 val kinfraConfig = configRepository.loadKinfraConfig(kinfraConfigPath)
                 kinfraConfig?.rootProject?.terraform?.generateOutputDir
             } else if (configRepository.kinfraParentConfigExists(kinfraParentConfigPath.toString())) {
@@ -31,7 +31,9 @@ class CurrentGenerateVariableAction(private val configRepository: ConfigReposito
                 kinfraParentConfig?.terraform?.generateOutputDir
             } else {
                 null
-            } ?: currentDir
+            }
+            
+            configOutputDir ?: currentDir
         }
 
         val withOutputs = options.containsKey("with-outputs")
