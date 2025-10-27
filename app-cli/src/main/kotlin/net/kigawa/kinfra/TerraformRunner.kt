@@ -2,6 +2,7 @@ package net.kigawa.kinfra
 
 import net.kigawa.kinfra.di.DependencyContainer
 import net.kigawa.kinfra.infrastructure.file.SystemHomeDirGetter
+import net.kigawa.kinfra.model.ActionType
 import kotlin.system.exitProcess
 
 class TerraformRunner(private val container: DependencyContainer) {
@@ -22,8 +23,12 @@ class TerraformRunner(private val container: DependencyContainer) {
                 exitProcess(1)
             }
 
-        // Always use the logged-in repository path
-        val workingDir = getLoggedInRepoPath()
+        // Use current directory for 'current' commands, logged-in repository for others
+        val workingDir = if (parsedCommand.actionName == ActionType.CURRENT.actionName) {
+            System.getProperty("user.dir")
+        } else {
+            getLoggedInRepoPath()
+        }
         logger.debug("Using working directory: $workingDir")
         
         // Set system property for working directory
