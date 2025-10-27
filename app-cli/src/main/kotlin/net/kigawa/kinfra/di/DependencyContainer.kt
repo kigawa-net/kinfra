@@ -2,6 +2,8 @@ package net.kigawa.kinfra.di
 
 import net.kigawa.kinfra.TerraformRunner
 import net.kigawa.kinfra.action.actions.*
+import net.kigawa.kinfra.infrastructure.action.actions.NextAction
+import net.kigawa.kinfra.infrastructure.action.actions.SubmoduleAction
 import net.kigawa.kinfra.action.actions.CurrentPlanAction
 import net.kigawa.kinfra.action.bitwarden.BitwardenRepository
 import net.kigawa.kinfra.action.bitwarden.BitwardenSecretManagerRepository
@@ -162,6 +164,8 @@ class DependencyContainer {
             ))
             put(Pair(ActionType.CURRENT.actionName, SubActionType.GENERATE), CurrentGenerateVariableAction(configRepository))
             put(Pair(ActionType.CURRENT.actionName, SubActionType.PLAN), CurrentPlanAction(configRepository))
+            put(Pair(ActionType.NEXT.actionName, null), NextAction(processExecutor, loginRepo, logger))
+            put(Pair(ActionType.SUBMODULE.actionName, null), SubmoduleAction(processExecutor, logger))
 
             // Subcommands
             put(Pair(ActionType.SUB.actionName, SubActionType.LIST), SubListAction(loginRepo))

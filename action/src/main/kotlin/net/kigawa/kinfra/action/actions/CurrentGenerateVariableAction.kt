@@ -84,13 +84,8 @@ class CurrentGenerateVariableAction(private val configRepository: ConfigReposito
             """.trimMargin()
         } + "\n"
 
-        if (variablesFile.exists()) {
-            // Append to existing file
-            variablesFile.appendText("\n$content")
-        } else {
-            // Create new file
-            variablesFile.writeText(content)
-        }
+        // Always overwrite the file
+        variablesFile.writeText(content)
 
         if (variablesToGenerate.size == 1) {
             println("${AnsiColors.GREEN}✓ Generated variable '${variablesToGenerate[0]}' in ${variablesFile.absolutePath}${AnsiColors.RESET}")
@@ -139,13 +134,8 @@ class CurrentGenerateVariableAction(private val configRepository: ConfigReposito
                     """.trimMargin()
                 } + "\n"
 
-                if (outputsFile.exists()) {
-                    // Append to existing file
-                    outputsFile.appendText("\n$outputsContent")
-                } else {
-                    // Create new file
-                    outputsFile.writeText(outputsContent)
-                }
+                // Always overwrite the file
+                outputsFile.writeText(outputsContent)
 
                 if (outputsToGenerate.size == 1) {
                     println("${AnsiColors.GREEN}✓ Generated output '${outputsToGenerate[0]}' in ${outputsFile.absolutePath}${AnsiColors.RESET}")
