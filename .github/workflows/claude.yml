@@ -134,10 +134,10 @@ jobs:
 
           claude_args: '--allowed-tools Bash(gh pr:*) Edit --dangerously-skip-permissions'
 
-       - name: Create Pull Request or Comment
-         id: pr
-         uses: peter-evans/create-pull-request@v6
-         with:
+      - name: Create Pull Request or Comment
+        id: pr
+        uses: peter-evans/create-pull-request@v6
+        with:
            token: ${{ github.token }}
            branch: claude-code-action-${{ github.run_id }}
            base: ${{ github.event.repository.default_branch }}
@@ -154,9 +154,9 @@ jobs:
            commit-message: "Claude Code Result"
            delete-branch: true
 
-       - name: Comment on no changes
-         if: steps.pr.outputs.pull-request-operation == 'none'
-         run: |
+      - name: Comment on no changes
+        if: steps.pr.outputs.pull-request-operation == 'none'
+        run: |
            # TARGET_NUMを安全に設定
            if [ -n "${{ github.event.issue.number }}" ]; then
              TARGET_NUM="${{ github.event.issue.number }}"
