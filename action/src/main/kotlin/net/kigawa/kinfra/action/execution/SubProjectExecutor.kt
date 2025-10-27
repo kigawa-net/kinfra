@@ -35,7 +35,7 @@ class SubProjectExecutor(
      *
      * @return backendConfig。設定が存在しない場合は空のMap
      */
-    fun getBackendConfig(): Map<String, String> {
+    fun getBackendConfig(): Map<String, Any> {
         val parentConfigPath = loginRepo.kinfraBaseConfigPath().toString()
         if (!configRepository.kinfraParentConfigExists(parentConfigPath)) {
             return emptyMap()
@@ -43,6 +43,33 @@ class SubProjectExecutor(
 
         val parentConfig = configRepository.loadKinfraParentConfig(parentConfigPath)
         return parentConfig?.terraform?.backendConfig ?: emptyMap()
+    }
+
+    /**
+     * 指定されたサブプロジェクトのマージされたbackendConfigを取得
+     * 親プロジェクト(kinfra-parent.yaml)とサブプロジェクト(kinfra.yaml)の設定をマージする
+     * サブプロジェクトの設定が親プロジェクトの設定を上書きする
+     *
+     * @param subProject サブプロジェクト
+     * @return マージされたbackendConfig。設定が存在しない場合は空のMap
+     */
+    fun getMergedBackendConfig(subProject: SubProject): Map<String, Any> {
+        // 親プロジェクトのbackendConfigを取得
+        val parentBackendConfig = getBackendConfig()
+        
+        // サブプロジェクトのkinfra.yamlからbackendConfigを取得
+        val subProjectDir = loginRepo.repoPath.resolve(subProject.path).toFile()
+        val subProjectConfigPath = subProjectDir.resolve("kinfra.yaml")
+        
+        val subProjectBackendConfig: Map<String, String> = if (subProjectConfigPath.exists()) {
+            val config = configRepository.loadKinfraConfig(subProjectConfigPath.toPath())
+            config?.rootProject?.terraform?.backendConfig ?: emptyMap()
+        } else {
+            emptyMap()
+        }
+        
+        // 親プロジェクトとサブプロジェクトの設定をマージ（サブプロジェクトが優先）
+        return parentBackendConfig + subProjectBackendConfig
     }
 
     /**
