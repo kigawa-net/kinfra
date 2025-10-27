@@ -1,17 +1,76 @@
 package net.kigawa.kinfra.infrastructure.config
 
 import com.charleskorn.kaml.Yaml
-import com.charleskorn.kaml.YamlConfiguration
-import net.kigawa.kinfra.action.config.ConfigRepository
-import net.kigawa.kinfra.model.conf.FilePaths
-import net.kigawa.kinfra.model.conf.GlobalConfigCompleter
-import net.kigawa.kinfra.model.conf.global.GlobalConfig
-import net.kigawa.kinfra.model.conf.KinfraConfig
-import net.kigawa.kinfra.model.conf.KinfraParentConfig
-import net.kigawa.kinfra.infrastructure.logging.Logger
-
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlin.script.experimental.api.*
+import kotlin.script.experimental.host.toScriptSource
+import kotlin.script.experimental.jvmhost.BasicJvmScriptingHost
+import kotlin.script.experimental.jvmhost.createJvmCompilationConfigurationFromTemplate
+import net.kigawa.kinfra.model.conf.*
 import java.io.File
 import java.nio.file.Path
+
+// Kotlin Script support classes for kinfra.yaml
+abstract class KinfraConfigScript : ScriptWithResult<KinfraConfigScheme>
+
+class KinfraConfigBuilder {
+    var project: ProjectSettingsScheme? = null
+    var rootProject: ProjectSettingsScheme? = null
+    var subProjects: List<SubProjectScheme> = emptyList()
+    var bitwarden: BitwardenSettingsScheme? = null
+    var update: UpdateSettingsScheme? = null
+
+    fun project(block: ProjectBuilder.() -> Unit) {
+        project = ProjectBuilder().apply(block).build()
+    }
+
+    fun rootProject(block: ProjectBuilder.() -> Unit) {
+        rootProject = ProjectBuilder().apply(block).build()
+    }
+
+    fun bitwarden(block: BitwardenBuilder.() -> Unit) {
+        bitwarden = BitwardenBuilder().apply(block).build()
+    }
+
+    fun update(block: UpdateBuilder.() -> Unit) {
+        update = UpdateBuilder().apply(block).build()
+    }
+
+    fun subProjects(vararg projects: SubProjectScheme) {
+        subProjects = projects.toList()
+    }
+
+    fun build(): KinfraConfigScheme {
+        return KinfraConfigScheme(
+            project = project,
+            rootProject = rootProject,
+            subProjects = subProjects,
+            bitwarden = bitwarden,
+            update = update
+        )
+    }
+}
+
+class ProjectBuilder {
+    var projectId: String = ""
+    var name: String = ""
+    var description: String? = null
+    var terraform: TerraformSettingsScheme? = null
+
+    fun terraform(block: TerraformBuilder.() -> Unit) {
+        terraform = TerraformBuilder().apply(block).build()
+    }
+
+    fun build(): ProjectSettingsScheme {
+        return ProjectSettingsScheme(
+            projectId = projectId,
+            name = name,
+            description = description,
+            terraform = terraform
+        )
+    }
+}
 
 /**
  * 設定ファイルを操作する実装です。
@@ -79,7 +138,52 @@ class ConfigRepositoryImpl(
 
     override fun loadKinfraConfig(filePath: Path): KinfraConfig? {
         val file = filePath.toFile()
-        return if (file.exists()) yaml.decodeFromString(KinfraConfigScheme.serializer(), file.readText()) else null
+        if (!file.exists()) return null
+
+        return when (file.extension.lowercase()) {
+            "kts" -> loadKinfraConfigFromKts(file)
+            else -> loadKinfraConfigFromYaml(file)
+        }
+    }
+
+    private fun loadKinfraConfigFromYaml(file: File): KinfraConfig {
+        return yaml.decodeFromString(KinfraConfigScheme.serializer(), file.readText())
+    }
+
+    private fun loadKinfraConfigFromKts(file: File): KinfraConfig {
+        try {
+            val scriptSource = file.toScriptSource()
+            val compilationConfiguration = createJvmCompilationConfigurationFromTemplate<KinfraConfigScript>()
+
+            val evaluationConfiguration = ScriptEvaluationConfiguration {
+                implicitReceivers(KinfraConfigBuilder::class)
+            }
+
+            val result = BasicJvmScriptingHost().eval(scriptSource, compilationConfiguration, evaluationConfiguration)
+
+            return when (result) {
+                is ResultWithDiagnostics.Success -> {
+                    val scriptResult = result.value.returnValue
+                    when (scriptResult) {
+                        is ResultValue.Value -> {
+                            scriptResult.value as KinfraConfigScheme
+                        }
+                        is ResultValue.Error -> {
+                            throw IllegalArgumentException("Script evaluation failed: ${scriptResult.error}")
+                        }
+                        else -> {
+                            throw IllegalArgumentException("Script did not return a configuration object")
+                        }
+                    }
+                }
+                is ResultWithDiagnostics.Failure -> {
+                    val errors = result.reports.joinToString("\n") { it.message }
+                    throw IllegalArgumentException("Failed to evaluate Kotlin script: $errors")
+                }
+            }
+        } catch (e: Exception) {
+            throw IllegalArgumentException("Failed to parse Kotlin script config file", e)
+        }
     }
 
     override fun saveKinfraConfig(config: KinfraConfig, filePath: String) {

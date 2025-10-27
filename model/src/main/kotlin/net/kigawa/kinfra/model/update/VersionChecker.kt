@@ -1,4 +1,4 @@
-package net.kigawa.kinfra.action.update
+package net.kigawa.kinfra.model.update
 
 data class VersionInfo(
     val currentVersion: String,

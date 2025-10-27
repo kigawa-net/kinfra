@@ -1,4 +1,4 @@
-package net.kigawa.kinfra.action.execution
+package net.kigawa.kinfra.model.execution
 
 import net.kigawa.kinfra.model.LoginRepo
 import net.kigawa.kinfra.model.util.AnsiColors
