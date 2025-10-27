@@ -2,9 +2,9 @@ package net.kigawa.kinfra.infrastructure.update
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import net.kigawa.kinfra.action.logging.Logger
-import net.kigawa.kinfra.action.update.VersionChecker
-import net.kigawa.kinfra.action.update.VersionInfo
+import net.kigawa.kinfra.model.logging.Logger
+import net.kigawa.kinfra.model.update.VersionChecker
+import net.kigawa.kinfra.model.update.VersionInfo
 import java.net.HttpURLConnection
 import java.net.URL
 

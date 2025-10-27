@@ -1,25 +1,22 @@
 package net.kigawa.kinfra.action.actions
 
+import net.kigawa.kinfra.model.config.ConfigRepository
+import net.kigawa.kinfra.model.execution.ActionExecutor
+import net.kigawa.kinfra.model.execution.DeploymentPipeline
+import net.kigawa.kinfra.model.execution.ExecutionStep
+import net.kigawa.kinfra.model.execution.SubProjectExecutor
+import net.kigawa.kinfra.model.logging.Logger
 import net.kigawa.kinfra.model.service.TerraformService
-import net.kigawa.kinfra.action.bitwarden.BitwardenRepository
-import net.kigawa.kinfra.action.config.ConfigRepository
-import net.kigawa.kinfra.action.execution.ActionExecutor
-import net.kigawa.kinfra.action.execution.DeploymentPipeline
-import net.kigawa.kinfra.action.execution.ExecutionStep
-import net.kigawa.kinfra.action.execution.SubProjectExecutor
-import net.kigawa.kinfra.action.logging.Logger
+import net.kigawa.kinfra.model.bitwarden.BitwardenRepository
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.LoginRepo
-import net.kigawa.kinfra.model.conf.R2BackendConfig
 import net.kigawa.kinfra.model.util.AnsiColors
-import net.kigawa.kinfra.model.util.isSuccess
-import java.io.File
 
 class DeployAction(
     private val terraformService: TerraformService,
     private val bitwardenRepository: BitwardenRepository,
-    private val configRepository: ConfigRepository,
-    private val loginRepo: LoginRepo,
+    configRepository: ConfigRepository,
+    loginRepo: LoginRepo,
     private val logger: Logger
 ) : Action {
 
@@ -63,8 +60,8 @@ class DeployAction(
             println()
             println("${AnsiColors.BLUE}Found ${subProjects.size} sub-project(s)${AnsiColors.RESET}")
 
-            val subResult = subProjectExecutor.executeInSubProjects(subProjects) { subProject, subProjectDir ->
-                executeSubProjectDeployment(additionalArgs, subProjectDir)
+            val subResult = subProjectExecutor.executeInSubProjects(subProjects) { _, _ ->
+                executeSubProjectDeployment(additionalArgs)
             }
 
             if (subResult != 0) {
@@ -79,7 +76,7 @@ class DeployAction(
         return 0
     }
 
-    private fun executeSubProjectDeployment(additionalArgs: List<String>, subProjectDir: File): Int {
+    private fun executeSubProjectDeployment(additionalArgs: List<String>): Int {
         // Create new instances for sub-project execution
         // Note: TerraformService will use the current working directory
         val subPipeline = DeploymentPipeline(terraformService, bitwardenRepository)
@@ -112,25 +109,4 @@ override fun getDescription(): String {
     }
 
 
-
-    private fun gitPush(): Boolean {
-        return try {
-            val process = ProcessBuilder("git", "push")
-                .redirectOutput(ProcessBuilder.Redirect.PIPE)
-                .redirectError(ProcessBuilder.Redirect.PIPE)
-                .start()
-
-            val exitCode = process.waitFor()
-            if (exitCode != 0) {
-                val error = process.errorStream.bufferedReader().readText()
-                println("${AnsiColors.YELLOW}Git push failed: $error${AnsiColors.RESET}")
-                false
-            } else {
-                true
-            }
-        } catch (e: Exception) {
-            println("${AnsiColors.YELLOW}Git push error: ${e.message}${AnsiColors.RESET}")
-            false
-        }
-    }
 }

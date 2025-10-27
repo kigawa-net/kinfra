@@ -1,8 +1,8 @@
 package net.kigawa.kinfra.infrastructure.update
 
-import net.kigawa.kinfra.action.logging.Logger
-import net.kigawa.kinfra.action.update.AutoUpdater
-import net.kigawa.kinfra.action.update.VersionInfo
+import net.kigawa.kinfra.model.logging.Logger
+import net.kigawa.kinfra.model.update.AutoUpdater
+import net.kigawa.kinfra.model.update.VersionInfo
 import net.kigawa.kinfra.model.conf.FilePaths
 import java.io.File
 import java.io.FileOutputStream

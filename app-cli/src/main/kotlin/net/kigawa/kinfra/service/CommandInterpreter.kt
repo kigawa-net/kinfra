@@ -1,6 +1,6 @@
 package net.kigawa.kinfra.service
 
-import net.kigawa.kinfra.action.logging.Logger
+import net.kigawa.kinfra.model.logging.Logger
 import net.kigawa.kinfra.model.ActionType
 import net.kigawa.kinfra.model.SubActionType
 import net.kigawa.kinfra.model.util.AnsiColors

@@ -1,6 +1,6 @@
 package net.kigawa.kinfra.infrastructure.config
 
-import net.kigawa.kinfra.action.config.EnvFileLoader
+import net.kigawa.kinfra.model.config.EnvFileLoader
 import java.io.File
 
 /**

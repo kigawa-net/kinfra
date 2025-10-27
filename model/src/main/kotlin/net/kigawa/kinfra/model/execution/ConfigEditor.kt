@@ -1,4 +1,4 @@
-package net.kigawa.kinfra.action.execution
+package net.kigawa.kinfra.model.execution
 
 import net.kigawa.kinfra.model.LoginRepo
 import net.kigawa.kinfra.model.conf.KinfraParentConfig
@@ -6,6 +6,7 @@ import net.kigawa.kinfra.model.conf.KinfraParentConfigData
 import net.kigawa.kinfra.model.sub.SubProject
 import net.kigawa.kinfra.model.util.AnsiColors
 import java.io.File
+import java.nio.file.Path
 import kotlin.io.path.exists
 import kotlin.io.path.absolute
 
@@ -77,7 +78,7 @@ val configPath = ConfigUtils.getProjectConfigPath(loginRepo) ?: return 1
         )
     }
     
-    private fun createSampleParentConfig(path: java.nio.file.Path) {
+    private fun createSampleParentConfig(path: Path) {
         println(
             "${AnsiColors.YELLOW}Parent configuration file not found. Creating from sample...${AnsiColors.RESET}"
         )

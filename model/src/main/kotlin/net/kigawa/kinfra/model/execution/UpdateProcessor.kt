@@ -1,10 +1,10 @@
-package net.kigawa.kinfra.action.execution
+package net.kigawa.kinfra.model.execution
 
 import net.kigawa.kinfra.model.GitHelper
-import net.kigawa.kinfra.action.logging.Logger
-import net.kigawa.kinfra.action.update.AutoUpdater
-import net.kigawa.kinfra.action.update.VersionChecker
-import net.kigawa.kinfra.action.update.VersionInfo
+import net.kigawa.kinfra.model.logging.Logger
+import net.kigawa.kinfra.model.update.AutoUpdater
+import net.kigawa.kinfra.model.update.VersionChecker
+import net.kigawa.kinfra.model.update.VersionInfo
 import net.kigawa.kinfra.model.LoginRepo
 import net.kigawa.kinfra.model.util.AnsiColors
 import net.kigawa.kinfra.model.util.VersionUtil

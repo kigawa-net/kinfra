@@ -6,9 +6,8 @@ import net.kigawa.kinfra.model.conf.TerraformConfig
 import net.kigawa.kinfra.model.err.ActionException
 import net.kigawa.kinfra.model.err.Res
 import net.kigawa.kinfra.model.service.TerraformService
-import net.kigawa.kinfra.action.bitwarden.BitwardenSecretManagerRepository
-import net.kigawa.kinfra.action.bitwarden.BitwardenRepository
-import net.kigawa.kinfra.action.config.ConfigRepository
+import net.kigawa.kinfra.model.config.ConfigRepository
+import net.kigawa.kinfra.model.bitwarden.BitwardenSecretManagerRepository
 import java.io.File
 import java.nio.file.Paths
 
@@ -20,7 +19,6 @@ class TerraformServiceImpl(
     private val terraformRepository: TerraformRepository,
     private val configRepository: ConfigRepository,
     private val bitwardenSecretManagerRepository: BitwardenSecretManagerRepository? = null,
-    private val bitwardenRepository: BitwardenRepository? = null,
 ): TerraformService {
 
     /**
@@ -238,57 +236,6 @@ class TerraformServiceImpl(
     }
 
     /**
-     * Bitwardenシークレットからbackend.tfvarsファイルを生成
-     */
-    private fun generateBackendTfvarsFromBitwarden(): String? {
-        println("DEBUG: Attempting to generate backend.tfvars from Bitwarden")
-        if (bitwardenRepository == null) {
-            println("DEBUG: BitwardenRepository is null")
-            return null
-        }
-
-        // BitwardenからR2バックエンド設定を取得
-        if (!bitwardenRepository.isLoggedIn()) {
-            println("DEBUG: Not logged in to Bitwarden")
-            return null
-        }
-
-        val session = bitwardenRepository.getSessionFromFile()
-            ?: bitwardenRepository.getSessionFromEnv()
-        if (session == null) {
-            println("DEBUG: No Bitwarden session found")
-            return null
-        }
-
-        val item = bitwardenRepository.getItem("Cloudflare R2 Terraform Backend", session)
-        if (item == null) {
-            println("DEBUG: Bitwarden item 'Cloudflare R2 Terraform Backend' not found")
-            return null
-        }
-
-        val accessKey = item.getFieldValue("access_key")
-        val secretKey = item.getFieldValue("secret_key")
-        val accountId = item.getFieldValue("account_id")
-        val bucketName = item.getFieldValue("bucket_name") ?: "kigawa-infra-state"
-
-        if (accessKey == null || secretKey == null || accountId == null) {
-            println("DEBUG: Missing required fields in Bitwarden item: access_key=$accessKey, secret_key=${secretKey != null}, account_id=$accountId")
-            return null
-        }
-
-        println("DEBUG: Successfully retrieved backend config from Bitwarden")
-        val config = net.kigawa.kinfra.model.conf.R2BackendConfig(
-            bucket = bucketName,
-            key = "terraform.tfstate",
-            endpoint = "https://$accountId.r2.cloudflarestorage.com",
-            accessKey = accessKey,
-            secretKey = secretKey
-        )
-
-        return config.toTfvarsContent()
-    }
-
-    /**
      * .tfvarsファイルを保存
      */
     private fun saveTfvarsFile(config: TerraformConfig, content: String): File {
@@ -297,13 +244,4 @@ class TerraformServiceImpl(
         return tfvarsFile
     }
 
-    /**
-     * backend.tfvarsファイルを保存
-     */
-    private fun saveBackendTfvarsFile(config: TerraformConfig, content: String): File {
-        val backendTfvarsFile = File(config.workingDirectory, "backend.tfvars")
-        backendTfvarsFile.writeText(content)
-        println("DEBUG: Created backend.tfvars file at ${backendTfvarsFile.absolutePath}")
-        return backendTfvarsFile
-    }
 }

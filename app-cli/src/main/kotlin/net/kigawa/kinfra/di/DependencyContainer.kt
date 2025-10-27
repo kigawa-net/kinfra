@@ -5,15 +5,13 @@ import net.kigawa.kinfra.action.actions.*
 import net.kigawa.kinfra.infrastructure.action.actions.NextAction
 import net.kigawa.kinfra.infrastructure.action.actions.SubmoduleAction
 import net.kigawa.kinfra.action.actions.CurrentPlanAction
-import net.kigawa.kinfra.action.bitwarden.BitwardenRepository
-import net.kigawa.kinfra.action.bitwarden.BitwardenSecretManagerRepository
-import net.kigawa.kinfra.action.config.ConfigRepository
-import net.kigawa.kinfra.action.config.EnvFileLoader
-import net.kigawa.kinfra.action.execution.ActionExecutor
-import net.kigawa.kinfra.action.execution.SubProjectExecutor
-import net.kigawa.kinfra.action.logging.Logger
-import net.kigawa.kinfra.action.update.AutoUpdater
-import net.kigawa.kinfra.action.update.VersionChecker
+import net.kigawa.kinfra.model.config.ConfigRepository
+import net.kigawa.kinfra.model.config.EnvFileLoader
+import net.kigawa.kinfra.model.execution.ActionExecutor
+import net.kigawa.kinfra.model.execution.SubProjectExecutor
+import net.kigawa.kinfra.model.logging.Logger
+import net.kigawa.kinfra.model.update.AutoUpdater
+import net.kigawa.kinfra.model.update.VersionChecker
 import net.kigawa.kinfra.actions.LoginAction
 import net.kigawa.kinfra.git.GitHelperImpl
 import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenRepositoryImpl
@@ -37,6 +35,8 @@ import net.kigawa.kinfra.model.ActionType
 import net.kigawa.kinfra.model.GitHelper
 import net.kigawa.kinfra.model.LoginRepo
 import net.kigawa.kinfra.model.SubActionType
+import net.kigawa.kinfra.model.bitwarden.BitwardenRepository
+import net.kigawa.kinfra.model.bitwarden.BitwardenSecretManagerRepository
 import net.kigawa.kinfra.model.conf.FilePaths
 import net.kigawa.kinfra.model.conf.global.GlobalConfig
 import net.kigawa.kinfra.model.conf.HomeDirGetter
@@ -68,7 +68,7 @@ class DependencyContainer {
     val globalConfigCompleter: GlobalConfigCompleter by lazy { GlobalConfigCompleterImpl(filePaths) }
     val configRepository: ConfigRepository by lazy { ConfigRepositoryImpl(filePaths, logger, globalConfigCompleter) }
     val terraformRepository by lazy { TerraformRepositoryImpl(fileRepository, configRepository, loginRepo) }
-    val terraformService: TerraformService by lazy { TerraformServiceImpl(processExecutor, terraformRepository, configRepository, bitwardenSecretManagerRepository, bitwardenRepository) }
+    val terraformService: TerraformService by lazy { TerraformServiceImpl(processExecutor, terraformRepository, configRepository, bitwardenSecretManagerRepository) }
     val bitwardenRepository: BitwardenRepository by lazy { BitwardenRepositoryImpl(processExecutor, filePaths) }
 
     val globalConfig: GlobalConfig by lazy {
@@ -189,11 +189,9 @@ class DependencyContainer {
             if (hasBwsToken && bitwardenSecretManagerRepository != null) {
                 put(Pair(ActionType.DEPLOY_SDK.actionName, null), DeployActionWithSDK(
                     terraformService,
-                    bitwardenSecretManagerRepository!!,
                     configRepository,
                     loginRepo,
-                    logger,
-                    envFileLoader
+                    logger
                 ))
             }
         }

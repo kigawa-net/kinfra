@@ -1,16 +1,14 @@
 package net.kigawa.kinfra.di
 
-import net.kigawa.kinfra.action.bitwarden.BitwardenRepository
-import net.kigawa.kinfra.action.bitwarden.BitwardenSecretManagerRepository
-import net.kigawa.kinfra.action.config.ConfigRepository
-import net.kigawa.kinfra.action.config.EnvFileLoader
+import net.kigawa.kinfra.model.bitwarden.BitwardenRepository
+import net.kigawa.kinfra.model.bitwarden.BitwardenSecretManagerRepository
+import net.kigawa.kinfra.model.config.ConfigRepository
+import net.kigawa.kinfra.model.config.EnvFileLoader
 import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenRepositoryImpl
 import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenSecretManagerRepositoryImpl
 import net.kigawa.kinfra.infrastructure.config.ConfigRepositoryImpl
 import net.kigawa.kinfra.infrastructure.config.EnvFileLoaderImpl
 import net.kigawa.kinfra.infrastructure.config.GlobalConfigCompleterImpl
-import net.kigawa.kinfra.infrastructure.config.GlobalConfigImpl
-import net.kigawa.kinfra.infrastructure.config.GlobalConfigScheme
 import net.kigawa.kinfra.model.conf.GlobalConfigCompleter
 import net.kigawa.kinfra.infrastructure.file.FileRepository
 import net.kigawa.kinfra.infrastructure.file.FileRepositoryImpl
@@ -61,7 +59,7 @@ class DependencyContainer {
     val loginRepo: LoginRepo by lazy { LoginRepoImpl(filePaths, globalConfig) }
 
     val terraformRepository: TerraformRepository by lazy { TerraformRepositoryImpl(fileRepository, configRepository, loginRepo) }
-    val terraformService: TerraformService by lazy { TerraformServiceImpl(processExecutor, terraformRepository, configRepository, bitwardenSecretManagerRepository, bitwardenRepository) }
+    val terraformService: TerraformService by lazy { TerraformServiceImpl(processExecutor, terraformRepository, configRepository, bitwardenSecretManagerRepository) }
     val bitwardenRepository: BitwardenRepository by lazy { BitwardenRepositoryImpl(processExecutor, filePaths) }
 
     // Bitwarden Secret Manager

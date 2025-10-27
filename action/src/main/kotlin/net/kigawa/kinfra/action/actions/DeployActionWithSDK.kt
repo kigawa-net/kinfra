@@ -1,20 +1,15 @@
 package net.kigawa.kinfra.action.actions
 
 import net.kigawa.kinfra.model.service.TerraformService
-import net.kigawa.kinfra.action.bitwarden.BitwardenSecretManagerRepository
-import net.kigawa.kinfra.action.config.ConfigRepository
-import net.kigawa.kinfra.action.config.EnvFileLoader
-import net.kigawa.kinfra.action.execution.SubProjectExecutor
+import net.kigawa.kinfra.model.config.ConfigRepository
+import net.kigawa.kinfra.model.execution.SubProjectExecutor
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.LoginRepo
-import net.kigawa.kinfra.model.conf.R2BackendConfig
 import net.kigawa.kinfra.model.util.AnsiColors
 import net.kigawa.kinfra.model.util.exitCode
 import net.kigawa.kinfra.model.util.isFailure
-import net.kigawa.kinfra.model.util.isSuccess
 import net.kigawa.kinfra.model.util.message
-import net.kigawa.kinfra.action.logging.Logger
-import net.kigawa.kinfra.model.BitwardenSecret
+import net.kigawa.kinfra.model.logging.Logger
 import java.io.File
 
 /**
@@ -22,11 +17,9 @@ import java.io.File
  */
 class DeployActionWithSDK(
     private val terraformService: TerraformService,
-    private val secretManagerRepository: BitwardenSecretManagerRepository,
-    private val configRepository: ConfigRepository,
-    private val loginRepo: LoginRepo,
-    private val logger: Logger,
-    private val envFileLoader: EnvFileLoader
+    configRepository: ConfigRepository,
+    loginRepo: LoginRepo,
+    private val logger: Logger
 ): Action {
 
     private val subProjectExecutor = SubProjectExecutor(configRepository, loginRepo)
@@ -101,7 +94,7 @@ class DeployActionWithSDK(
             println()
             println("${AnsiColors.BLUE}Found ${subProjects.size} sub-project(s)${AnsiColors.RESET}")
 
-            val subResult = subProjectExecutor.executeInSubProjects(subProjects) { subProject, subProjectDir ->
+            val subResult = subProjectExecutor.executeInSubProjects(subProjects) { _, subProjectDir ->
                 executeSubProjectDeployment(additionalArgs, subProjectDir)
             }
 

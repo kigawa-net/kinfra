@@ -1,11 +1,10 @@
 package net.kigawa.kinfra.infrastructure.bitwarden
 
-import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
-import net.kigawa.kinfra.action.bitwarden.BitwardenRepository
 import net.kigawa.kinfra.infrastructure.process.ProcessExecutor
 import net.kigawa.kinfra.model.BitwardenItem
+import net.kigawa.kinfra.model.bitwarden.BitwardenRepository
 import net.kigawa.kinfra.model.conf.FilePaths
 import java.io.File
 
@@ -13,8 +12,6 @@ class BitwardenRepositoryImpl(
     private val processExecutor: ProcessExecutor,
     val filePaths: FilePaths
 ) : BitwardenRepository {
-
-    private val gson = Gson()
 
     override fun isInstalled(): Boolean {
         val result = processExecutor.executeWithOutput(
@@ -36,7 +33,7 @@ class BitwardenRepositoryImpl(
             // "locked" or "unlocked" means logged in
             // "unauthenticated" means not logged in
             statusValue == "locked" || statusValue == "unlocked"
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             false
         }
     }
@@ -63,7 +60,7 @@ class BitwardenRepositoryImpl(
 
         return try {
             parseItem(JsonParser.parseString(result.output).asJsonObject)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }
@@ -81,11 +78,11 @@ class BitwardenRepositoryImpl(
             items.mapNotNull { element ->
                 try {
                     parseItem(element.asJsonObject)
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     null
                 }
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             emptyList()
         }
     }
@@ -98,7 +95,7 @@ class BitwardenRepositoryImpl(
             } else {
                 null
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }

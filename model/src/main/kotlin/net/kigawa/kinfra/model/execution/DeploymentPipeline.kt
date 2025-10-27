@@ -1,12 +1,11 @@
-package net.kigawa.kinfra.action.execution
+package net.kigawa.kinfra.model.execution
 
 import net.kigawa.kinfra.model.service.TerraformService
-import net.kigawa.kinfra.action.bitwarden.BitwardenRepository
+import net.kigawa.kinfra.model.bitwarden.BitwardenRepository
 import net.kigawa.kinfra.model.BitwardenItem
 import net.kigawa.kinfra.model.conf.R2BackendConfig
 import net.kigawa.kinfra.model.util.AnsiColors
 import net.kigawa.kinfra.model.util.exitCode
-import net.kigawa.kinfra.model.util.isSuccess
 import net.kigawa.kinfra.model.util.isFailure
 import net.kigawa.kinfra.model.util.message
 import java.io.File
@@ -183,7 +182,7 @@ private class BackendSetup(private val bitwardenRepository: BitwardenRepository)
         }
 
         // Create backend config
-        val config = net.kigawa.kinfra.model.conf.R2BackendConfig(
+        val config = R2BackendConfig(
             bucket = bucketName,
             key = "terraform.tfstate",
             endpoint = "https://$accountId.r2.cloudflarestorage.com",
