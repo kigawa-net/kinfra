@@ -57,7 +57,9 @@
 | todo-maintainer    | タスク管理を自動化するエージェント |
 
 ## 変更履歴
+- 2025-10-26: PR #167 を作成。ログ出力、ドキュメント、アクション処理の改善を実装。
 - 2025-10-26: NextActionを修正。`kinfra next` コマンドでローカル変更がある場合に自動stashしてpullし、変更があったサブプロジェクトのみを有効化。stash復元時にコンフリクトが発生した場合でも処理を続行。divergent branchesがある場合に--no-rebaseオプションでpullする機能を追加。
+- 2025-10-26: current commandのドキュメントを作成。`kinfra current generate variable`と`kinfra current plan`の詳細な使用方法を追加。
 - 2025-10-26: PR #164 を作成。generateOutputDir設定のドキュメントを追加。
 - 2025-10-26: PR #159 を更新。Claudeワークフローをcreate-pull-requestアクションで簡素化。
 - 2025-10-26: PR #159 を作成。Claudeワークフロー修正とプロジェクトドキュメント更新を実装。

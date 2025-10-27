@@ -20,6 +20,9 @@ kinfra CLIの全コマンドリファレンス。
   - [sub list](#sub-list)
   - [sub add](#sub-add)
   - [sub plan](#sub-plan)
+- [Currentコマンド](#currentコマンド)
+  - [current generate variable](#current-generate-variable)
+  - [current plan](#current-plan)
 - [Terraformコマンド](#terraformコマンド)
   - [init](#init)
   - [plan](#plan)
@@ -146,6 +149,89 @@ kinfra sub plan <sub-project-name>
 **例**:
 ```bash
 kinfra sub plan my-project
+```
+
+---
+
+## Currentコマンド
+
+### current generate variable
+
+現在のディレクトリにTerraform変数を生成します。
+
+```bash
+kinfra current generate variable [options] [variable_name]
+```
+
+**オプション**:
+- `--output-dir, -o <dir>`: 出力ディレクトリを指定
+- `--with-outputs`: 対応するoutputs.tfも生成
+
+**動作**:
+- kinfra.yamlまたはkinfra-parent.yamlからvariableMappingsを読み込み
+- 引数なし: 全ての変数を生成
+- 引数あり: 指定した変数のみを生成
+- 出力ディレクトリの優先順位: CLIオプション > kinfra.yaml設定 > カレントディレクトリ
+
+**設定例 (kinfra.yaml)**:
+```yaml
+project:
+  terraform:
+    generateOutputDir: /path/to/output
+    variableMappings:
+      - terraformVariable: "my_var"
+        bitwardenSecret: "my_secret"
+```
+
+**使用例**:
+```bash
+# 全ての変数を生成
+kinfra current generate variable
+
+# 特定の変数を生成
+kinfra current generate variable my_var
+
+# 出力と共に生成
+kinfra current generate variable --with-outputs
+
+# 特定ディレクトリに出力
+kinfra current generate variable --output-dir /tmp
+```
+
+---
+
+### current plan
+
+現在のディレクトリでTerraform planを実行します。
+
+```bash
+kinfra current plan [terraform_options]
+```
+
+**動作**:
+- カレントディレクトリにTerraformファイルがあるか確認
+- kinfra.yamlまたはkinfra-parent.yamlからbackendConfigを読み込み
+- 自動でterraform initを実行
+- backendConfigをterraformコマンドに適用
+- terraform planを実行
+
+**設定例 (kinfra.yaml)**:
+```yaml
+project:
+  terraform:
+    backendConfig:
+      bucket: "my-terraform-state-bucket"
+      key: "terraform.tfstate"
+      region: "us-east-1"
+```
+
+**使用例**:
+```bash
+# 基本plan
+kinfra current plan
+
+# 追加オプション付き
+kinfra current plan -out=myplan.tfplan
 ```
 
 ---
