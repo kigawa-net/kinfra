@@ -163,7 +163,7 @@ class DependencyContainer {
                 logger
             ))
             put(Pair(ActionType.CURRENT.actionName, SubActionType.GENERATE), CurrentGenerateVariableAction(configRepository))
-            put(Pair(ActionType.CURRENT.actionName, SubActionType.PLAN), CurrentPlanAction(configRepository, NextAction(processExecutor, loginRepo, logger)))
+            put(Pair(ActionType.CURRENT.actionName, SubActionType.PLAN), CurrentPlanAction(configRepository))
             put(Pair(ActionType.NEXT.actionName, null), NextAction(processExecutor, loginRepo, logger))
             put(Pair(ActionType.SUBMODULE.actionName, null), SubmoduleAction(processExecutor, logger))
 
