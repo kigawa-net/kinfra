@@ -7,6 +7,32 @@ import java.io.File
 import java.nio.file.Paths
 
 class CurrentPlanAction(private val configRepository: ConfigRepository) : Action {
+
+    /**
+     * backendConfigをフラットなキーバリューペアに変換
+     */
+    private fun flattenBackendConfig(backendConfig: Map<String, Any>, prefix: String = ""): Map<String, String> {
+        val result = mutableMapOf<String, String>()
+
+        backendConfig.forEach { (key, value) ->
+            val fullKey = if (prefix.isEmpty()) key else "$prefix.$key"
+
+            when (value) {
+                is String -> result[fullKey] = value
+                is Number -> result[fullKey] = value.toString()
+                is Boolean -> result[fullKey] = value.toString()
+                is Map<*, *> -> {
+                    @Suppress("UNCHECKED_CAST")
+                    val nestedMap = value as Map<String, Any>
+                    result.putAll(flattenBackendConfig(nestedMap, fullKey))
+                }
+                else -> result[fullKey] = value.toString()
+            }
+        }
+
+        return result
+    }
+
     override fun execute(args: List<String>): Int {
 
         val currentDir = File(".").absoluteFile
@@ -21,27 +47,38 @@ class CurrentPlanAction(private val configRepository: ConfigRepository) : Action
             return 1
         }
 
-        // kinfra.yamlからbackendConfigを読み込み
+        // kinfra.yamlとkinfra-parent.yamlからbackendConfigを読み込み、マージする
         val kinfraConfigPath = Paths.get(currentDir.absolutePath, "kinfra.yaml")
         val kinfraParentConfigPath = Paths.get(currentDir.absolutePath, "kinfra-parent.yaml")
         println("Config paths: $kinfraConfigPath, $kinfraParentConfigPath")
 
-        val backendConfig = if (configRepository.kinfraConfigExists(kinfraConfigPath.toString())) {
-            println("kinfra.yaml exists")
-            val config = configRepository.loadKinfraConfig(kinfraConfigPath)
-            val bc = config?.rootProject?.terraform?.backendConfig
-            println("Backend config from kinfra.yaml: $bc")
-            bc
-        } else if (configRepository.kinfraParentConfigExists(kinfraParentConfigPath.toString())) {
+        // 親プロジェクトのbackendConfigを取得
+        val parentBackendConfig: Map<String, Any> = if (configRepository.kinfraParentConfigExists(kinfraParentConfigPath.toString())) {
             println("kinfra-parent.yaml exists")
             val config = configRepository.loadKinfraParentConfig(kinfraParentConfigPath.toString())
             val bc = config?.terraform?.backendConfig
             println("Backend config from kinfra-parent.yaml: $bc")
-            bc
+            bc ?: emptyMap()
         } else {
-            println("No config file found")
+            println("kinfra-parent.yaml not found")
             emptyMap()
         }
+
+        // サブプロジェクトのbackendConfigを取得
+        val subProjectBackendConfig: Map<String, Any> = if (configRepository.kinfraConfigExists(kinfraConfigPath.toString())) {
+            println("kinfra.yaml exists")
+            val config = configRepository.loadKinfraConfig(kinfraConfigPath)
+            val bc = config?.rootProject?.terraform?.backendConfig
+            println("Backend config from kinfra.yaml: $bc")
+            bc ?: emptyMap()
+        } else {
+            println("kinfra.yaml not found")
+            emptyMap()
+        }
+
+        // 親プロジェクトとサブプロジェクトの設定をマージ（サブプロジェクトが優先）
+        val backendConfig = parentBackendConfig + subProjectBackendConfig
+        println("Merged backend config: $backendConfig")
 
         // backend.tfvarsファイルが存在するかチェック
         val backendTfvarsFile = File(currentDir, "backend.tfvars")
@@ -54,8 +91,11 @@ class CurrentPlanAction(private val configRepository: ConfigRepository) : Action
         val initArgs = mutableListOf("terraform", "init", "-input=false")
 
         // backendConfigから-backend-configオプションを追加
-        backendConfig?.forEach { (key, value) ->
-            initArgs.add("-backend-config=$key=$value")
+        backendConfig?.let { config ->
+            val flattenedConfig = flattenBackendConfig(config)
+            flattenedConfig.forEach { (key, value) ->
+                initArgs.add("-backend-config=$key=$value")
+            }
         }
 
         // backend.tfvarsが存在する場合も追加
@@ -80,8 +120,11 @@ class CurrentPlanAction(private val configRepository: ConfigRepository) : Action
         val planArgs = mutableListOf("terraform", "plan", "-input=false")
 
         // backendConfigから-backend-configオプションを追加
-        backendConfig?.forEach { (key, value) ->
-            planArgs.add("-backend-config=$key=$value")
+        backendConfig?.let { config ->
+            val flattenedConfig = flattenBackendConfig(config)
+            flattenedConfig.forEach { (key, value) ->
+                planArgs.add("-backend-config=$key=$value")
+            }
         }
 
         // backend.tfvarsが存在する場合も追加
