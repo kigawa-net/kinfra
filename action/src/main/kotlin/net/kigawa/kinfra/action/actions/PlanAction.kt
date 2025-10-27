@@ -60,8 +60,8 @@ class PlanAction(
             val subResult = subProjectExecutor.executeInSubProjects(subProjects) { subProject, subProjectDir ->
                 println("${AnsiColors.BLUE}Planning Terraform changes for sub-project:${AnsiColors.RESET} ${subProject.name} (${subProjectDir.absolutePath})")
 
-                // サブプロジェクトのbackendConfigを読み込み
-                val backendConfig = subProjectExecutor.getBackendConfig()
+                // サブプロジェクトのマージされたbackendConfigを読み込み
+                val backendConfig = subProjectExecutor.getMergedBackendConfig(subProject)
 
                 // サブプロジェクトでもplan前にinitを実行
                 println("${AnsiColors.BLUE}Initializing Terraform for sub-project...${AnsiColors.RESET}")
