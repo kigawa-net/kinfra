@@ -8,6 +8,7 @@ import java.nio.file.Paths
 
 class CurrentPlanAction(private val configRepository: ConfigRepository) : Action {
     override fun execute(args: List<String>): Int {
+
         val currentDir = File(".").absoluteFile
 
         // カレントディレクトリにTerraformファイルがあるかチェック
