@@ -23,6 +23,31 @@ class TerraformServiceImpl(
     private val bitwardenRepository: BitwardenRepository? = null,
 ): TerraformService {
 
+    /**
+     * backendConfigをフラットなキーバリューペアに変換
+     */
+    private fun flattenBackendConfig(backendConfig: Map<String, Any>, prefix: String = ""): Map<String, String> {
+        val result = mutableMapOf<String, String>()
+
+        backendConfig.forEach { (key, value) ->
+            val fullKey = if (prefix.isEmpty()) key else "$prefix.$key"
+
+            when (value) {
+                is String -> result[fullKey] = value
+                is Number -> result[fullKey] = value.toString()
+                is Boolean -> result[fullKey] = value.toString()
+                is Map<*, *> -> {
+                    @Suppress("UNCHECKED_CAST")
+                    val nestedMap = value as Map<String, Any>
+                    result.putAll(flattenBackendConfig(nestedMap, fullKey))
+                }
+                else -> result[fullKey] = value.toString()
+            }
+        }
+
+        return result
+    }
+
     override fun init(additionalArgs: List<String>, quiet: Boolean): Res<Int, ActionException> {
         val config = terraformRepository.getTerraformConfig()
         if (config == null) {
@@ -32,7 +57,8 @@ class TerraformServiceImpl(
         val args = mutableListOf("terraform", "init", "-input=false")
 
         // backendConfigから-backend-configオプションを追加
-        config.backendConfig.forEach { (key, value) ->
+        val flattenedConfig = flattenBackendConfig(config.backendConfig)
+        flattenedConfig.forEach { (key, value) ->
             args.add("-backend-config=$key=$value")
         }
 
@@ -116,7 +142,8 @@ class TerraformServiceImpl(
         val planArgs = if (planFile != null) listOf(planFile) else emptyList()
 
         // backendConfigから-backend-configオプションで追加
-        config.backendConfig.forEach { (key, value) ->
+        val flattenedConfig = flattenBackendConfig(config.backendConfig)
+        flattenedConfig.forEach { (key, value) ->
             baseArgs.add("-backend-config=$key=$value")
         }
 

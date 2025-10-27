@@ -9,7 +9,7 @@ data class TerraformConfig(
     val workingDirectory: File,
     val varFile: File?,
     val sshConfigPath: String,
-    val backendConfig: Map<String, String> = emptyMap()
+    val backendConfig: Map<String, Any> = emptyMap()
 ) {
     fun hasVarFile(): Boolean = varFile?.exists() == true
 }
