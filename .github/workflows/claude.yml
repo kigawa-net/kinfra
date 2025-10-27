@@ -132,7 +132,7 @@ jobs:
             - **PR説明**: ${{ github.event.pull_request.body }}
             - **コメント内容**: ${{ github.event.comment.body }}
 
-          claude_args: '--allowed-tools Bash(gh pr:*) Edit --dangerously-skip-permissions'
+           claude_args: '--allowed-tools Bash(gh pr:*) Edit --dangerously-skip-permissions'
 
        - name: Create Pull Request or Comment
          id: pr
