@@ -57,6 +57,7 @@
 | todo-maintainer    | タスク管理を自動化するエージェント |
 
 ## 変更履歴
+- 2025-10-29: コンパイルエラーを修正。SubProjectExecutor.ktのsubProjectBackendConfigの型をMap<String, String>からMap<String, Any>に変更。KinfraConfigScheme.ktにkotlinx.serialization.Contextualのインポートを追加。
 - 2025-10-28: Issue #169を修正。`kinfra plan`コマンドのバックエンド設定マージ問題を解決。SubProjectExecutorにgetMergedBackendConfigメソッドを追加し、親プロジェクト(kinfra-parent.yaml)とサブプロジェクト(kinfra.yaml)のbackendConfigを正しくマージするように修正。PlanActionとCurrentPlanActionでマージされた設定を使用するように変更。
 - 2025-10-26: Claudeワークフローのclaude_argsパラメータのYAMLインデントを修正。
 - 2025-10-26: PR #167 を作成。ログ出力、ドキュメント、アクション処理の改善を実装。
