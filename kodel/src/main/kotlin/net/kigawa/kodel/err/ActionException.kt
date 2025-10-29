@@ -1,4 +1,4 @@
-package net.kigawa.kinfra.model.err
+package net.kigawa.kodel.err
 
 /**
  * アクション実行時の例外

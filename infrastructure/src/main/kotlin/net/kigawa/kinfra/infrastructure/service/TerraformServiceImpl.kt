@@ -3,8 +3,8 @@ package net.kigawa.kinfra.infrastructure.service
 import net.kigawa.kinfra.infrastructure.process.ProcessExecutor
 import net.kigawa.kinfra.infrastructure.terraform.TerraformRepository
 import net.kigawa.kinfra.model.conf.TerraformConfig
-import net.kigawa.kinfra.model.err.ActionException
-import net.kigawa.kinfra.model.err.Res
+import net.kigawa.kodel.err.ActionException
+import net.kigawa.kodel.err.Res
 import net.kigawa.kinfra.model.service.TerraformService
 import net.kigawa.kinfra.model.config.ConfigRepository
 import net.kigawa.kinfra.model.bitwarden.BitwardenSecretManagerRepository

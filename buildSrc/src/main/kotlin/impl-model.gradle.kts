@@ -1,5 +1,5 @@
-plugins {
-    id("impl-model")
+plugins{
+    id("common")
 }
 
 dependencies {

@@ -9,10 +9,11 @@ repositories {
 val kotlinVersion = "2.2.0"
 fun pluginId(pluginName: String, version: String) = "$pluginName:$pluginName.gradle.plugin:$version"
 fun kotlinPluginId(pluginName: String, version: String = kotlinVersion) =
-    pluginId("org.jetbrains.kotlin.$pluginName", kotlinVersion)
+    pluginId("org.jetbrains.kotlin.$pluginName", version)
 
 fun kotlinId(id: String) = "org.jetbrains.kotlin:$id:$kotlinVersion"
 dependencies {
     implementation(kotlinPluginId("jvm"))
+    implementation(kotlinPluginId("plugin.serialization", version = "2.2.0"))
     implementation(pluginId("com.github.johnrengelman.shadow", "8.1.1"))
 }

@@ -1,4 +1,4 @@
-package net.kigawa.kinfra.model.err
+package net.kigawa.kodel.err
 
 sealed interface Res<T, in E: Throwable> {
     class Ok<T, E: Throwable>(val value: T): Res<T, E>

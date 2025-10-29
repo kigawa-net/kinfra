@@ -1,4 +1,4 @@
-package net.kigawa.kinfra.model.err
+package net.kigawa.kodel.err
 
 class ErrScope<in E: Throwable> {
     fun err(err: E): Nothing = throw err
