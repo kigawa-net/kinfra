@@ -61,7 +61,7 @@ class SubProjectExecutor(
         val subProjectDir = loginRepo.repoPath.resolve(subProject.path).toFile()
         val subProjectConfigPath = subProjectDir.resolve("kinfra.yaml")
         
-        val subProjectBackendConfig: Map<String, String> = if (subProjectConfigPath.exists()) {
+        val subProjectBackendConfig: Map<String, Any> = if (subProjectConfigPath.exists()) {
             val config = configRepository.loadKinfraConfig(subProjectConfigPath.toPath())
             config?.rootProject?.terraform?.backendConfig ?: emptyMap()
         } else {
