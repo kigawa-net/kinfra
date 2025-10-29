@@ -1,4 +1,4 @@
-package net.kigawa.kinfra.action.config
+package net.kigawa.kinfra.model.config
 
 /**
  * .env ファイルを読み込むインターフェース

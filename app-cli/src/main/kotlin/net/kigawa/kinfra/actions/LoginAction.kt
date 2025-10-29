@@ -1,8 +1,8 @@
 package net.kigawa.kinfra.actions
 
 import net.kigawa.kinfra.model.GitHelper
-import net.kigawa.kinfra.action.bitwarden.BitwardenRepository
-import net.kigawa.kinfra.action.config.ConfigRepository
+import net.kigawa.kinfra.model.bitwarden.BitwardenRepository
+import net.kigawa.kinfra.model.config.ConfigRepository
 import net.kigawa.kinfra.infrastructure.config.GlobalConfigScheme
 import net.kigawa.kinfra.infrastructure.config.LoginConfigScheme
 import net.kigawa.kinfra.infrastructure.config.GlobalConfigImpl

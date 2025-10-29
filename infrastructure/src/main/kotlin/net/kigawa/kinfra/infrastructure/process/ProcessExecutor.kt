@@ -1,7 +1,7 @@
 package net.kigawa.kinfra.infrastructure.process
 
-import net.kigawa.kinfra.model.err.ActionException
-import net.kigawa.kinfra.model.err.Res
+import net.kigawa.kodel.err.ActionException
+import net.kigawa.kodel.err.Res
 import java.io.File
 import java.io.IOException
 

@@ -1,4 +1,4 @@
-package net.kigawa.kinfra.action.config
+package net.kigawa.kinfra.model.config
 
 import net.kigawa.kinfra.model.conf.global.GlobalConfig
 import net.kigawa.kinfra.model.conf.KinfraConfig

@@ -1,4 +1,4 @@
-package net.kigawa.kinfra.action.update
+package net.kigawa.kinfra.model.update
 
 interface AutoUpdater {
     fun performUpdate(versionInfo: VersionInfo): Boolean

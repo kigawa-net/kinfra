@@ -1,4 +1,4 @@
-package net.kigawa.kinfra.action.logging
+package net.kigawa.kinfra.model.logging
 
 /**
  * ログレベル

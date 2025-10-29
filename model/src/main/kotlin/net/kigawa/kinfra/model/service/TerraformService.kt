@@ -1,8 +1,8 @@
 package net.kigawa.kinfra.model.service
 
 import net.kigawa.kinfra.model.conf.TerraformConfig
-import net.kigawa.kinfra.model.err.ActionException
-import net.kigawa.kinfra.model.err.Res
+import net.kigawa.kodel.err.ActionException
+import net.kigawa.kodel.err.Res
 
 /**
  * Terraformコマンドの実行を管理するサービス

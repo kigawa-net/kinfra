@@ -2,7 +2,7 @@ package net.kigawa.kinfra.infrastructure.action.actions
 
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.LoginRepo
-import net.kigawa.kinfra.model.err.Res
+import net.kigawa.kodel.err.Res
 import net.kigawa.kinfra.model.util.AnsiColors
 import net.kigawa.kinfra.infrastructure.process.ProcessExecutor
 import net.kigawa.kinfra.infrastructure.logging.Logger
