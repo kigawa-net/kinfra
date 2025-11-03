@@ -1,6 +1,5 @@
-package net.kigawa.kinfra.infrastructure.dep.context
+package net.kigawa.kodel.dep.context
 
-import world.onemc.domain.dep.context.ContextProvider
 import kotlin.reflect.KClass
 
 class ContextBundle(

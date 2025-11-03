@@ -1,4 +1,4 @@
-package world.onemc.domain.dep.context
+package net.kigawa.kodel.dep.context
 
 interface ContextProvider<T: Any> {
     val value: T
