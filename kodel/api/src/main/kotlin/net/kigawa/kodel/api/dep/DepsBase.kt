@@ -11,4 +11,10 @@ abstract class DepsBase<S: DepScope<S>>(
     ): Dep<T, S> {
         return Dep(depProviderFactory, block, depContext.newDepContext())
     }
+
+    suspend context(depContext: DepContext<S>) fun <T: DepScope<T>> childContext(
+        block: suspend (S) -> T,
+    ): DepContext<T> {
+        return DepContext(block(depContext.depScope), depContext.defaultDepProviderFactory)
+    }
 }
