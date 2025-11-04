@@ -1,4 +1,4 @@
-package net.kigawa.kodel.entrypoint
+package net.kigawa.kodel.api.entrypoint
 
 interface Entrypoint<in I, out O> {
     val info: EntrypointInfo

@@ -1,4 +1,4 @@
-package net.kigawa.kodel.err
+package net.kigawa.kodel.api.err
 
 /**
  * アクション実行時の例外

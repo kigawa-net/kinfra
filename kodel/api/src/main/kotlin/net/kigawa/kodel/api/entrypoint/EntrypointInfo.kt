@@ -1,4 +1,4 @@
-package net.kigawa.kodel.entrypoint
+package net.kigawa.kodel.api.entrypoint
 
 class EntrypointInfo (
     val name: EntrypointName,

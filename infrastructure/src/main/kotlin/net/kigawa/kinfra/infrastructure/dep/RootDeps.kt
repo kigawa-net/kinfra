@@ -1,9 +1,9 @@
 package net.kigawa.kinfra.infrastructure.dep
 
-import net.kigawa.kodel.dep.DepContext
-import net.kigawa.kodel.dep.DepsBase
+import net.kigawa.kodel.api.dep.DepContext
+import net.kigawa.kodel.api.dep.DepsBase
 
 class RootDeps(
-    depContext: DepContext<RootDepScope>,
-): DepsBase<RootDepScope>(depContext) {
+    depContext: DepContext<KinfraDepScope>,
+): DepsBase<KinfraDepScope>(depContext) {
 }

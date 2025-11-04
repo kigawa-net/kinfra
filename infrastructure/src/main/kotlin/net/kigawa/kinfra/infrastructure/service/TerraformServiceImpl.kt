@@ -3,8 +3,8 @@ package net.kigawa.kinfra.infrastructure.service
 import net.kigawa.kinfra.infrastructure.process.ProcessExecutor
 import net.kigawa.kinfra.infrastructure.terraform.TerraformRepository
 import net.kigawa.kinfra.model.conf.TerraformConfig
-import net.kigawa.kodel.err.ActionException
-import net.kigawa.kodel.err.Res
+import net.kigawa.kodel.api.err.ActionException
+import net.kigawa.kodel.api.err.Res
 import net.kigawa.kinfra.model.service.TerraformService
 import net.kigawa.kinfra.model.config.ConfigRepository
 import net.kigawa.kinfra.model.bitwarden.BitwardenSecretManagerRepository
@@ -49,7 +49,7 @@ class TerraformServiceImpl(
     override fun init(additionalArgs: List<String>, quiet: Boolean): Res<Int, ActionException> {
         val config = terraformRepository.getTerraformConfig()
         if (config == null) {
-            return Res.Err(ActionException(1, "Terraform configuration not found"))
+            return Res.Err<Int, ActionException>(ActionException(1, "Terraform configuration not found"))
         }
 
         val args = mutableListOf("terraform", "init", "-input=false")
@@ -73,7 +73,7 @@ class TerraformServiceImpl(
     override fun plan(additionalArgs: List<String>, quiet: Boolean, planFile: String?): Res<Int, ActionException> {
         val config = terraformRepository.getTerraformConfig()
         if (config == null) {
-            return Res.Err(ActionException(1, "Terraform configuration not found"))
+            return Res.Err<Int, ActionException>(ActionException(1, "Terraform configuration not found"))
         }
 
         // Bitwardenシークレットから.tfvarsファイルを生成
@@ -116,7 +116,7 @@ class TerraformServiceImpl(
     ): Res<Int, ActionException> {
         val config = terraformRepository.getTerraformConfig()
         if (config == null) {
-            return Res.Err(ActionException(1, "Terraform configuration not found"))
+            return Res.Err<Int, ActionException>(ActionException(1, "Terraform configuration not found"))
         }
 
         // Bitwardenシークレットから.tfvarsファイルを生成
@@ -159,7 +159,7 @@ class TerraformServiceImpl(
     override fun destroy(additionalArgs: List<String>, quiet: Boolean): Res<Int, ActionException> {
         val config = terraformRepository.getTerraformConfig()
         if (config == null) {
-            return Res.Err(ActionException(1, "Terraform configuration not found"))
+            return Res.Err<Int, ActionException>(ActionException(1, "Terraform configuration not found"))
         }
 
         val varFileArgs = if (config.hasVarFile()) {
@@ -195,7 +195,7 @@ class TerraformServiceImpl(
     override fun show(additionalArgs: List<String>, quiet: Boolean): Res<Int, ActionException> {
         val config = terraformRepository.getTerraformConfig()
         if (config == null) {
-            return Res.Err(ActionException(1, "Terraform configuration not found"))
+            return Res.Err<Int, ActionException>(ActionException(1, "Terraform configuration not found"))
         }
 
         val args = arrayOf("terraform", "show") + additionalArgs

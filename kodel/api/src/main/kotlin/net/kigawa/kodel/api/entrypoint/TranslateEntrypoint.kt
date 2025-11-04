@@ -1,4 +1,4 @@
-package net.kigawa.kodel.entrypoint
+package net.kigawa.kodel.api.entrypoint
 
 class TranslateEntrypoint<in I, out O, in J, out P, T: Entrypoint<J, P>>(
     val entrypoint: T, private val translator: ((J) -> P).(I) -> O,

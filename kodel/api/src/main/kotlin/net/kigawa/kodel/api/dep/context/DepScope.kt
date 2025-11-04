@@ -1,6 +1,6 @@
-package net.kigawa.kodel.dep.context
+package net.kigawa.kodel.api.dep.context
 
-import net.kigawa.kodel.dep.DepProviderFactory
+import net.kigawa.kodel.api.dep.DepProviderFactory
 
 interface DepScope<S: DepScope<S>> {
     val depProviderFactory: DepProviderFactory

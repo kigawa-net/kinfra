@@ -1,6 +1,9 @@
-package net.kigawa.kodel.dep.context
+package net.kigawa.kodel.api.dep.context
+
+import kotlin.coroutines.CoroutineContext
 
 interface DepCoroutineScope {
+    val coroutineContext: CoroutineContext
     fun launch(
         onFail: (e: Exception) -> Unit = {
             println("Error in ${DepCoroutineScope::launch}: ${it.message}")

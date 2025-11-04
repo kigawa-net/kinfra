@@ -1,7 +1,7 @@
 package net.kigawa.kinfra.model.util
 
-import net.kigawa.kodel.err.ActionException
-import net.kigawa.kodel.err.Res
+import net.kigawa.kodel.api.err.ActionException
+import net.kigawa.kodel.api.err.Res
 
 /**
  * Resから終了コードを取得するヘルパー関数

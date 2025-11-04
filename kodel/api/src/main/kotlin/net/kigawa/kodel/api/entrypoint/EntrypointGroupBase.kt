@@ -1,4 +1,4 @@
-package net.kigawa.kodel.entrypoint
+package net.kigawa.kodel.api.entrypoint
 
 abstract class EntrypointGroupBase<I, O>: Entrypoint<I, O> {
     private var subEntrypoints = mutableListOf<Entrypoint<I, O>>()

@@ -1,4 +1,4 @@
-package net.kigawa.kodel.entrypoint
+package net.kigawa.kodel.api.entrypoint
 
 data class EntrypointName(
     val raw: String,
