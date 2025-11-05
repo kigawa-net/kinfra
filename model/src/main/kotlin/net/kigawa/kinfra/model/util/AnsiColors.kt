@@ -22,17 +22,26 @@ object AnsiColors {
      * Apply color to text and automatically reset
      */
     fun red(text: String) = "$RED$text$RESET"
+
     fun green(text: String) = "$GREEN$text$RESET"
+
     fun yellow(text: String) = "$YELLOW$text$RESET"
+
     fun blue(text: String) = "$BLUE$text$RESET"
+
     fun cyan(text: String) = "$CYAN$text$RESET"
+
     fun magenta(text: String) = "$MAGENTA$text$RESET"
+
     fun bold(text: String) = "$BOLD$text$RESET"
 
     /**
      * Apply color based on log category
      */
-    fun colorize(text: String, category: LogCategory): String {
+    fun colorize(
+        text: String,
+        category: LogCategory,
+    ): String {
         return when (category) {
             LogCategory.INFO -> cyan(text)
             LogCategory.SUCCESS -> green(text)

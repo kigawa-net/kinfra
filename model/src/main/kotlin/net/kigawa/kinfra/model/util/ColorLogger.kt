@@ -9,7 +9,10 @@ object ColorLogger {
     /**
      * Log a message with the specified category
      */
-    fun log(message: String, category: LogCategory = LogCategory.INFO) {
+    fun log(
+        message: String,
+        category: LogCategory = LogCategory.INFO,
+    ) {
         println(AnsiColors.colorize(message, category))
     }
 

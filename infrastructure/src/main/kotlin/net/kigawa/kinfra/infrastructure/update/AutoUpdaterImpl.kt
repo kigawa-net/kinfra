@@ -1,9 +1,9 @@
 package net.kigawa.kinfra.infrastructure.update
 
+import net.kigawa.kinfra.model.conf.FilePaths
 import net.kigawa.kinfra.model.logging.Logger
 import net.kigawa.kinfra.model.update.AutoUpdater
 import net.kigawa.kinfra.model.update.VersionInfo
-import net.kigawa.kinfra.model.conf.FilePaths
 import java.io.File
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
@@ -13,7 +13,7 @@ import java.nio.file.StandardCopyOption
 
 class AutoUpdaterImpl(
     private val logger: Logger,
-    val filePaths: FilePaths
+    val filePaths: FilePaths,
 ) : AutoUpdater {
     private val appDir: File
         get() = filePaths.baseConfigDir?.toFile() ?: throw IllegalStateException("Config directory not available")

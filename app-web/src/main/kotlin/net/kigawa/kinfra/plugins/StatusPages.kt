@@ -1,9 +1,10 @@
 package net.kigawa.kinfra.plugins
 
-import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.plugins.statuspages.*
-import io.ktor.server.response.*
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.Application
+import io.ktor.server.application.install
+import io.ktor.server.plugins.statuspages.StatusPages
+import io.ktor.server.response.respond
 
 fun Application.configureStatusPages() {
     install(StatusPages) {
@@ -12,8 +13,8 @@ fun Application.configureStatusPages() {
                 HttpStatusCode.InternalServerError,
                 mapOf(
                     "error" to "Internal server error",
-                    "message" to (cause.message ?: "Unknown error")
-                )
+                    "message" to (cause.message ?: "Unknown error"),
+                ),
             )
         }
     }

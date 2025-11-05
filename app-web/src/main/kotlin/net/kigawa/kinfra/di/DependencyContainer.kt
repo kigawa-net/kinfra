@@ -1,15 +1,11 @@
 package net.kigawa.kinfra.di
 
-import net.kigawa.kinfra.model.bitwarden.BitwardenRepository
-import net.kigawa.kinfra.model.bitwarden.BitwardenSecretManagerRepository
-import net.kigawa.kinfra.model.config.ConfigRepository
-import net.kigawa.kinfra.model.config.EnvFileLoader
 import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenRepositoryImpl
 import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenSecretManagerRepositoryImpl
 import net.kigawa.kinfra.infrastructure.config.ConfigRepositoryImpl
 import net.kigawa.kinfra.infrastructure.config.EnvFileLoaderImpl
 import net.kigawa.kinfra.infrastructure.config.GlobalConfigCompleterImpl
-import net.kigawa.kinfra.model.conf.GlobalConfigCompleter
+import net.kigawa.kinfra.infrastructure.config.LoginRepoImpl
 import net.kigawa.kinfra.infrastructure.file.FileRepository
 import net.kigawa.kinfra.infrastructure.file.FileRepositoryImpl
 import net.kigawa.kinfra.infrastructure.file.SystemHomeDirGetter
@@ -21,11 +17,15 @@ import net.kigawa.kinfra.infrastructure.process.ProcessExecutorImpl
 import net.kigawa.kinfra.infrastructure.service.TerraformServiceImpl
 import net.kigawa.kinfra.infrastructure.terraform.TerraformRepository
 import net.kigawa.kinfra.infrastructure.terraform.TerraformRepositoryImpl
-import net.kigawa.kinfra.model.conf.FilePaths
-import net.kigawa.kinfra.model.conf.global.GlobalConfig
-import net.kigawa.kinfra.model.conf.HomeDirGetter
 import net.kigawa.kinfra.model.LoginRepo
-import net.kigawa.kinfra.infrastructure.config.LoginRepoImpl
+import net.kigawa.kinfra.model.bitwarden.BitwardenRepository
+import net.kigawa.kinfra.model.bitwarden.BitwardenSecretManagerRepository
+import net.kigawa.kinfra.model.conf.FilePaths
+import net.kigawa.kinfra.model.conf.GlobalConfigCompleter
+import net.kigawa.kinfra.model.conf.HomeDirGetter
+import net.kigawa.kinfra.model.conf.global.GlobalConfig
+import net.kigawa.kinfra.model.config.ConfigRepository
+import net.kigawa.kinfra.model.config.EnvFileLoader
 import net.kigawa.kinfra.model.service.TerraformService
 
 class DependencyContainer {
@@ -33,16 +33,15 @@ class DependencyContainer {
     val homeDirGetter: HomeDirGetter by lazy { SystemHomeDirGetter() }
     val filePaths: FilePaths by lazy { FilePaths(homeDirGetter) }
 
-
-
     val logger: Logger by lazy {
         val logDir = System.getenv("KINFRA_LOG_DIR") ?: "logs"
         val logLevelStr = System.getenv("KINFRA_LOG_LEVEL") ?: "INFO"
-        val logLevel = try {
-            LogLevel.valueOf(logLevelStr.uppercase())
-        } catch (e: IllegalArgumentException) {
-            LogLevel.INFO
-        }
+        val logLevel =
+            try {
+                LogLevel.valueOf(logLevelStr.uppercase())
+            } catch (e: IllegalArgumentException) {
+                LogLevel.INFO
+            }
         FileLogger(logDir, logLevel)
     }
 
@@ -59,7 +58,9 @@ class DependencyContainer {
     val loginRepo: LoginRepo by lazy { LoginRepoImpl(filePaths, globalConfig) }
 
     val terraformRepository: TerraformRepository by lazy { TerraformRepositoryImpl(fileRepository, configRepository, loginRepo) }
-    val terraformService: TerraformService by lazy { TerraformServiceImpl(processExecutor, terraformRepository, configRepository, bitwardenSecretManagerRepository) }
+    val terraformService: TerraformService by lazy {
+        TerraformServiceImpl(processExecutor, terraformRepository, configRepository, bitwardenSecretManagerRepository)
+    }
     val bitwardenRepository: BitwardenRepository by lazy { BitwardenRepositoryImpl(processExecutor, filePaths) }
 
     // Bitwarden Secret Manager

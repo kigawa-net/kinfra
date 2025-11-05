@@ -1,9 +1,9 @@
 package net.kigawa.kinfra.model.execution
 
-import net.kigawa.kinfra.model.service.TerraformService
-import net.kigawa.kinfra.model.bitwarden.BitwardenRepository
 import net.kigawa.kinfra.model.BitwardenItem
+import net.kigawa.kinfra.model.bitwarden.BitwardenRepository
 import net.kigawa.kinfra.model.conf.R2BackendConfig
+import net.kigawa.kinfra.model.service.TerraformService
 import net.kigawa.kinfra.model.util.AnsiColors
 import net.kigawa.kinfra.model.util.exitCode
 import net.kigawa.kinfra.model.util.isFailure
@@ -15,11 +15,8 @@ import java.io.File
  */
 class DeploymentPipeline(
     private val terraformService: TerraformService,
-    private val bitwardenRepository: BitwardenRepository
+    private val bitwardenRepository: BitwardenRepository,
 ) {
-    
-
-    
     fun initializeTerraform(additionalArgs: List<String>): Int {
         println("${AnsiColors.BLUE}Calling terraformService.init${AnsiColors.RESET}")
         val result = terraformService.init(additionalArgs = additionalArgs)
@@ -36,7 +33,7 @@ class DeploymentPipeline(
             0
         }
     }
-    
+
     fun createExecutionPlan(additionalArgs: List<String>): Int {
         println("${AnsiColors.BLUE}Calling terraformService.plan${AnsiColors.RESET}")
         val result = terraformService.plan(additionalArgs)
@@ -53,13 +50,14 @@ class DeploymentPipeline(
             0
         }
     }
-    
+
     fun applyChanges(additionalArgs: List<String>): Int {
-        val applyArgsWithAutoApprove = if (additionalArgs.contains("-auto-approve")) {
-            additionalArgs
-        } else {
-            additionalArgs + "-auto-approve"
-        }
+        val applyArgsWithAutoApprove =
+            if (additionalArgs.contains("-auto-approve")) {
+                additionalArgs
+            } else {
+                additionalArgs + "-auto-approve"
+            }
         println("${AnsiColors.BLUE}Calling terraformService.apply with args: $applyArgsWithAutoApprove${AnsiColors.RESET}")
         val result = terraformService.apply(additionalArgs = applyArgsWithAutoApprove)
         println("${AnsiColors.BLUE}terraformService.apply returned: $result${AnsiColors.RESET}")
@@ -75,13 +73,14 @@ class DeploymentPipeline(
             0
         }
     }
-    
+
     fun pushToGit(): Int {
         return try {
-            val process = ProcessBuilder("git", "push")
-                .redirectOutput(ProcessBuilder.Redirect.PIPE)
-                .redirectError(ProcessBuilder.Redirect.PIPE)
-                .start()
+            val process =
+                ProcessBuilder("git", "push")
+                    .redirectOutput(ProcessBuilder.Redirect.PIPE)
+                    .redirectError(ProcessBuilder.Redirect.PIPE)
+                    .start()
 
             val exitCode = process.waitFor()
             if (exitCode != 0) {
@@ -102,7 +101,6 @@ class DeploymentPipeline(
  * バックエンドセットアップを担当するクラス
  */
 private class BackendSetup(private val bitwardenRepository: BitwardenRepository) {
-    
     fun setup(): Int {
         println("${AnsiColors.YELLOW}Backend configuration not found or contains placeholders${AnsiColors.RESET}")
         println("${AnsiColors.BLUE}Fetching credentials from Bitwarden...${AnsiColors.RESET}")
@@ -135,12 +133,12 @@ private class BackendSetup(private val bitwardenRepository: BitwardenRepository)
 
         return createBackendFile(item)
     }
-    
+
     private fun getSession(): String? {
         return bitwardenRepository.getSessionFromFile()
             ?: bitwardenRepository.getSessionFromEnv()
     }
-    
+
     private fun showSessionError() {
         println("${AnsiColors.RED}Error:${AnsiColors.RESET} No Bitwarden session found.")
         println()
@@ -153,9 +151,9 @@ private class BackendSetup(private val bitwardenRepository: BitwardenRepository)
         println("${AnsiColors.BLUE}Then run deploy command again:${AnsiColors.RESET}")
         println("  ./gradlew run --args=\"deploy\"")
     }
-    
+
     private fun getItem(session: String) = bitwardenRepository.getItem("Cloudflare R2 Terraform Backend", session)
-    
+
     private fun showItemNotFoundError() {
         println("${AnsiColors.RED}Error:${AnsiColors.RESET} Item 'Cloudflare R2 Terraform Backend' not found in Bitwarden.")
         println()
@@ -168,7 +166,7 @@ private class BackendSetup(private val bitwardenRepository: BitwardenRepository)
         println("   ${AnsiColors.BLUE}export BWS_ACCESS_TOKEN=<your-token>${AnsiColors.RESET}")
         println("   ${AnsiColors.BLUE}./gradlew run --args=\"deploy-sdk\"${AnsiColors.RESET}")
     }
-    
+
     private fun createBackendFile(item: BitwardenItem): Int {
         val accessKey = item.getFieldValue("access_key")
         val secretKey = item.getFieldValue("secret_key")
@@ -182,13 +180,14 @@ private class BackendSetup(private val bitwardenRepository: BitwardenRepository)
         }
 
         // Create backend config
-        val config = R2BackendConfig(
-            bucket = bucketName,
-            key = "terraform.tfstate",
-            endpoint = "https://$accountId.r2.cloudflarestorage.com",
-            accessKey = accessKey,
-            secretKey = secretKey
-        )
+        val config =
+            R2BackendConfig(
+                bucket = bucketName,
+                key = "terraform.tfstate",
+                endpoint = "https://$accountId.r2.cloudflarestorage.com",
+                accessKey = accessKey,
+                secretKey = secretKey,
+            )
 
         // Save to file
         val backendFile = File("backend.tfvars")

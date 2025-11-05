@@ -1,11 +1,11 @@
 package net.kigawa.kinfra.service
 
+import net.kigawa.kinfra.model.LoginRepo
+import net.kigawa.kinfra.model.conf.KinfraConfig
 import net.kigawa.kinfra.model.config.ConfigRepository
 import net.kigawa.kinfra.model.logging.Logger
 import net.kigawa.kinfra.model.update.AutoUpdater
 import net.kigawa.kinfra.model.update.VersionChecker
-import net.kigawa.kinfra.model.LoginRepo
-import net.kigawa.kinfra.model.conf.KinfraConfig
 import net.kigawa.kinfra.model.util.AnsiColors
 import net.kigawa.kinfra.model.util.VersionUtil
 
@@ -14,15 +14,15 @@ class UpdateHandler(
     private val autoUpdater: AutoUpdater,
     private val logger: Logger,
     private val configRepository: ConfigRepository,
-    private val loginRepo: LoginRepo
+    private val loginRepo: LoginRepo,
 ) {
-
     fun checkForUpdates() {
         try {
             // Load config to check if auto-update is enabled
-            val config = runCatching {
-                loadCurrentConfig()
-            }.getOrNull()
+            val config =
+                runCatching {
+                    loadCurrentConfig()
+                }.getOrNull()
 
             // Skip update check if auto-update is disabled
             if (config?.update?.autoUpdate == false) {
@@ -48,7 +48,11 @@ class UpdateHandler(
             autoUpdater.updateLastCheckTime()
 
             if (versionInfo.updateAvailable) {
-                println("\n${AnsiColors.YELLOW}Update available!${AnsiColors.RESET} New version ${versionInfo.latestVersion} is available (current: ${versionInfo.currentVersion})")
+                println(
+                    "\n${AnsiColors.YELLOW}Update available!${AnsiColors.RESET} " +
+                        "New version ${versionInfo.latestVersion} is available " +
+                        "(current: ${versionInfo.currentVersion})",
+                )
                 println("${AnsiColors.BLUE}Downloading and installing update...${AnsiColors.RESET}")
 
                 val updateSuccess = autoUpdater.performUpdate(versionInfo)
@@ -62,18 +66,19 @@ class UpdateHandler(
             // Silently fail - don't interrupt user workflow
         }
     }
-    
+
     private fun loadCurrentConfig(): KinfraConfig? {
         // Try to load from current directory first
-        val currentDirConfig = runCatching {
-            val configPath = configRepository.getProjectConfigFilePath()
-            configRepository.loadKinfraConfig(java.nio.file.Paths.get(configPath))
-        }.getOrNull()
-        
+        val currentDirConfig =
+            runCatching {
+                val configPath = configRepository.getProjectConfigFilePath()
+                configRepository.loadKinfraConfig(java.nio.file.Paths.get(configPath))
+            }.getOrNull()
+
         if (currentDirConfig != null) {
             return currentDirConfig
         }
-        
+
         // Try to load from login repo if available
         return runCatching {
             loginRepo.loadKinfraConfig()

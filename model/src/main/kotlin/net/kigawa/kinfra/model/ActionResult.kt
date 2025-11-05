@@ -5,7 +5,7 @@ package net.kigawa.kinfra.model
  */
 data class ActionResult(
     val exitCode: Int,
-    val message: String? = null
+    val message: String? = null,
 ) {
     val isSuccess: Boolean
         get() = exitCode == 0
@@ -14,6 +14,9 @@ data class ActionResult(
         get() = exitCode != 0
 
     companion object {
-        fun failure(exitCode: Int = 1, message: String? = null) = ActionResult(exitCode, message)
+        fun failure(
+            exitCode: Int = 1,
+            message: String? = null,
+        ) = ActionResult(exitCode, message)
     }
 }

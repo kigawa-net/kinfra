@@ -1,8 +1,8 @@
 package net.kigawa.kinfra.service
 
-import net.kigawa.kinfra.model.logging.Logger
 import net.kigawa.kinfra.model.ActionType
 import net.kigawa.kinfra.model.SubActionType
+import net.kigawa.kinfra.model.logging.Logger
 import net.kigawa.kinfra.model.util.AnsiColors
 import kotlin.system.exitProcess
 
@@ -14,7 +14,6 @@ data class ParsedCommand(
 )
 
 class CommandInterpreter(private val logger: Logger) {
-
     fun parse(args: Array<String>): ParsedCommand? {
         if (args.isEmpty()) {
             logger.warn("No action provided")
@@ -95,25 +94,28 @@ class CommandInterpreter(private val logger: Logger) {
             actionName = actionName,
             subActionType = subActionType,
             actionArgs = actionArgs,
-            showHelp = showHelp
+            showHelp = showHelp,
         )
     }
 
     fun shouldSkipTerraformCheck(actionName: String): Boolean {
-        return actionName == ActionType.HELP.actionName
-            || actionName == ActionType.LOGIN.actionName
-            || actionName == ActionType.HELLO.actionName
-            || actionName == ActionType.SELF_UPDATE.actionName
-            || actionName == ActionType.PUSH.actionName
-            || actionName == ActionType.CONFIG.actionName
-            || actionName == ActionType.CONFIG_EDIT.actionName
-            || actionName == ActionType.SUB.actionName
-            || actionName == ActionType.CURRENT.actionName
+        return actionName == ActionType.HELP.actionName ||
+            actionName == ActionType.LOGIN.actionName ||
+            actionName == ActionType.HELLO.actionName ||
+            actionName == ActionType.SELF_UPDATE.actionName ||
+            actionName == ActionType.PUSH.actionName ||
+            actionName == ActionType.CONFIG.actionName ||
+            actionName == ActionType.CONFIG_EDIT.actionName ||
+            actionName == ActionType.SUB.actionName ||
+            actionName == ActionType.CURRENT.actionName
     }
 
-    fun handleUnknownAction(actionName: String, helpAction: (() -> Unit)? = null) {
+    fun handleUnknownAction(
+        actionName: String,
+        helpAction: (() -> Unit)? = null,
+    ) {
         logger.error("Unknown action: $actionName")
-        
+
         when (actionName) {
             ActionType.DEPLOY_SDK.actionName -> {
                 logger.error("BWS_ACCESS_TOKEN is not set for SDK action: $actionName")
@@ -129,7 +131,7 @@ class CommandInterpreter(private val logger: Logger) {
                 println("  3. Generate an access token from project settings")
                 exitProcess(1)
             }
-            
+
             ActionType.CONFIG_EDIT.actionName -> {
                 logger.error("config-edit action not found: $actionName")
                 println("${AnsiColors.RED}Error:${AnsiColors.RESET} Unknown action: $actionName")
@@ -143,7 +145,7 @@ class CommandInterpreter(private val logger: Logger) {
                 helpAction?.invoke()
                 exitProcess(1)
             }
-            
+
             else -> {
                 println("${AnsiColors.RED}Error:${AnsiColors.RESET} Unknown action: $actionName")
                 helpAction?.invoke()

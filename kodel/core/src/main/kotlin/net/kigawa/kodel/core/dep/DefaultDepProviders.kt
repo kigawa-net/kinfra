@@ -6,18 +6,20 @@ import net.kigawa.kodel.api.dep.context.DepScope
 import net.kigawa.kodel.api.dep.initializer.DepProvider
 
 object DefaultDepProviders {
-    object Singleton: DepProviderFactory {
-        override fun <T, S: DepScope<S>> create(
-            block: suspend context(DepContext<S>) () -> T,
+    object Singleton : DepProviderFactory {
+        override fun <T, S : DepScope<S>> create(
+            block: suspend context(DepContext<S>)
+            () -> T,
             depContext: DepContext<S>,
         ): DepProvider<T, S> {
             return SingletonProvider(block, depContext)
         }
     }
 
-    object Lazy: DepProviderFactory {
-        override fun <T, S: DepScope<S>> create(
-            block: suspend context(DepContext<S>) () -> T,
+    object Lazy : DepProviderFactory {
+        override fun <T, S : DepScope<S>> create(
+            block: suspend context(DepContext<S>)
+            () -> T,
             depContext: DepContext<S>,
         ): DepProvider<T, S> {
             return LazyProvider(block, depContext)

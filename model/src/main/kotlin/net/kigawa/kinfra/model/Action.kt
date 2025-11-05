@@ -4,6 +4,7 @@ import net.kigawa.kinfra.model.util.AnsiColors
 
 interface Action {
     fun execute(args: List<String>): Int
+
     fun getDescription(): String
 
     /**

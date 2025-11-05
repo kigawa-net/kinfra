@@ -27,21 +27,22 @@ data class RepositoryName(val value: String) {
          * @return RepositoryName or null if invalid format
          */
         fun fromGitHubRepo(githubRepo: String): RepositoryName? {
-            val repoName = when {
-                // HTTPS URL: https://github.com/user/repo.git
-                githubRepo.startsWith("https://github.com/") -> {
-                    githubRepo.removePrefix("https://github.com/").removeSuffix(".git")
+            val repoName =
+                when {
+                    // HTTPS URL: https://github.com/user/repo.git
+                    githubRepo.startsWith("https://github.com/") -> {
+                        githubRepo.removePrefix("https://github.com/").removeSuffix(".git")
+                    }
+                    // SSH URL: git@github.com:user/repo.git
+                    githubRepo.startsWith("git@github.com:") -> {
+                        githubRepo.removePrefix("git@github.com:").removeSuffix(".git")
+                    }
+                    // Short format: user/repo
+                    githubRepo.matches(Regex("^[a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+$")) -> {
+                        githubRepo
+                    }
+                    else -> return null
                 }
-                // SSH URL: git@github.com:user/repo.git
-                githubRepo.startsWith("git@github.com:") -> {
-                    githubRepo.removePrefix("git@github.com:").removeSuffix(".git")
-                }
-                // Short format: user/repo
-                githubRepo.matches(Regex("^[a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+$")) -> {
-                    githubRepo
-                }
-                else -> return null
-            }
 
             return RepositoryName(repoName)
         }

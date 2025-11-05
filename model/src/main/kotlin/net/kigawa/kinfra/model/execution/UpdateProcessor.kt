@@ -1,11 +1,11 @@
 package net.kigawa.kinfra.model.execution
 
 import net.kigawa.kinfra.model.GitHelper
+import net.kigawa.kinfra.model.LoginRepo
 import net.kigawa.kinfra.model.logging.Logger
 import net.kigawa.kinfra.model.update.AutoUpdater
 import net.kigawa.kinfra.model.update.VersionChecker
 import net.kigawa.kinfra.model.update.VersionInfo
-import net.kigawa.kinfra.model.LoginRepo
 import net.kigawa.kinfra.model.util.AnsiColors
 import net.kigawa.kinfra.model.util.VersionUtil
 
@@ -17,9 +17,8 @@ class UpdateProcessor(
     private val autoUpdater: AutoUpdater,
     private val gitHelper: GitHelper,
     private val loginRepo: LoginRepo,
-    private val logger: Logger
+    private val logger: Logger,
 ) {
-    
     fun performUpdate(args: List<String>): Int {
         // Pull latest changes from git repository
         if (!gitHelper.pullRepository()) {
@@ -37,7 +36,7 @@ class UpdateProcessor(
         val githubRepo = updateSettings.githubRepo ?: "kigawa-net/kinfra"
 
         val versionInfo = checkForUpdates(githubRepo) ?: return 1
-        
+
         if (!versionInfo.updateAvailable) {
             println("${AnsiColors.GREEN}✓${AnsiColors.RESET} You are already on the latest version: ${versionInfo.currentVersion}")
             return 0
@@ -50,25 +49,27 @@ class UpdateProcessor(
             0
         }
     }
-    
-    private fun getUpdateSettings() = try {
-        loginRepo.loadKinfraConfig()?.update
-    } catch (e: Exception) {
-        println("${AnsiColors.RED}Error:${AnsiColors.RESET} Failed to load configuration: ${e.message}")
-        null
-    }
-    
-    private fun checkForUpdates(githubRepo: String) = try {
-        println("${AnsiColors.BLUE}Checking for updates from${AnsiColors.RESET} $githubRepo...")
-        println()
-        
-        val currentVersion = VersionUtil.getVersion()
-        versionChecker.checkForUpdates(currentVersion, githubRepo)
-    } catch (e: Exception) {
-        println("${AnsiColors.RED}Error:${AnsiColors.RESET} Failed to check for updates: ${e.message}")
-        null
-    }
-    
+
+    private fun getUpdateSettings() =
+        try {
+            loginRepo.loadKinfraConfig()?.update
+        } catch (e: Exception) {
+            println("${AnsiColors.RED}Error:${AnsiColors.RESET} Failed to load configuration: ${e.message}")
+            null
+        }
+
+    private fun checkForUpdates(githubRepo: String) =
+        try {
+            println("${AnsiColors.BLUE}Checking for updates from${AnsiColors.RESET} $githubRepo...")
+            println()
+
+            val currentVersion = VersionUtil.getVersion()
+            versionChecker.checkForUpdates(currentVersion, githubRepo)
+        } catch (e: Exception) {
+            println("${AnsiColors.RED}Error:${AnsiColors.RESET} Failed to check for updates: ${e.message}")
+            null
+        }
+
     private fun shouldUpdate(args: List<String>): Boolean {
         val force = args.contains("--force") || args.contains("-f")
         if (!force) {
@@ -81,8 +82,11 @@ class UpdateProcessor(
         }
         return true
     }
-    
-    private fun executeUpdate(versionInfo: VersionInfo, githubRepo: String): Int {
+
+    private fun executeUpdate(
+        versionInfo: VersionInfo,
+        githubRepo: String,
+    ): Int {
         println("${AnsiColors.YELLOW}Update available!${AnsiColors.RESET}")
         println("  Current version: ${versionInfo.currentVersion}")
         println("  Latest version:  ${versionInfo.latestVersion}")

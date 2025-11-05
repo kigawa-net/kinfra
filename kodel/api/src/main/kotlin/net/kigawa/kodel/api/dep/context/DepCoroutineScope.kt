@@ -4,6 +4,7 @@ import kotlin.coroutines.CoroutineContext
 
 interface DepCoroutineScope {
     val coroutineContext: CoroutineContext
+
     fun launch(
         onFail: (e: Exception) -> Unit = {
             println("Error in ${DepCoroutineScope::launch}: ${it.message}")

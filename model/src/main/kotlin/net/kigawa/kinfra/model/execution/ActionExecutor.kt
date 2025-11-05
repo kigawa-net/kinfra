@@ -7,14 +7,13 @@ import net.kigawa.kinfra.model.util.AnsiColors
  * 共通のアクション実行パターンを提供するクラス
  */
 class ActionExecutor(private val logger: Logger) {
-    
     /**
      * ステップ実行の共通パターン
      */
     fun executeSteps(steps: List<ExecutionStep>): Int {
         steps.forEachIndexed { index, step ->
             println("${AnsiColors.BLUE}Step ${index + 1}/${steps.size}: ${step.description}${AnsiColors.RESET}")
-            
+
             val result = step.execute()
             if (result != 0) {
                 println("${AnsiColors.RED}✗${AnsiColors.RESET} Step '${step.description}' failed with exit code: $result")
@@ -23,32 +22,35 @@ class ActionExecutor(private val logger: Logger) {
             } else {
                 println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Step '${step.description}' completed successfully")
             }
-            
+
             if (index < steps.size - 1) {
                 println()
             }
         }
-        
+
         return 0
     }
-    
+
     /**
      * 条件付き実行
      */
-    fun executeIf(condition: () -> Boolean, action: () -> Int): Int {
+    fun executeIf(
+        condition: () -> Boolean,
+        action: () -> Int,
+    ): Int {
         return if (condition()) {
             action()
         } else {
             0
         }
     }
-    
+
     /**
      * エラーハンドリング付き実行
      */
     fun executeWithErrorHandling(
         operation: String,
-        action: () -> Int
+        action: () -> Int,
     ): Int {
         return try {
             action()
@@ -65,5 +67,5 @@ class ActionExecutor(private val logger: Logger) {
  */
 data class ExecutionStep(
     val description: String,
-    val execute: () -> Int
+    val execute: () -> Int,
 )

@@ -1,16 +1,15 @@
 package net.kigawa.kinfra.action.actions
 
-import net.kigawa.kinfra.model.execution.ConfigEditor
-import net.kigawa.kinfra.model.logging.Logger
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.LoginRepo
+import net.kigawa.kinfra.model.execution.ConfigEditor
+import net.kigawa.kinfra.model.logging.Logger
 import net.kigawa.kinfra.model.util.AnsiColors
 
 class ConfigEditAction(
     private val loginRepo: LoginRepo,
     val logger: Logger,
-): Action {
-    
+) : Action {
     private val configEditor = ConfigEditor(loginRepo)
 
     override fun execute(args: List<String>): Int {
@@ -30,7 +29,8 @@ class ConfigEditAction(
     }
 
     override fun getDescription(): String {
-        return "Edit kinfra configuration files or manage parent project (use --parent to edit parent config, add-subproject to add sub-projects)"
+        return "Edit kinfra configuration files or manage parent project " +
+            "(use --parent to edit parent config, add-subproject to add sub-projects)"
     }
 
     override fun showHelp() {

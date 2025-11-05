@@ -1,12 +1,12 @@
 package net.kigawa.kinfra.action.actions
 
-import net.kigawa.kinfra.model.GitHelper
 import net.kigawa.kinfra.model.Action
+import net.kigawa.kinfra.model.GitHelper
 import net.kigawa.kinfra.model.util.AnsiColors
 
 class HelpAction(
     private val commands: Map<String, Action>,
-    private val gitHelper: GitHelper
+    private val gitHelper: GitHelper,
 ) : Action {
     override fun execute(args: List<String>): Int {
         // Pull latest changes from git repository
@@ -34,5 +34,4 @@ class HelpAction(
     override fun getDescription(): String {
         return "Show this help message"
     }
-
 }

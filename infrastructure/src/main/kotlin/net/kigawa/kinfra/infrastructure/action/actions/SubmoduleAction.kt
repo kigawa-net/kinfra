@@ -1,15 +1,15 @@
 package net.kigawa.kinfra.infrastructure.action.actions
 
-import net.kigawa.kinfra.model.Action
-import net.kigawa.kodel.api.err.Res
-import net.kigawa.kinfra.model.util.AnsiColors
-import net.kigawa.kinfra.infrastructure.process.ProcessExecutor
 import net.kigawa.kinfra.infrastructure.logging.Logger
+import net.kigawa.kinfra.infrastructure.process.ProcessExecutor
+import net.kigawa.kinfra.model.Action
+import net.kigawa.kinfra.model.util.AnsiColors
+import net.kigawa.kodel.api.err.Res
 import java.io.File
 
 class SubmoduleAction(
     private val processExecutor: ProcessExecutor,
-    private val logger: Logger
+    private val logger: Logger,
 ) : Action {
     override fun execute(args: List<String>): Int {
         if (args.isNotEmpty()) {

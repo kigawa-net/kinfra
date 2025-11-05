@@ -5,14 +5,15 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 class EntrypointTest {
-
     @Test
     fun `should create entrypoint with input and output types`() {
         // Given
-        val entrypoint = object : Entrypoint<String, Int> {
-            override val info = EntrypointInfo("test", emptyList(), "Test entrypoint")
-            override fun access(input: String): Int = input.length
-        }
+        val entrypoint =
+            object : Entrypoint<String, Int> {
+                override val info = EntrypointInfo("test", emptyList(), "Test entrypoint")
+
+                override fun access(input: String): Int = input.length
+            }
 
         // When & Then
         assertNotNull(entrypoint.info)
@@ -22,10 +23,12 @@ class EntrypointTest {
     @Test
     fun `should access entrypoint with input`() {
         // Given
-        val entrypoint = object : Entrypoint<String, Int> {
-            override val info = EntrypointInfo("lengthcalc", emptyList(), "Calculates string length")
-            override fun access(input: String): Int = input.length
-        }
+        val entrypoint =
+            object : Entrypoint<String, Int> {
+                override val info = EntrypointInfo("lengthcalc", emptyList(), "Calculates string length")
+
+                override fun access(input: String): Int = input.length
+            }
 
         // When
         val result = entrypoint.access("hello")
@@ -37,10 +40,12 @@ class EntrypointTest {
     @Test
     fun `should have entrypoint info`() {
         // Given
-        val entrypoint = object : Entrypoint<Unit, Unit> {
-            override val info = EntrypointInfo("simple", listOf("alias1"), "A simple entrypoint")
-            override fun access(input: Unit) {}
-        }
+        val entrypoint =
+            object : Entrypoint<Unit, Unit> {
+                override val info = EntrypointInfo("simple", listOf("alias1"), "A simple entrypoint")
+
+                override fun access(input: Unit) {}
+            }
 
         // When
         val info = entrypoint.info

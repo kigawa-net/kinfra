@@ -1,25 +1,38 @@
 package net.kigawa.kinfra.di
 
 import net.kigawa.kinfra.TerraformRunner
-import net.kigawa.kinfra.action.actions.*
-import net.kigawa.kinfra.infrastructure.action.actions.NextAction
-import net.kigawa.kinfra.infrastructure.action.actions.SubmoduleAction
+import net.kigawa.kinfra.action.actions.ApplyAction
+import net.kigawa.kinfra.action.actions.ConfigAction
+import net.kigawa.kinfra.action.actions.ConfigEditAction
+import net.kigawa.kinfra.action.actions.CurrentGenerateVariableAction
 import net.kigawa.kinfra.action.actions.CurrentPlanAction
-import net.kigawa.kinfra.model.config.ConfigRepository
-import net.kigawa.kinfra.model.config.EnvFileLoader
-import net.kigawa.kinfra.model.execution.ActionExecutor
-import net.kigawa.kinfra.model.execution.SubProjectExecutor
-import net.kigawa.kinfra.model.logging.Logger
-import net.kigawa.kinfra.model.update.AutoUpdater
-import net.kigawa.kinfra.model.update.VersionChecker
+import net.kigawa.kinfra.action.actions.DeployAction
+import net.kigawa.kinfra.action.actions.DeployActionWithSDK
+import net.kigawa.kinfra.action.actions.DestroyAction
+import net.kigawa.kinfra.action.actions.FormatAction
+import net.kigawa.kinfra.action.actions.HelloAction
+import net.kigawa.kinfra.action.actions.HelpAction
+import net.kigawa.kinfra.action.actions.InitAction
+import net.kigawa.kinfra.action.actions.PlanAction
+import net.kigawa.kinfra.action.actions.PushAction
+import net.kigawa.kinfra.action.actions.SelfUpdateAction
+import net.kigawa.kinfra.action.actions.StatusAction
+import net.kigawa.kinfra.action.actions.SubAddAction
+import net.kigawa.kinfra.action.actions.SubEditAction
+import net.kigawa.kinfra.action.actions.SubListAction
+import net.kigawa.kinfra.action.actions.SubPlanAction
+import net.kigawa.kinfra.action.actions.SubRemoveAction
+import net.kigawa.kinfra.action.actions.SubShowAction
+import net.kigawa.kinfra.action.actions.ValidateAction
 import net.kigawa.kinfra.actions.LoginAction
 import net.kigawa.kinfra.git.GitHelperImpl
+import net.kigawa.kinfra.infrastructure.action.actions.NextAction
+import net.kigawa.kinfra.infrastructure.action.actions.SubmoduleAction
 import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenRepositoryImpl
 import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenSecretManagerRepositoryImpl
 import net.kigawa.kinfra.infrastructure.config.ConfigRepositoryImpl
-import net.kigawa.kinfra.infrastructure.config.GlobalConfigCompleterImpl
-import net.kigawa.kinfra.model.conf.GlobalConfigCompleter
 import net.kigawa.kinfra.infrastructure.config.EnvFileLoaderImpl
+import net.kigawa.kinfra.infrastructure.config.GlobalConfigCompleterImpl
 import net.kigawa.kinfra.infrastructure.config.LoginRepoImpl
 import net.kigawa.kinfra.infrastructure.file.FileRepositoryImpl
 import net.kigawa.kinfra.infrastructure.file.SystemHomeDirGetter
@@ -38,9 +51,17 @@ import net.kigawa.kinfra.model.SubActionType
 import net.kigawa.kinfra.model.bitwarden.BitwardenRepository
 import net.kigawa.kinfra.model.bitwarden.BitwardenSecretManagerRepository
 import net.kigawa.kinfra.model.conf.FilePaths
-import net.kigawa.kinfra.model.conf.global.GlobalConfig
+import net.kigawa.kinfra.model.conf.GlobalConfigCompleter
 import net.kigawa.kinfra.model.conf.HomeDirGetter
+import net.kigawa.kinfra.model.conf.global.GlobalConfig
+import net.kigawa.kinfra.model.config.ConfigRepository
+import net.kigawa.kinfra.model.config.EnvFileLoader
+import net.kigawa.kinfra.model.execution.ActionExecutor
+import net.kigawa.kinfra.model.execution.SubProjectExecutor
+import net.kigawa.kinfra.model.logging.Logger
 import net.kigawa.kinfra.model.service.TerraformService
+import net.kigawa.kinfra.model.update.AutoUpdater
+import net.kigawa.kinfra.model.update.VersionChecker
 import net.kigawa.kinfra.service.ActionRegistry
 import net.kigawa.kinfra.service.CommandInterpreter
 import net.kigawa.kinfra.service.SystemRequirement
@@ -54,11 +75,12 @@ class DependencyContainer {
     val logger: Logger by lazy {
         val logDir = System.getenv("KINFRA_LOG_DIR") ?: "logs"
         val logLevelStr = System.getenv("KINFRA_LOG_LEVEL") ?: "INFO"
-        val logLevel = try {
-            LogLevel.valueOf(logLevelStr.uppercase())
-        } catch (e: IllegalArgumentException) {
-            LogLevel.INFO
-        }
+        val logLevel =
+            try {
+                LogLevel.valueOf(logLevelStr.uppercase())
+            } catch (e: IllegalArgumentException) {
+                LogLevel.INFO
+            }
         FileLogger(logDir, logLevel)
     }
 
@@ -68,7 +90,9 @@ class DependencyContainer {
     val globalConfigCompleter: GlobalConfigCompleter by lazy { GlobalConfigCompleterImpl(filePaths) }
     val configRepository: ConfigRepository by lazy { ConfigRepositoryImpl(filePaths, logger, globalConfigCompleter) }
     val terraformRepository by lazy { TerraformRepositoryImpl(fileRepository, configRepository, loginRepo) }
-    val terraformService: TerraformService by lazy { TerraformServiceImpl(processExecutor, terraformRepository, configRepository, bitwardenSecretManagerRepository) }
+    val terraformService: TerraformService by lazy {
+        TerraformServiceImpl(processExecutor, terraformRepository, configRepository, bitwardenSecretManagerRepository)
+    }
     val bitwardenRepository: BitwardenRepository by lazy { BitwardenRepositoryImpl(processExecutor, filePaths) }
 
     val globalConfig: GlobalConfig by lazy {
@@ -133,35 +157,44 @@ class DependencyContainer {
             put(Pair(ActionType.FMT.actionName, null), FormatAction(terraformService, gitHelper))
             put(Pair(ActionType.VALIDATE.actionName, null), ValidateAction(terraformService, gitHelper))
             put(Pair(ActionType.STATUS.actionName, null), StatusAction(terraformService, gitHelper))
-            put(Pair(ActionType.LOGIN.actionName, null), LoginAction(
-                bitwardenRepository,
-                configRepository,
-                gitHelper,
-                filePaths,
-                loginRepo
-            ))
+            put(
+                Pair(ActionType.LOGIN.actionName, null),
+                LoginAction(
+                    bitwardenRepository,
+                    configRepository,
+                    gitHelper,
+                    filePaths,
+                    loginRepo,
+                ),
+            )
             put(Pair(ActionType.HELLO.actionName, null), HelloAction(terraformService, logger, gitHelper))
             put(Pair(ActionType.INIT.actionName, null), InitAction(terraformService, gitHelper))
             put(Pair(ActionType.PLAN.actionName, null), PlanAction(terraformService, gitHelper, subProjectExecutor))
             put(Pair(ActionType.APPLY.actionName, null), ApplyAction(terraformService))
             put(Pair(ActionType.DESTROY.actionName, null), DestroyAction(terraformService, gitHelper))
-            put(Pair(ActionType.DEPLOY.actionName, null), DeployAction(
-                terraformService,
-                bitwardenRepository,
-                configRepository,
-                loginRepo,
-                logger
-            ))
+            put(
+                Pair(ActionType.DEPLOY.actionName, null),
+                DeployAction(
+                    terraformService,
+                    bitwardenRepository,
+                    configRepository,
+                    loginRepo,
+                    logger,
+                ),
+            )
             put(Pair(ActionType.PUSH.actionName, null), PushAction(gitHelper))
             put(Pair(ActionType.CONFIG.actionName, null), ConfigAction(loginRepo))
             put(Pair(ActionType.CONFIG_EDIT.actionName, null), ConfigEditAction(loginRepo, logger))
-            put(Pair(ActionType.SELF_UPDATE.actionName, null), SelfUpdateAction(
-                versionChecker,
-                autoUpdater,
-                gitHelper,
-                loginRepo,
-                logger
-            ))
+            put(
+                Pair(ActionType.SELF_UPDATE.actionName, null),
+                SelfUpdateAction(
+                    versionChecker,
+                    autoUpdater,
+                    gitHelper,
+                    loginRepo,
+                    logger,
+                ),
+            )
             put(Pair(ActionType.CURRENT.actionName, SubActionType.GENERATE), CurrentGenerateVariableAction(configRepository))
             put(Pair(ActionType.CURRENT.actionName, SubActionType.PLAN), CurrentPlanAction(configRepository))
             put(Pair(ActionType.NEXT.actionName, null), NextAction(processExecutor, loginRepo, logger))
@@ -170,29 +203,41 @@ class DependencyContainer {
             // Subcommands
             put(Pair(ActionType.SUB.actionName, SubActionType.LIST), SubListAction(loginRepo))
             put(Pair(ActionType.SUB.actionName, SubActionType.ADD), SubAddAction(loginRepo))
-            put(Pair(ActionType.SUB.actionName, SubActionType.SHOW), SubShowAction(
-                configRepository,
-                filePaths,
-                loginRepo
-            ))
-            put(Pair(ActionType.SUB.actionName, SubActionType.EDIT), SubEditAction(
-                loginRepo,
-                logger
-            ))
+            put(
+                Pair(ActionType.SUB.actionName, SubActionType.SHOW),
+                SubShowAction(
+                    configRepository,
+                    filePaths,
+                    loginRepo,
+                ),
+            )
+            put(
+                Pair(ActionType.SUB.actionName, SubActionType.EDIT),
+                SubEditAction(
+                    loginRepo,
+                    logger,
+                ),
+            )
             put(Pair(ActionType.SUB.actionName, SubActionType.REMOVE), SubRemoveAction(loginRepo))
-            put(Pair(ActionType.SUB.actionName, SubActionType.PLAN), SubPlanAction(
-                loginRepo,
-                subProjectExecutor
-            ))
+            put(
+                Pair(ActionType.SUB.actionName, SubActionType.PLAN),
+                SubPlanAction(
+                    loginRepo,
+                    subProjectExecutor,
+                ),
+            )
 
             // SDK-based actions (only if BWS_ACCESS_TOKEN is available)
             if (hasBwsToken && bitwardenSecretManagerRepository != null) {
-                put(Pair(ActionType.DEPLOY_SDK.actionName, null), DeployActionWithSDK(
-                    terraformService,
-                    configRepository,
-                    loginRepo,
-                    logger
-                ))
+                put(
+                    Pair(ActionType.DEPLOY_SDK.actionName, null),
+                    DeployActionWithSDK(
+                        terraformService,
+                        configRepository,
+                        loginRepo,
+                        logger,
+                    ),
+                )
             }
         }
     }
@@ -201,26 +246,30 @@ class DependencyContainer {
     private val actions: Map<Pair<String, SubActionType?>, Action> by lazy {
         actionsWithoutHelp.toMutableMap().apply {
             // Help action needs access to all actions (without help itself)
-            val actionsForHelp = buildMap {
-                ActionType.entries.forEach { actionType ->
-                    if (actionType == ActionType.SUB || actionType == ActionType.CURRENT) {
-                        SubActionType.entries.forEach { subActionType ->
-                            actionsWithoutHelp[Pair(actionType.actionName, subActionType)]?.let {
-                                put("${actionType.actionName} ${subActionType.actionName}", it)
+            val actionsForHelp =
+                buildMap {
+                    ActionType.entries.forEach { actionType ->
+                        if (actionType == ActionType.SUB || actionType == ActionType.CURRENT) {
+                            SubActionType.entries.forEach { subActionType ->
+                                actionsWithoutHelp[Pair(actionType.actionName, subActionType)]?.let {
+                                    put("${actionType.actionName} ${subActionType.actionName}", it)
+                                }
                             }
-                        }
-                    } else if (actionType != ActionType.HELP) {
-                        actionsWithoutHelp[Pair(actionType.actionName, null)]?.let {
-                            put(actionType.actionName, it)
+                        } else if (actionType != ActionType.HELP) {
+                            actionsWithoutHelp[Pair(actionType.actionName, null)]?.let {
+                                put(actionType.actionName, it)
+                            }
                         }
                     }
                 }
-            }
             put(Pair(ActionType.HELP.actionName, null), HelpAction(actionsForHelp, gitHelper))
         }
     }
 
-    fun getAction(actionName: String, subActionType: SubActionType? = null): Action? {
+    fun getAction(
+        actionName: String,
+        subActionType: SubActionType? = null,
+    ): Action? {
         return actions[Pair(actionName, subActionType)]
     }
 

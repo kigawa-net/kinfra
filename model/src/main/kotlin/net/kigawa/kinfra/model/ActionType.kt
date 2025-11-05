@@ -20,7 +20,8 @@ enum class ActionType(val actionName: String) {
     CURRENT("current"),
     SUB("sub"),
     NEXT("next"),
-    SUBMODULE("submodule");
+    SUBMODULE("submodule"),
+    ;
 
     companion object {
         fun fromString(name: String): ActionType? {

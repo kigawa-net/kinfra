@@ -5,11 +5,10 @@ import net.kigawa.kodel.api.dep.DepProviderFactory
 import net.kigawa.kodel.core.dep.DefaultDepProviders
 import net.kigawa.kodel.core.dep.context.NormalDepCoroutineScope
 import kotlin.test.Test
-import kotlin.test.assertNotNull
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 class ActionScopeTest {
-
     @Test
     fun `should create ActionScope with dependencies`() {
         // Given
@@ -18,7 +17,12 @@ class ActionScopeTest {
             override val depCoroutineScope = NormalDepCoroutineScope(SupervisorJob())
 
             override fun plus(depScope: TestActionScope): TestActionScope = this
+
             override fun newDepScope(): TestActionScope = this
+
+            override fun close() {
+                depCoroutineScope.close()
+            }
         }
 
         // When

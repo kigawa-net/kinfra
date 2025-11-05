@@ -7,13 +7,11 @@ import net.kigawa.kodel.core.dep.context.NormalDepCoroutineScope
 
 class KinfraDepScope(
     override val depCoroutineScope: NormalDepCoroutineScope,
-): DepScope<KinfraDepScope> {
+) : DepScope<KinfraDepScope> {
     override val depProviderFactory: DepProviderFactory
         get() = DefaultDepProviders.Lazy
 
-    override fun plus(
-        depScope: KinfraDepScope,
-    ): KinfraDepScope {
+    override fun plus(depScope: KinfraDepScope): KinfraDepScope {
         return KinfraDepScope(depCoroutineScope.plus(depScope.depCoroutineScope))
     }
 

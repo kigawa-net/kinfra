@@ -7,7 +7,7 @@ import kotlin.io.path.Path
 /**
  * システムプロパティを使用したデフォルトのHomeDirGetter実装
  */
-class SystemHomeDirGetter: HomeDirGetter {
+class SystemHomeDirGetter : HomeDirGetter {
     override fun getHomeDir(): Path {
         return System.getProperty("user.home")?.let { Path(it) }
             ?: throw IllegalStateException("user.home system property is not set")

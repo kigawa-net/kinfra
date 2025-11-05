@@ -1,8 +1,8 @@
 package net.kigawa.kinfra.infrastructure.config
 
 import kotlinx.serialization.Serializable
-import net.kigawa.kinfra.model.conf.global.LoginConfig
 import net.kigawa.kinfra.model.conf.RepositoryName
+import net.kigawa.kinfra.model.conf.global.LoginConfig
 import java.nio.file.Path
 
 /**
@@ -11,14 +11,18 @@ import java.nio.file.Path
 data class LoginConfigImpl(
     override val repo: RepositoryName,
     override val enabledProjects: List<String> = emptyList(),
-    override val repoPath: Path
+    override val repoPath: Path,
 ) : LoginConfig {
     companion object {
-        fun from(repo: RepositoryName, repoPath: Path, enabledProjects: List<String> = emptyList()): LoginConfigImpl {
+        fun from(
+            repo: RepositoryName,
+            repoPath: Path,
+            enabledProjects: List<String> = emptyList(),
+        ): LoginConfigImpl {
             return LoginConfigImpl(
                 repo = repo,
                 repoPath = repoPath,
-                enabledProjects = enabledProjects
+                enabledProjects = enabledProjects,
             )
         }
     }
@@ -34,15 +38,16 @@ data class LoginConfigScheme(
     val enabledProjects: List<String> = emptyList(),
 ) {
     fun toLoginConfig(basePath: Path): LoginConfig {
-        val resolvedRepoPath = if (repoPath.isNotBlank()) {
-            Path.of(repoPath)
-        } else {
-            basePath.resolve(repo)
-        }
+        val resolvedRepoPath =
+            if (repoPath.isNotBlank()) {
+                Path.of(repoPath)
+            } else {
+                basePath.resolve(repo)
+            }
         return LoginConfigImpl(
             repo = RepositoryName(repo),
             repoPath = resolvedRepoPath,
-            enabledProjects = enabledProjects
+            enabledProjects = enabledProjects,
         )
     }
 
@@ -51,7 +56,7 @@ data class LoginConfigScheme(
             return LoginConfigScheme(
                 repo = loginConfig.repo.value,
                 repoPath = loginConfig.repoPath.toString(),
-                enabledProjects = loginConfig.enabledProjects
+                enabledProjects = loginConfig.enabledProjects,
             )
         }
     }

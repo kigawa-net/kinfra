@@ -6,5 +6,5 @@ package net.kigawa.kodel.api.err
  */
 class ActionException(
     val exitCode: Int,
-    message: String? = null
+    message: String? = null,
 ) : Exception(message)

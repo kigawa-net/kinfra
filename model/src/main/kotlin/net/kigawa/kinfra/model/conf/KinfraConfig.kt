@@ -3,13 +3,14 @@ package net.kigawa.kinfra.model.conf
 import net.kigawa.kinfra.model.conf.global.LoginConfig
 
 interface KinfraConfig {
-      val rootProject: ProjectInfo
-      val bitwarden: BitwardenSettings?
-      val subProjects: List<ProjectInfo>
-      val update: UpdateSettings?
-      @Deprecated("Login configuration should be in GlobalConfig. This property is kept for backward compatibility.")
-      val login: LoginConfig?
-  }
+    val rootProject: ProjectInfo
+    val bitwarden: BitwardenSettings?
+    val subProjects: List<ProjectInfo>
+    val update: UpdateSettings?
+
+    @Deprecated("Login configuration should be in GlobalConfig. This property is kept for backward compatibility.")
+    val login: LoginConfig?
+}
 
 interface ProjectInfo {
     val projectId: String
@@ -41,15 +42,11 @@ interface TerraformSettings {
 }
 
 interface BitwardenSettings {
-     val projectId: String
- }
+    val projectId: String
+}
 
 interface UpdateSettings {
-     val autoUpdate: Boolean
-     val checkInterval: Long
-     val githubRepo: String
- }
-
-
-
-
+    val autoUpdate: Boolean
+    val checkInterval: Long
+    val githubRepo: String
+}

@@ -1,17 +1,16 @@
 package net.kigawa.kinfra.action.actions
 
-import net.kigawa.kinfra.model.logging.Logger
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.LoginRepo
+import net.kigawa.kinfra.model.logging.Logger
 import net.kigawa.kinfra.model.sub.SubProject
 import net.kigawa.kinfra.model.util.AnsiColors
 import java.io.File
 
 class SubEditAction(
     private val loginRepo: LoginRepo,
-    private val logger: Logger
+    private val logger: Logger,
 ) : Action {
-
     override fun execute(args: List<String>): Int {
         if (args.isEmpty()) {
             showUsage()
@@ -23,10 +22,10 @@ class SubEditAction(
 
         if (parentConfig == null) {
             println(
-                "${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Parent configuration file not found: ${loginRepo.kinfraBaseConfigPath()}"
+                "${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Parent configuration file not found: ${loginRepo.kinfraBaseConfigPath()}",
             )
             println(
-                "${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Run 'kinfra sub add <project-name>' to create a configuration file"
+                "${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Run 'kinfra sub add <project-name>' to create a configuration file",
             )
             return 1
         }
@@ -39,11 +38,12 @@ class SubEditAction(
                 println("  ${AnsiColors.YELLOW}(none)${AnsiColors.RESET}")
             } else {
                 parentConfig.subProjects.forEach { project ->
-                    val displayText = if (project.path == project.name) {
-                        project.name
-                    } else {
-                        "${project.name}:${project.path}"
-                    }
+                    val displayText =
+                        if (project.path == project.name) {
+                            project.name
+                        } else {
+                            "${project.name}:${project.path}"
+                        }
                     println("  - $displayText")
                 }
             }
@@ -55,14 +55,15 @@ class SubEditAction(
 
     private fun editSubProjectConfig(subProject: SubProject): Int {
         // Determine the sub-project config file path
-        val configFile = if (subProject.path.startsWith('/')) {
-            // Absolute path
-            File(subProject.path, "kinfra.yaml")
-        } else {
-            // Relative path - resolve from parent config directory
-            val parentConfigDir = loginRepo.kinfraBaseConfigPath().parent
-            parentConfigDir.resolve(subProject.path).resolve("kinfra.yaml").toFile()
-        }
+        val configFile =
+            if (subProject.path.startsWith('/')) {
+                // Absolute path
+                File(subProject.path, "kinfra.yaml")
+            } else {
+                // Relative path - resolve from parent config directory
+                val parentConfigDir = loginRepo.kinfraBaseConfigPath().parent
+                parentConfigDir.resolve(subProject.path).resolve("kinfra.yaml").toFile()
+            }
 
         // Create sample config if it doesn't exist
         if (!configFile.exists()) {
@@ -72,9 +73,12 @@ class SubEditAction(
         return openInEditor(configFile)
     }
 
-    private fun createSampleSubProjectConfig(configFile: File, subProject: SubProject) {
+    private fun createSampleSubProjectConfig(
+        configFile: File,
+        subProject: SubProject,
+    ) {
         println("${AnsiColors.YELLOW}Configuration file not found. Creating from sample...${AnsiColors.RESET}")
-        
+
         // Ensure parent directory exists
         val parentDir = configFile.parentFile
         if (parentDir != null && !parentDir.exists()) {
@@ -85,7 +89,8 @@ class SubEditAction(
             }
         }
 
-        val sampleContent = """
+        val sampleContent =
+            """
             # Kinfra Sub-Project Configuration: ${subProject.name}
 
             rootProject:
@@ -104,11 +109,11 @@ class SubEditAction(
             #   autoUpdate: true
             #   checkInterval: 86400000
             #   githubRepo: "kigawa-net/kinfra"
-        """.trimIndent()
+            """.trimIndent()
 
         configFile.writeText(sampleContent)
         println(
-            "${AnsiColors.GREEN}✓${AnsiColors.RESET} Created sample configuration at ${configFile.absolutePath}"
+            "${AnsiColors.GREEN}✓${AnsiColors.RESET} Created sample configuration at ${configFile.absolutePath}",
         )
     }
 
@@ -118,7 +123,7 @@ class SubEditAction(
         if (editor == null) {
             println("${AnsiColors.RED}Error:${AnsiColors.RESET} No suitable editor found")
             println(
-                "${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Set EDITOR environment variable to your preferred editor"
+                "${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Set EDITOR environment variable to your preferred editor",
             )
             println("  Example: export EDITOR=nano")
             println()
@@ -131,9 +136,10 @@ class SubEditAction(
         println()
 
         return try {
-            val process = ProcessBuilder(editor, file.absolutePath)
-                .inheritIO()
-                .start()
+            val process =
+                ProcessBuilder(editor, file.absolutePath)
+                    .inheritIO()
+                    .start()
 
             val exitCode = process.waitFor()
 
@@ -148,7 +154,7 @@ class SubEditAction(
         } catch (e: Exception) {
             println("${AnsiColors.RED}Error:${AnsiColors.RESET} Failed to open editor: ${e.message}")
             println(
-                "${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Set EDITOR environment variable to your preferred editor"
+                "${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Set EDITOR environment variable to your preferred editor",
             )
             println("  Example: export EDITOR=nano")
             1
@@ -175,10 +181,11 @@ class SubEditAction(
 
     private fun isCommandAvailable(command: String): Boolean {
         return try {
-            val process = ProcessBuilder("which", command)
-                .redirectOutput(ProcessBuilder.Redirect.PIPE)
-                .redirectError(ProcessBuilder.Redirect.PIPE)
-                .start()
+            val process =
+                ProcessBuilder("which", command)
+                    .redirectOutput(ProcessBuilder.Redirect.PIPE)
+                    .redirectError(ProcessBuilder.Redirect.PIPE)
+                    .start()
 
             val exitCode = process.waitFor()
             exitCode == 0

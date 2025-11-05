@@ -10,20 +10,21 @@ import java.io.File
 
 class BitwardenRepositoryImpl(
     private val processExecutor: ProcessExecutor,
-    val filePaths: FilePaths
+    val filePaths: FilePaths,
 ) : BitwardenRepository {
-
     override fun isInstalled(): Boolean {
-        val result = processExecutor.executeWithOutput(
-            arrayOf("bw", "--version")
-        )
+        val result =
+            processExecutor.executeWithOutput(
+                arrayOf("bw", "--version"),
+            )
         return result.exitCode == 0
     }
 
     override fun isLoggedIn(): Boolean {
-        val result = processExecutor.executeWithOutput(
-            arrayOf("bw", "status")
-        )
+        val result =
+            processExecutor.executeWithOutput(
+                arrayOf("bw", "status"),
+            )
 
         if (result.exitCode != 0) return false
 
@@ -39,9 +40,10 @@ class BitwardenRepositoryImpl(
     }
 
     override fun unlock(password: String): String? {
-        val result = processExecutor.executeWithOutput(
-            arrayOf("bw", "unlock", password, "--raw")
-        )
+        val result =
+            processExecutor.executeWithOutput(
+                arrayOf("bw", "unlock", password, "--raw"),
+            )
 
         return if (result.exitCode == 0 && result.output.isNotBlank()) {
             result.output.trim()
@@ -50,11 +52,15 @@ class BitwardenRepositoryImpl(
         }
     }
 
-    override fun getItem(itemName: String, session: String): BitwardenItem? {
-        val result = processExecutor.executeWithOutput(
-            arrayOf("bw", "get", "item", itemName),
-            environment = mapOf("BW_SESSION" to session)
-        )
+    override fun getItem(
+        itemName: String,
+        session: String,
+    ): BitwardenItem? {
+        val result =
+            processExecutor.executeWithOutput(
+                arrayOf("bw", "get", "item", itemName),
+                environment = mapOf("BW_SESSION" to session),
+            )
 
         if (result.exitCode != 0) return null
 
@@ -66,10 +72,11 @@ class BitwardenRepositoryImpl(
     }
 
     override fun listItems(session: String): List<BitwardenItem> {
-        val result = processExecutor.executeWithOutput(
-            arrayOf("bw", "list", "items"),
-            environment = mapOf("BW_SESSION" to session)
-        )
+        val result =
+            processExecutor.executeWithOutput(
+                arrayOf("bw", "list", "items"),
+                environment = mapOf("BW_SESSION" to session),
+            )
 
         if (result.exitCode != 0) return emptyList()
 

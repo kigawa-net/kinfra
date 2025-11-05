@@ -1,16 +1,15 @@
 package net.kigawa.kinfra.action.actions
 
-import net.kigawa.kinfra.model.execution.SubProjectExecutor
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.LoginRepo
+import net.kigawa.kinfra.model.execution.SubProjectExecutor
 import net.kigawa.kinfra.model.util.AnsiColors
 import java.io.File
 
 class SubPlanAction(
     private val loginRepo: LoginRepo,
-    private val subProjectExecutor: SubProjectExecutor
+    private val subProjectExecutor: SubProjectExecutor,
 ) : Action {
-
     override fun execute(args: List<String>): Int {
         if (args.isEmpty()) {
             showUsage()
@@ -22,10 +21,10 @@ class SubPlanAction(
 
         if (parentConfig == null) {
             println(
-                "${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Parent configuration file not found: ${loginRepo.kinfraBaseConfigPath()}"
+                "${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Parent configuration file not found: ${loginRepo.kinfraBaseConfigPath()}",
             )
             println(
-                "${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Run 'kinfra sub add <project-name>' to create a configuration file"
+                "${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Run 'kinfra sub add <project-name>' to create a configuration file",
             )
             return 1
         }
@@ -38,11 +37,12 @@ class SubPlanAction(
                 println("  ${AnsiColors.YELLOW}(none)${AnsiColors.RESET}")
             } else {
                 parentConfig.subProjects.forEach { project ->
-                    val displayText = if (project.path == project.name) {
-                        project.name
-                    } else {
-                        "${project.name}:${project.path}"
-                    }
+                    val displayText =
+                        if (project.path == project.name) {
+                            project.name
+                        } else {
+                            "${project.name}:${project.path}"
+                        }
                     println("  - $displayText")
                 }
             }
@@ -50,38 +50,42 @@ class SubPlanAction(
         }
 
         // サブプロジェクトでplanを実行
-        val result = subProjectExecutor.executeInSubProjects(listOf(subProject)) { _, subProjectDir ->
-            // plan前にinitを実行
-            println("${AnsiColors.BLUE}Initializing Terraform for sub-project ${subProject.name}...${AnsiColors.RESET}")
-            val initProcess = ProcessBuilder("terraform", "init", "-input=false")
-                .directory(subProjectDir)
-                .redirectOutput(ProcessBuilder.Redirect.INHERIT)
-                .redirectError(ProcessBuilder.Redirect.INHERIT)
-                .start()
+        val result =
+            subProjectExecutor.executeInSubProjects(listOf(subProject)) { _, subProjectDir ->
+                // plan前にinitを実行
+                println("${AnsiColors.BLUE}Initializing Terraform for sub-project ${subProject.name}...${AnsiColors.RESET}")
+                val initProcess =
+                    ProcessBuilder("terraform", "init", "-input=false")
+                        .directory(subProjectDir)
+                        .redirectOutput(ProcessBuilder.Redirect.INHERIT)
+                        .redirectError(ProcessBuilder.Redirect.INHERIT)
+                        .start()
 
-            val initExitCode = initProcess.waitFor()
-            if (initExitCode != 0) {
-                println("${AnsiColors.RED}Terraform init failed for sub-project ${subProject.name}${AnsiColors.RESET}")
-                return@executeInSubProjects initExitCode
+                val initExitCode = initProcess.waitFor()
+                if (initExitCode != 0) {
+                    println("${AnsiColors.RED}Terraform init failed for sub-project ${subProject.name}${AnsiColors.RESET}")
+                    return@executeInSubProjects initExitCode
+                }
+
+                // backend.tfvarsファイルが存在するかチェック
+                val backendTfvarsFile = File(subProjectDir, "backend.tfvars")
+                val planArgs =
+                    if (backendTfvarsFile.exists()) {
+                        listOf("terraform", "plan", "-input=false", "-backend-config=backend.tfvars")
+                    } else {
+                        listOf("terraform", "plan", "-input=false")
+                    }
+
+                // サブプロジェクトディレクトリでterraform planを実行
+                val process =
+                    ProcessBuilder(planArgs)
+                        .directory(subProjectDir)
+                        .redirectOutput(ProcessBuilder.Redirect.INHERIT)
+                        .redirectError(ProcessBuilder.Redirect.INHERIT)
+                        .start()
+
+                process.waitFor()
             }
-
-            // backend.tfvarsファイルが存在するかチェック
-            val backendTfvarsFile = File(subProjectDir, "backend.tfvars")
-            val planArgs = if (backendTfvarsFile.exists()) {
-                listOf("terraform", "plan", "-input=false", "-backend-config=backend.tfvars")
-            } else {
-                listOf("terraform", "plan", "-input=false")
-            }
-
-            // サブプロジェクトディレクトリでterraform planを実行
-            val process = ProcessBuilder(planArgs)
-                .directory(subProjectDir)
-                .redirectOutput(ProcessBuilder.Redirect.INHERIT)
-                .redirectError(ProcessBuilder.Redirect.INHERIT)
-                .start()
-
-            process.waitFor()
-        }
 
         return result
     }

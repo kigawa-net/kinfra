@@ -5,7 +5,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 class ActionExceptionTest {
-
     @Test
     fun `should create exception with exit code and message`() {
         // Given

@@ -1,7 +1,7 @@
 package net.kigawa.kinfra.model.execution
 
-import net.kigawa.kinfra.model.config.ConfigRepository
 import net.kigawa.kinfra.model.LoginRepo
+import net.kigawa.kinfra.model.config.ConfigRepository
 import net.kigawa.kinfra.model.sub.SubProject
 import net.kigawa.kinfra.model.util.AnsiColors
 import java.io.File
@@ -11,9 +11,8 @@ import java.io.File
  */
 class SubProjectExecutor(
     private val configRepository: ConfigRepository,
-    private val loginRepo: LoginRepo
+    private val loginRepo: LoginRepo,
 ) {
-
     /**
      * 親プロジェクトの設定からサブプロジェクトリストを取得
      *
@@ -56,18 +55,19 @@ class SubProjectExecutor(
     fun getMergedBackendConfig(subProject: SubProject): Map<String, Any> {
         // 親プロジェクトのbackendConfigを取得
         val parentBackendConfig = getBackendConfig()
-        
+
         // サブプロジェクトのkinfra.yamlからbackendConfigを取得
         val subProjectDir = loginRepo.repoPath.resolve(subProject.path).toFile()
         val subProjectConfigPath = subProjectDir.resolve("kinfra.yaml")
-        
-        val subProjectBackendConfig: Map<String, Any> = if (subProjectConfigPath.exists()) {
-            val config = configRepository.loadKinfraConfig(subProjectConfigPath.toPath())
-            config?.rootProject?.terraform?.backendConfig ?: emptyMap()
-        } else {
-            emptyMap()
-        }
-        
+
+        val subProjectBackendConfig: Map<String, Any> =
+            if (subProjectConfigPath.exists()) {
+                val config = configRepository.loadKinfraConfig(subProjectConfigPath.toPath())
+                config?.rootProject?.terraform?.backendConfig ?: emptyMap()
+            } else {
+                emptyMap()
+            }
+
         // 親プロジェクトとサブプロジェクトの設定をマージ（サブプロジェクトが優先）
         return parentBackendConfig + subProjectBackendConfig
     }
@@ -81,9 +81,8 @@ class SubProjectExecutor(
      */
     fun executeInSubProjects(
         subProjects: List<SubProject>,
-        executor: (SubProject, File) -> Int
+        executor: (SubProject, File) -> Int,
     ): Int {
-
         for ((index, subProject) in subProjects.withIndex()) {
             println()
             println("${AnsiColors.CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${AnsiColors.RESET}")
@@ -103,21 +102,21 @@ class SubProjectExecutor(
                 return 1
             }
 
-             try {
-                 val exitCode = executor(subProject, subProjectDir)
-                 if (exitCode != 0) {
-                     println()
-                     println("${AnsiColors.RED}✗${AnsiColors.RESET} Sub-project ${subProject.name} failed with exit code: $exitCode")
-                     return exitCode
-                 }
+            try {
+                val exitCode = executor(subProject, subProjectDir)
+                if (exitCode != 0) {
+                    println()
+                    println("${AnsiColors.RED}✗${AnsiColors.RESET} Sub-project ${subProject.name} failed with exit code: $exitCode")
+                    return exitCode
+                }
 
-                 println()
-                 println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Sub-project ${subProject.name} completed successfully")
-             } catch (e: Exception) {
-                 println()
-                 println("${AnsiColors.RED}✗${AnsiColors.RESET} Sub-project ${subProject.name} failed with exception: ${e.message}")
-                 return 1
-             }
+                println()
+                println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Sub-project ${subProject.name} completed successfully")
+            } catch (e: Exception) {
+                println()
+                println("${AnsiColors.RED}✗${AnsiColors.RESET} Sub-project ${subProject.name} failed with exception: ${e.message}")
+                return 1
+            }
         }
 
         return 0

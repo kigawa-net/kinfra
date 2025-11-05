@@ -8,5 +8,5 @@ data class KinfraParentConfigData(
     val terraform: TerraformSettings? = null,
     val subProjects: List<SubProject> = emptyList(),
     val bitwarden: BitwardenSettings? = null,
-    val update: UpdateSettings? = null
+    val update: UpdateSettings? = null,
 )

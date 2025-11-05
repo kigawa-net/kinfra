@@ -2,12 +2,12 @@ package net.kigawa.kinfra.infrastructure.service
 
 import net.kigawa.kinfra.infrastructure.process.ProcessExecutor
 import net.kigawa.kinfra.infrastructure.terraform.TerraformRepository
+import net.kigawa.kinfra.model.bitwarden.BitwardenSecretManagerRepository
 import net.kigawa.kinfra.model.conf.TerraformConfig
+import net.kigawa.kinfra.model.config.ConfigRepository
+import net.kigawa.kinfra.model.service.TerraformService
 import net.kigawa.kodel.api.err.ActionException
 import net.kigawa.kodel.api.err.Res
-import net.kigawa.kinfra.model.service.TerraformService
-import net.kigawa.kinfra.model.config.ConfigRepository
-import net.kigawa.kinfra.model.bitwarden.BitwardenSecretManagerRepository
 import java.io.File
 import java.nio.file.Paths
 
@@ -19,12 +19,14 @@ class TerraformServiceImpl(
     private val terraformRepository: TerraformRepository,
     private val configRepository: ConfigRepository,
     private val bitwardenSecretManagerRepository: BitwardenSecretManagerRepository? = null,
-): TerraformService {
-
+) : TerraformService {
     /**
      * backendConfigをフラットなキーバリューペアに変換
      */
-    private fun flattenBackendConfig(backendConfig: Map<String, Any>, prefix: String = ""): Map<String, String> {
+    private fun flattenBackendConfig(
+        backendConfig: Map<String, Any>,
+        prefix: String = "",
+    ): Map<String, String> {
         val result = mutableMapOf<String, String>()
 
         backendConfig.forEach { (key, value) ->
@@ -46,7 +48,10 @@ class TerraformServiceImpl(
         return result
     }
 
-    override fun init(additionalArgs: List<String>, quiet: Boolean): Res<Int, ActionException> {
+    override fun init(
+        additionalArgs: List<String>,
+        quiet: Boolean,
+    ): Res<Int, ActionException> {
         val config = terraformRepository.getTerraformConfig()
         if (config == null) {
             return Res.Err<Int, ActionException>(ActionException(1, "Terraform configuration not found"))
@@ -66,20 +71,25 @@ class TerraformServiceImpl(
             args = args.toTypedArray(),
             workingDir = config.workingDirectory,
             environment = emptyMap(),
-            quiet = quiet
+            quiet = quiet,
         )
     }
 
-    override fun plan(additionalArgs: List<String>, quiet: Boolean, planFile: String?): Res<Int, ActionException> {
+    override fun plan(
+        additionalArgs: List<String>,
+        quiet: Boolean,
+        planFile: String?,
+    ): Res<Int, ActionException> {
         val config = terraformRepository.getTerraformConfig()
         if (config == null) {
             return Res.Err<Int, ActionException>(ActionException(1, "Terraform configuration not found"))
         }
 
         // Bitwardenシークレットから.tfvarsファイルを生成
-        val generatedTfvarsFile = generateTfvarsFromBitwarden()?.let { content ->
-            saveTfvarsFile(config, content)
-        }
+        val generatedTfvarsFile =
+            generateTfvarsFromBitwarden()?.let { content ->
+                saveTfvarsFile(config, content)
+            }
 
         val varFileArgs = mutableListOf<String>()
 
@@ -107,12 +117,14 @@ class TerraformServiceImpl(
             args = args.toTypedArray(),
             workingDir = config.workingDirectory,
             environment = mapOf("SSH_CONFIG" to config.sshConfigPath),
-            quiet = quiet
+            quiet = quiet,
         )
     }
 
     override fun apply(
-        planFile: String?, additionalArgs: List<String>, quiet: Boolean
+        planFile: String?,
+        additionalArgs: List<String>,
+        quiet: Boolean,
     ): Res<Int, ActionException> {
         val config = terraformRepository.getTerraformConfig()
         if (config == null) {
@@ -120,9 +132,10 @@ class TerraformServiceImpl(
         }
 
         // Bitwardenシークレットから.tfvarsファイルを生成
-        val generatedTfvarsFile = generateTfvarsFromBitwarden()?.let { content ->
-            saveTfvarsFile(config, content)
-        }
+        val generatedTfvarsFile =
+            generateTfvarsFromBitwarden()?.let { content ->
+                saveTfvarsFile(config, content)
+            }
 
         val baseArgs = mutableListOf("terraform", "apply")
         val varFileArgs = mutableListOf<String>()
@@ -152,21 +165,25 @@ class TerraformServiceImpl(
             args = args.toTypedArray(),
             workingDir = config.workingDirectory,
             environment = mapOf("SSH_CONFIG" to config.sshConfigPath),
-            quiet = quiet
+            quiet = quiet,
         )
     }
 
-    override fun destroy(additionalArgs: List<String>, quiet: Boolean): Res<Int, ActionException> {
+    override fun destroy(
+        additionalArgs: List<String>,
+        quiet: Boolean,
+    ): Res<Int, ActionException> {
         val config = terraformRepository.getTerraformConfig()
         if (config == null) {
             return Res.Err<Int, ActionException>(ActionException(1, "Terraform configuration not found"))
         }
 
-        val varFileArgs = if (config.hasVarFile()) {
-            arrayOf("-var-file=${config.varFile!!.absolutePath}")
-        } else {
-            emptyArray()
-        }
+        val varFileArgs =
+            if (config.hasVarFile()) {
+                arrayOf("-var-file=${config.varFile!!.absolutePath}")
+            } else {
+                emptyArray()
+            }
 
         val args = arrayOf("terraform", "destroy") + varFileArgs + additionalArgs
 
@@ -174,16 +191,20 @@ class TerraformServiceImpl(
             args = args,
             workingDir = config.workingDirectory,
             environment = mapOf("SSH_CONFIG" to config.sshConfigPath),
-            quiet = quiet
+            quiet = quiet,
         )
     }
 
-    override fun format(recursive: Boolean, quiet: Boolean): Res<Int, ActionException> {
-        val args = if (recursive) {
-            arrayOf("terraform", "fmt", "-recursive")
-        } else {
-            arrayOf("terraform", "fmt")
-        }
+    override fun format(
+        recursive: Boolean,
+        quiet: Boolean,
+    ): Res<Int, ActionException> {
+        val args =
+            if (recursive) {
+                arrayOf("terraform", "fmt", "-recursive")
+            } else {
+                arrayOf("terraform", "fmt")
+            }
 
         return processExecutor.execute(args = args, quiet = quiet)
     }
@@ -192,7 +213,10 @@ class TerraformServiceImpl(
         return processExecutor.execute(args = arrayOf("terraform", "validate"), quiet = quiet)
     }
 
-    override fun show(additionalArgs: List<String>, quiet: Boolean): Res<Int, ActionException> {
+    override fun show(
+        additionalArgs: List<String>,
+        quiet: Boolean,
+    ): Res<Int, ActionException> {
         val config = terraformRepository.getTerraformConfig()
         if (config == null) {
             return Res.Err<Int, ActionException>(ActionException(1, "Terraform configuration not found"))
@@ -204,7 +228,7 @@ class TerraformServiceImpl(
             args = args,
             workingDir = config.workingDirectory,
             environment = mapOf("SSH_CONFIG" to config.sshConfigPath),
-            quiet = quiet
+            quiet = quiet,
         )
     }
 
@@ -238,10 +262,12 @@ class TerraformServiceImpl(
     /**
      * .tfvarsファイルを保存
      */
-    private fun saveTfvarsFile(config: TerraformConfig, content: String): File {
+    private fun saveTfvarsFile(
+        config: TerraformConfig,
+        content: String,
+    ): File {
         val tfvarsFile = File(config.workingDirectory, "secrets.tfvars")
         tfvarsFile.writeText(content)
         return tfvarsFile
     }
-
 }

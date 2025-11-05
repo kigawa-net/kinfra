@@ -6,7 +6,10 @@ import net.kigawa.kinfra.model.ActionType
 import net.kigawa.kinfra.model.SubActionType
 
 class ActionRegistry(private val container: DependencyContainer) {
-    fun getAction(actionName: String, subActionType: SubActionType? = null): Action? {
+    fun getAction(
+        actionName: String,
+        subActionType: SubActionType? = null,
+    ): Action? {
         return container.getAction(actionName, subActionType)
     }
 

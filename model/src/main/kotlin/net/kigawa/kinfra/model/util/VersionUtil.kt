@@ -10,20 +10,22 @@ object VersionUtil {
             return cachedVersion!!
         }
 
-        cachedVersion = try {
-            val properties = Properties()
-            val inputStream = VersionUtil::class.java.classLoader
-                .getResourceAsStream("version.properties")
+        cachedVersion =
+            try {
+                val properties = Properties()
+                val inputStream =
+                    VersionUtil::class.java.classLoader
+                        .getResourceAsStream("version.properties")
 
-            if (inputStream != null) {
-                properties.load(inputStream)
-                properties.getProperty("version", "dev")
-            } else {
+                if (inputStream != null) {
+                    properties.load(inputStream)
+                    properties.getProperty("version", "dev")
+                } else {
+                    "dev"
+                }
+            } catch (e: Exception) {
                 "dev"
             }
-        } catch (e: Exception) {
-            "dev"
-        }
 
         return cachedVersion!!
     }
