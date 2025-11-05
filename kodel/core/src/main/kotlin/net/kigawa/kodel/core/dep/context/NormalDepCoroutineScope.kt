@@ -1,9 +1,6 @@
 package net.kigawa.kodel.core.dep.context
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import net.kigawa.kodel.api.dep.context.DepCoroutineScope
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.cancellation.CancellationException
@@ -41,5 +38,9 @@ class NormalDepCoroutineScope(
 
     fun newScope(): NormalDepCoroutineScope {
         return NormalDepCoroutineScope(coroutineContext)
+    }
+
+    fun close() {
+        ownCoroutineContext.cancel()
     }
 }

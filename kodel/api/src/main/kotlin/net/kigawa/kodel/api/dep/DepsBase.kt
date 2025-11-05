@@ -15,6 +15,12 @@ abstract class DepsBase<S: DepScope<S>>(
     suspend context(depContext: DepContext<S>) fun <T: DepScope<T>> childContext(
         block: suspend (S) -> T,
     ): DepContext<T> {
-        return DepContext(block(depContext.depScope), depContext.defaultDepProviderFactory)
+        return DepContext(
+            block(depContext.depScope), depContext.defaultDepProviderFactory
+        ).also { closeHook { it.close() } }
+    }
+
+    context(childContext: DepContext<S>) fun closeHook(block: suspend () -> Unit) {
+        childContext.closeHook(block)
     }
 }

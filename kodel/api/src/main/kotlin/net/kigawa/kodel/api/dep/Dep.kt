@@ -11,6 +11,7 @@ class Dep<T, S: DepScope<S>>(
 
 
     suspend context(childContext: DepContext<S>) fun get(): T {
+        depContext.closeHook { childContext.close() }
         childContext.appendParentDepScope(depContext.depScope)
         return provider.get(childContext, childContext)
     }

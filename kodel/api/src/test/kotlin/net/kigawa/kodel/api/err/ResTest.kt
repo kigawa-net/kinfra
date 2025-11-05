@@ -85,10 +85,8 @@ class ResTest {
         fun createResult(): Res<User, Exception> = Res.Ok(user)
 
         // When
-        val result = createResult()
-
         // Then
-        when (result) {
+        when (val result = createResult()) {
             is Res.Ok -> {
                 assertEquals(user, result.value)
                 assertEquals(1, result.value.id)

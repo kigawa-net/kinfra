@@ -20,4 +20,8 @@ class ActionScopeImpl<S: InfraScope<S>>(
     override fun newDepScope(): ActionScopeImpl<S> {
         return ActionScopeImpl(infraScope.newDepScope())
     }
+
+    override fun close() {
+        infraScope.close()
+    }
 }

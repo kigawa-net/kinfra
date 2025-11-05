@@ -8,4 +8,5 @@ interface DepScope<S: DepScope<S>> {
 
     operator fun plus(depScope: S): S
     fun newDepScope(): S
+    fun close()
 }

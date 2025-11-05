@@ -20,4 +20,8 @@ class KinfraDepScope(
     override fun newDepScope(): KinfraDepScope {
         return KinfraDepScope(depCoroutineScope.newScope())
     }
+
+    override fun close() {
+        depCoroutineScope.close()
+    }
 }
