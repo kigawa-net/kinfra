@@ -3,7 +3,6 @@ package net.kigawa.kodel.core.dep.context
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import net.kigawa.kodel.api.dep.context.DepCoroutineScope
 import kotlin.coroutines.CoroutineContext
@@ -17,4 +16,4 @@ fun <T> DepCoroutineScope.async(
     return CoroutineScope(coroutineContext).async(context, start, block)
 }
 
-fun depCoroutineScope(context: CoroutineContext = Dispatchers.Default) = NormalDepCoroutineScope(context)
+

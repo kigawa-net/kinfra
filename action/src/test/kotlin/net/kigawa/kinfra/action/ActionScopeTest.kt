@@ -13,7 +13,7 @@ class ActionScopeTest {
     fun `should create ActionScope with dependencies`() {
         // Given
         class TestActionScope : ActionScope<TestActionScope> {
-            override val depProviderFactory: DepProviderFactory = DefaultDepProviders.Singleton
+            override val defaultDepProviderFactory: DepProviderFactory = DefaultDepProviders.Singleton
             override val depCoroutineScope = NormalDepCoroutineScope(SupervisorJob())
 
             override fun plus(depScope: TestActionScope): TestActionScope = this
@@ -30,6 +30,6 @@ class ActionScopeTest {
 
         // Then
         assertNotNull(scope)
-        assertEquals(DefaultDepProviders.Singleton, scope.depProviderFactory)
+        assertEquals(DefaultDepProviders.Singleton, scope.defaultDepProviderFactory)
     }
 }

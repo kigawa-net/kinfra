@@ -56,7 +56,6 @@ import net.kigawa.kinfra.model.conf.HomeDirGetter
 import net.kigawa.kinfra.model.conf.global.GlobalConfig
 import net.kigawa.kinfra.model.config.ConfigRepository
 import net.kigawa.kinfra.model.config.EnvFileLoader
-import net.kigawa.kinfra.model.execution.ActionExecutor
 import net.kigawa.kinfra.model.execution.SubProjectExecutor
 import net.kigawa.kinfra.model.logging.Logger
 import net.kigawa.kinfra.model.service.TerraformService
@@ -78,7 +77,7 @@ class DependencyContainer {
         val logLevel =
             try {
                 LogLevel.valueOf(logLevelStr.uppercase())
-            } catch (e: IllegalArgumentException) {
+            } catch (_: IllegalArgumentException) {
                 LogLevel.INFO
             }
         FileLogger(logDir, logLevel)
@@ -89,7 +88,7 @@ class DependencyContainer {
     val processExecutor by lazy { ProcessExecutorImpl() }
     val globalConfigCompleter: GlobalConfigCompleter by lazy { GlobalConfigCompleterImpl(filePaths) }
     val configRepository: ConfigRepository by lazy { ConfigRepositoryImpl(filePaths, logger, globalConfigCompleter) }
-    val terraformRepository by lazy { TerraformRepositoryImpl(fileRepository, configRepository, loginRepo) }
+    val terraformRepository by lazy { TerraformRepositoryImpl(fileRepository, loginRepo) }
     val terraformService: TerraformService by lazy {
         TerraformServiceImpl(processExecutor, terraformRepository, configRepository, bitwardenSecretManagerRepository)
     }
@@ -143,8 +142,6 @@ class DependencyContainer {
     val systemRequirement: SystemRequirement by lazy { SystemRequirement(logger) }
     val updateHandler: UpdateHandler by lazy { UpdateHandler(versionChecker, autoUpdater, logger, configRepository, loginRepo) }
 
-    // Execution layer
-    val actionExecutor: ActionExecutor by lazy { ActionExecutor(logger) }
     val subProjectExecutor: SubProjectExecutor by lazy { SubProjectExecutor(configRepository, loginRepo) }
 
     // Presentation layer
@@ -273,21 +270,4 @@ class DependencyContainer {
         return actions[Pair(actionName, subActionType)]
     }
 
-    fun getAllActions(): Map<String, Action> {
-        return buildMap {
-            ActionType.entries.forEach { actionType ->
-                if (actionType == ActionType.SUB || actionType == ActionType.CURRENT) {
-                    SubActionType.entries.forEach { subActionType ->
-                        actions[Pair(actionType.actionName, subActionType)]?.let {
-                            put("${actionType.actionName} ${subActionType.actionName}", it)
-                        }
-                    }
-                } else if (actionType != ActionType.HELP) {
-                    actions[Pair(actionType.actionName, null)]?.let {
-                        put(actionType.actionName, it)
-                    }
-                }
-            }
-        }
-    }
 }

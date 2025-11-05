@@ -5,12 +5,13 @@
 plugins {
     application
     id("com.github.johnrengelman.shadow")
+    id("impl-cli")
 }
 
 dependencies {
     implementation(project(":model"))
     implementation(project(":action"))
-    implementation(project(":infrastructure"))
+    implementation(project(":kinfra-infra"))
 }
 
 // Generate version.properties file at build time

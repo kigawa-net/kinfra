@@ -10,7 +10,7 @@ plugins {
 dependencies {
     implementation(project(":model"))
     implementation(project(":action"))
-    implementation(project(":infrastructure"))
+    implementation(project(":kinfra-infra"))
 
     // Ktor server
     implementation("io.ktor:ktor-server-core-jvm")
@@ -22,7 +22,7 @@ dependencies {
     implementation("io.ktor:ktor-server-status-pages-jvm")
 
     // Logging
-    implementation("ch.qos.logback:logback-classic:1.4.14")
+    implementation("ch.qos.logback:logback-classic:1.5.13")
 
     // Testing
     testImplementation("io.ktor:ktor-server-test-host-jvm")

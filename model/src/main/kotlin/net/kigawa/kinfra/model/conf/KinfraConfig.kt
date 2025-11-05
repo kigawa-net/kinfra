@@ -35,7 +35,7 @@ interface TerraformSettings {
         get() = emptyList()
     val outputMappings: List<TerraformOutputMapping>
         get() = emptyList()
-    val backendConfig: Map<String, Any>
+    val backendConfig: Map<String, String>
         get() = emptyMap()
     val generateOutputDir: String?
         get() = null

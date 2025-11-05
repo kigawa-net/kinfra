@@ -18,12 +18,12 @@ terraform:
 
 # List of sub-project paths or identifiers
 subProjects:
-  - projectId: "project-a"
-    description: "Project A"
-  - projectId: "project-b"
-    description: "Project B"
-  - projectId: "project-c"
-    description: "Project C"
+  - name: "project-a"
+    path: "project-a"
+  - name: "project-b"
+    path: "project-b"
+  - name: "project-c"
+    path: "project-c"
 
 # Common Bitwarden settings
 bitwarden:
