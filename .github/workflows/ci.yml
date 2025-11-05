@@ -78,7 +78,7 @@ jobs:
         run: ./gradlew test --continue
 
       - name: Run lint checks
-        run: echo "Lint checks skipped - no lint plugin configured"
+        run: ./gradlew ktlintCheck --continue
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
