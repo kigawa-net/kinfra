@@ -1,19 +1,19 @@
 package net.kigawa.kodel.core.dep.context
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import net.kigawa.kodel.api.dep.context.DepCoroutineScope
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.cancellation.CancellationException
 
 class NormalDepCoroutineScope(
     private val ownCoroutineContext: CoroutineContext,
-) : DepCoroutineScope {
+): DepCoroutineScope {
     override val coroutineContext: CoroutineContext
         get() = ownCoroutineContext + SupervisorJob()
+
+    companion object {
+        fun create(context: CoroutineContext = Dispatchers.Default) = NormalDepCoroutineScope(context)
+    }
 
     override fun launch(
         onFail: (e: Exception) -> Unit,

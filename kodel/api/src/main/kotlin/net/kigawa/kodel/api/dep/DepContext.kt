@@ -2,9 +2,8 @@ package net.kigawa.kodel.api.dep
 
 import net.kigawa.kodel.api.dep.context.DepScope
 
-class DepContext<S : DepScope<S>>(
+class DepContext<S: DepScope<S>>(
     var depScope: S,
-    val defaultDepProviderFactory: DepProviderFactory,
 ) {
     var closeHooks = listOf<suspend () -> Unit>({ depScope.close() })
 
@@ -14,7 +13,7 @@ class DepContext<S : DepScope<S>>(
     }
 
     fun newDepContext(): DepContext<S> {
-        return DepContext(depScope.newDepScope(), defaultDepProviderFactory).also { closeHook { it.close() } }
+        return DepContext(depScope.newDepScope()).also { closeHook { it.close() } }
     }
 
     fun closeHook(block: suspend () -> Unit) {

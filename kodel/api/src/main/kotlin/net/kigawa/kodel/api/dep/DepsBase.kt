@@ -6,7 +6,7 @@ abstract class DepsBase<S : DepScope<S>>(
     val depContext: DepContext<S>,
 ) {
     fun <T> dep(
-        depProviderFactory: DepProviderFactory = depContext.defaultDepProviderFactory,
+        depProviderFactory: DepProviderFactory = depContext.depScope.defaultDepProviderFactory,
         block: suspend context (DepContext<S>)
         () -> T,
     ): Dep<T, S> {
@@ -17,7 +17,7 @@ abstract class DepsBase<S : DepScope<S>>(
         block: suspend (S) -> T,
     ): DepContext<T> {
         return DepContext(
-            block(depContext.depScope), depContext.defaultDepProviderFactory
+            block(depContext.depScope)
         ).also { closeHook { it.close() } }
     }
 
