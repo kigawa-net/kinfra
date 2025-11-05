@@ -5,9 +5,9 @@ import net.kigawa.kinfra.infrastructure.action.ActionScopeImpl
 import net.kigawa.kodel.api.dep.DepContext
 import net.kigawa.kodel.api.dep.DepsBase
 
-class InfraDeps<S : InfraScope<S>>(depContext: DepContext<S>) : DepsBase<S>(depContext) {
+class InfraDeps<S: InfraScope<S>>(depContext: DepContext<S>): DepsBase<S>(depContext) {
     val actionDeps =
         dep {
-            ActionDeps(childContext(depContext) { ActionScopeImpl(it) })
+            ActionDeps(childContext { ActionScopeImpl(it) })
         }
 }
