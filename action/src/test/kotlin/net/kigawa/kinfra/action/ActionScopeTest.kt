@@ -19,6 +19,9 @@ class ActionScopeTest {
 
             override fun plus(depScope: TestActionScope): TestActionScope = this
             override fun newDepScope(): TestActionScope = this
+            override fun close() {
+                (depCoroutineScope as NormalDepCoroutineScope).close()
+            }
         }
 
         // When

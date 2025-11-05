@@ -11,6 +11,14 @@ on:
       - '**/*.gradle*'
       - '.github/workflows/ci.yml'
       - 'gradle.properties'
+      - '**/*.yml'
+      - '**/*.yaml'
+      - '**/*.xml'
+      - '**/*.json'
+      - '**/*.properties'
+      - 'src/**'
+      - 'buildSrc/**'
+      - 'gradle/**'
   pull_request:
     branches:
       - main
@@ -21,6 +29,14 @@ on:
       - '**/*.gradle*'
       - '.github/workflows/ci.yml'
       - 'gradle.properties'
+      - '**/*.yml'
+      - '**/*.yaml'
+      - '**/*.xml'
+      - '**/*.json'
+      - '**/*.properties'
+      - 'src/**'
+      - 'buildSrc/**'
+      - 'gradle/**'
 
 permissions:
   contents: read
@@ -29,7 +45,7 @@ jobs:
   test-and-lint:
     name: Test and Lint
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     env:
       GRADLE_OPTS: -Dorg.gradle.daemon=true -Dorg.gradle.parallel=true -Dorg.gradle.caching=true -Dorg.gradle.build-cache=true
 
@@ -52,9 +68,17 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x gradlew
 
-      - name: Run tests and lint
-        run: |
-          ./gradlew test ktlintCheck --continue || true
+      - name: Clean build
+        run: ./gradlew clean
+
+      - name: Build all projects
+        run: ./gradlew build --continue
+
+      - name: Run all tests
+        run: ./gradlew test --continue
+
+      - name: Run lint checks
+        run: ./gradlew ktlintCheck --continue
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
