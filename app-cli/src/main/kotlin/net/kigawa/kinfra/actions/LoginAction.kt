@@ -1,14 +1,14 @@
 package net.kigawa.kinfra.actions
 
-import net.kigawa.kinfra.model.GitHelper
-import net.kigawa.kinfra.model.bitwarden.BitwardenRepository
-import net.kigawa.kinfra.model.config.ConfigRepository
+import net.kigawa.kinfra.infrastructure.config.GlobalConfigImpl
 import net.kigawa.kinfra.infrastructure.config.GlobalConfigScheme
 import net.kigawa.kinfra.infrastructure.config.LoginConfigScheme
-import net.kigawa.kinfra.infrastructure.config.GlobalConfigImpl
 import net.kigawa.kinfra.model.Action
+import net.kigawa.kinfra.model.GitHelper
 import net.kigawa.kinfra.model.LoginRepo
+import net.kigawa.kinfra.model.bitwarden.BitwardenRepository
 import net.kigawa.kinfra.model.conf.FilePaths
+import net.kigawa.kinfra.model.config.ConfigRepository
 import net.kigawa.kinfra.model.util.AnsiColors
 import java.io.File
 
@@ -18,8 +18,7 @@ class LoginAction(
     private val gitHelper: GitHelper,
     private val filePaths: FilePaths,
     val loginRepo: LoginRepo,
-): Action {
-
+) : Action {
     override fun execute(args: List<String>): Int {
         // GitHubリポジトリ引数が指定されている場合はクローンまたはpull
         if (args.isNotEmpty()) {
@@ -33,7 +32,7 @@ class LoginAction(
             if (repoPath == null) {
                 println("${AnsiColors.RED}Error:${AnsiColors.RESET} Invalid GitHub repository format: $githubRepo")
                 println(
-                    "${AnsiColors.BLUE}Expected format:${AnsiColors.RESET} user/repo or https://github.com/user/repo.git"
+                    "${AnsiColors.BLUE}Expected format:${AnsiColors.RESET} user/repo or https://github.com/user/repo.git",
                 )
                 return 1
             }
@@ -42,13 +41,15 @@ class LoginAction(
             val targetDir = File(repoPath.second)
 
             // Save project configuration (repo identifier like "kigawa01/infra")
-            val loginConfig = LoginConfigScheme(
-                repo = repoPath.first.value,
-                repoPath = targetDir.absolutePath
-            )
+            val loginConfig =
+                LoginConfigScheme(
+                    repo = repoPath.first.value,
+                    repoPath = targetDir.absolutePath,
+                )
             val globalConfigScheme = GlobalConfigScheme(login = loginConfig)
-            val reposPath = filePaths.baseConfigDir?.resolve(filePaths.reposDir)
-                ?: throw IllegalStateException("Config directory not available")
+            val reposPath =
+                filePaths.baseConfigDir?.resolve(filePaths.reposDir)
+                    ?: throw IllegalStateException("Config directory not available")
             val globalConfig = GlobalConfigImpl(globalConfigScheme, reposPath)
             configRepository.saveGlobalConfig(globalConfig)
             val configPath = configRepository.getProjectConfigFilePath()
@@ -60,16 +61,17 @@ class LoginAction(
                 println("${AnsiColors.BLUE}Repository already exists, pulling latest changes...${AnsiColors.RESET}")
                 if (!gitHelper.pullRepository()) {
                     println(
-                        "${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Failed to pull from git repository, continuing anyway..."
+                        "${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Failed to pull from git repository, continuing anyway...",
                     )
                 }
             } else {
                 // Clone the repository
-                val repoUrl = if (githubRepo.startsWith("http") || githubRepo.startsWith("git@")) {
-                    githubRepo
-                } else {
-                    "https://github.com/$githubRepo.git"
-                }
+                val repoUrl =
+                    if (githubRepo.startsWith("http") || githubRepo.startsWith("git@")) {
+                        githubRepo
+                    } else {
+                        "https://github.com/$githubRepo.git"
+                    }
 
                 if (!gitHelper.cloneRepository(repoUrl, targetDir)) {
                     println("${AnsiColors.RED}Error:${AnsiColors.RESET} Failed to clone repository")
@@ -81,7 +83,7 @@ class LoginAction(
             // Pull latest changes from git repository (if configured)
             if (!gitHelper.pullRepository()) {
                 println(
-                    "${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Failed to pull from git repository, continuing anyway..."
+                    "${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Failed to pull from git repository, continuing anyway...",
                 )
             }
         }
@@ -134,14 +136,15 @@ class LoginAction(
 
         println("${AnsiColors.BLUE}Enter your BWS_ACCESS_TOKEN:${AnsiColors.RESET}")
         println(
-            "${AnsiColors.YELLOW}(You can generate this from Bitwarden Web Vault > Secret Manager)${AnsiColors.RESET}"
+            "${AnsiColors.YELLOW}(You can generate this from Bitwarden Web Vault > Secret Manager)${AnsiColors.RESET}",
         )
         print("Token: ")
 
-        val token = System.console()?.readPassword()?.let { String(it) } ?: run {
-            // If console is not available, read from standard input
-            readLine()
-        }
+        val token =
+            System.console()?.readPassword()?.let { String(it) } ?: run {
+                // If console is not available, read from standard input
+                readLine()
+            }
 
         if (token.isNullOrBlank()) {
             println("${AnsiColors.RED}Error:${AnsiColors.RESET} Token cannot be empty")
@@ -173,12 +176,13 @@ class LoginAction(
         println("${AnsiColors.BLUE}=== Kinfra Configuration ===${AnsiColors.RESET}")
 
         // Check if login config is available before accessing kinfra config
-        val hasLoginConfig = try {
-            loginRepo.loginConfig
-            true
-        } catch (e: IllegalStateException) {
-            false
-        }
+        val hasLoginConfig =
+            try {
+                loginRepo.loginConfig
+                true
+            } catch (e: IllegalStateException) {
+                false
+            }
 
         if (hasLoginConfig && loginRepo.kinfraConfigExists()) {
             println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Found kinfra.yaml")
@@ -199,9 +203,10 @@ class LoginAction(
             println("${AnsiColors.YELLOW}kinfra.yaml not found${AnsiColors.RESET}")
             println("${AnsiColors.BLUE}Creating default kinfra.yaml...${AnsiColors.RESET}")
 
-            val defaultConfig = net.kigawa.kinfra.infrastructure.config.KinfraConfigScheme(
-                rootProjectField = net.kigawa.kinfra.infrastructure.config.ProjectInfoScheme()
-            )
+            val defaultConfig =
+                net.kigawa.kinfra.infrastructure.config.KinfraConfigScheme(
+                    rootProjectField = net.kigawa.kinfra.infrastructure.config.ProjectInfoScheme(),
+                )
 
             try {
                 loginRepo.saveKinfraConfig(defaultConfig)
@@ -240,10 +245,11 @@ class LoginAction(
             println()
             println("${AnsiColors.BLUE}Unlocking vault...${AnsiColors.RESET}")
             print("Enter your Bitwarden master password: ")
-            val password = System.console()?.readPassword()?.let { String(it) } ?: run {
-                println("${AnsiColors.RED}Error:${AnsiColors.RESET} Failed to read password")
-                return 1
-            }
+            val password =
+                System.console()?.readPassword()?.let { String(it) } ?: run {
+                    println("${AnsiColors.RED}Error:${AnsiColors.RESET} Failed to read password")
+                    return 1
+                }
 
             val session = bitwardenRepository.unlock(password)
             if (session == null) {
@@ -288,8 +294,9 @@ class LoginAction(
      * @return Pair of (RepositoryName, localPath) or null if invalid format
      */
     private fun parseGitHubRepoPath(githubRepo: String): Pair<net.kigawa.kinfra.model.conf.RepositoryName, String>? {
-        val repositoryName = net.kigawa.kinfra.model.conf.RepositoryName.fromGitHubRepo(githubRepo)
-            ?: return null
+        val repositoryName =
+            net.kigawa.kinfra.model.conf.RepositoryName.fromGitHubRepo(githubRepo)
+                ?: return null
 
         // Default local path: ~/.local/kinfra/repos/{repo}
         val localPath = "${filePaths.baseConfigDir}/${filePaths.reposDir}/${repositoryName.getShortName()}"

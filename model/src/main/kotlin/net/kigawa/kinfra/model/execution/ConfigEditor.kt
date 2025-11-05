@@ -7,18 +7,17 @@ import net.kigawa.kinfra.model.sub.SubProject
 import net.kigawa.kinfra.model.util.AnsiColors
 import java.io.File
 import java.nio.file.Path
-import kotlin.io.path.exists
 import kotlin.io.path.absolute
+import kotlin.io.path.exists
 
 /**
  * 設定ファイル編集の各機能を担当するクラス
  */
 class ConfigEditor(
-    private val loginRepo: LoginRepo
+    private val loginRepo: LoginRepo,
 ) {
-    
     fun editProjectConfig(): Int {
-val configPath = ConfigUtils.getProjectConfigPath(loginRepo) ?: return 1
+        val configPath = ConfigUtils.getProjectConfigPath(loginRepo) ?: return 1
 
         val configFile = configPath.toFile()
 
@@ -29,10 +28,10 @@ val configPath = ConfigUtils.getProjectConfigPath(loginRepo) ?: return 1
 
         return openInEditor(configFile)
     }
-    
+
     fun editParentConfig(): Int {
         val path = loginRepo.kinfraBaseConfigPath()
-        
+
         // Create sample config if it doesn't exist
         if (!path.exists()) {
             createSampleParentConfig(path)
@@ -40,16 +39,17 @@ val configPath = ConfigUtils.getProjectConfigPath(loginRepo) ?: return 1
 
         return openInEditor(path.toFile())
     }
-    
+
     fun addSubProject(args: Array<String>): Int {
         return SubProjectManager(loginRepo).addSubProject(args)
     }
-    
+
     private fun createSampleProjectConfig(configFile: File) {
         println("${AnsiColors.YELLOW}Configuration file not found. Creating from sample...${AnsiColors.RESET}")
         configFile.parentFile?.mkdirs()
 
-        val sampleContent = """
+        val sampleContent =
+            """
             # Kinfra Project Configuration
 
             rootProject:
@@ -70,20 +70,21 @@ val configPath = ConfigUtils.getProjectConfigPath(loginRepo) ?: return 1
             #   autoUpdate: true
             #   checkInterval: 86400000
             #   githubRepo: "kigawa-net/kinfra"
-        """.trimIndent()
+            """.trimIndent()
 
         configFile.writeText(sampleContent)
         println(
-            "${AnsiColors.GREEN}✓${AnsiColors.RESET} Created sample configuration at ${configFile.absolutePath}"
+            "${AnsiColors.GREEN}✓${AnsiColors.RESET} Created sample configuration at ${configFile.absolutePath}",
         )
     }
-    
+
     private fun createSampleParentConfig(path: Path) {
         println(
-            "${AnsiColors.YELLOW}Parent configuration file not found. Creating from sample...${AnsiColors.RESET}"
+            "${AnsiColors.YELLOW}Parent configuration file not found. Creating from sample...${AnsiColors.RESET}",
         )
 
-        val sampleContent = """
+        val sampleContent =
+            """
             # Kinfra Parent Project Configuration
 
             projectName: "my-infrastructure"
@@ -109,21 +110,21 @@ val configPath = ConfigUtils.getProjectConfigPath(loginRepo) ?: return 1
             #   autoUpdate: true
             #   checkInterval: 86400000
             #   githubRepo: "kigawa-net/kinfra"
-        """.trimIndent()
+            """.trimIndent()
 
         path.toFile().writeText(sampleContent)
         println(
-            "${AnsiColors.GREEN}✓${AnsiColors.RESET} Created sample parent configuration at ${path.absolute()}"
+            "${AnsiColors.GREEN}✓${AnsiColors.RESET} Created sample parent configuration at ${path.absolute()}",
         )
     }
-    
+
     private fun openInEditor(file: File): Int {
         val editor = findAvailableEditor()
 
         if (editor == null) {
             println("${AnsiColors.RED}Error:${AnsiColors.RESET} No suitable editor found")
             println(
-                "${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Set EDITOR environment variable to your preferred editor"
+                "${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Set EDITOR environment variable to your preferred editor",
             )
             println("  Example: export EDITOR=nano")
             println()
@@ -136,9 +137,10 @@ val configPath = ConfigUtils.getProjectConfigPath(loginRepo) ?: return 1
         println()
 
         return try {
-            val process = ProcessBuilder(editor, file.absolutePath)
-                .inheritIO()
-                .start()
+            val process =
+                ProcessBuilder(editor, file.absolutePath)
+                    .inheritIO()
+                    .start()
 
             val exitCode = process.waitFor()
 
@@ -153,7 +155,7 @@ val configPath = ConfigUtils.getProjectConfigPath(loginRepo) ?: return 1
         } catch (e: Exception) {
             println("${AnsiColors.RED}Error:${AnsiColors.RESET} Failed to open editor: ${e.message}")
             println(
-                "${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Set EDITOR environment variable to your preferred editor"
+                "${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Set EDITOR environment variable to your preferred editor",
             )
             println("  Example: export EDITOR=nano")
             1
@@ -180,10 +182,11 @@ val configPath = ConfigUtils.getProjectConfigPath(loginRepo) ?: return 1
 
     private fun isCommandAvailable(command: String): Boolean {
         return try {
-            val process = ProcessBuilder("which", command)
-                .redirectOutput(ProcessBuilder.Redirect.PIPE)
-                .redirectError(ProcessBuilder.Redirect.PIPE)
-                .start()
+            val process =
+                ProcessBuilder("which", command)
+                    .redirectOutput(ProcessBuilder.Redirect.PIPE)
+                    .redirectError(ProcessBuilder.Redirect.PIPE)
+                    .start()
 
             val exitCode = process.waitFor()
             exitCode == 0
@@ -197,9 +200,8 @@ val configPath = ConfigUtils.getProjectConfigPath(loginRepo) ?: return 1
  * サブプロジェクト管理を担当するクラス
  */
 private class SubProjectManager(
-    private val loginRepo: LoginRepo
+    private val loginRepo: LoginRepo,
 ) {
-    
     fun addSubProject(args: Array<String>): Int {
         if (args.isEmpty()) {
             showUsage()
@@ -207,37 +209,38 @@ private class SubProjectManager(
         }
         val parentConfig = getOrCreateBaseConfig()
 
-
         val subProjectInput = args[0]
-        val subProject = if (':' in subProjectInput) {
-            val parts = subProjectInput.split(':', limit = 2)
-            parentConfig.addSubProject(parts[0].trim(), parts[1].trim())
-        } else {
-            // Just name, use name as path
-            parentConfig.addSubProject(subProjectInput.trim(), subProjectInput.trim(), )
-        }
+        val subProject =
+            if (':' in subProjectInput) {
+                val parts = subProjectInput.split(':', limit = 2)
+                parentConfig.addSubProject(parts[0].trim(), parts[1].trim())
+            } else {
+                // Just name, use name as path
+                parentConfig.addSubProject(subProjectInput.trim(), subProjectInput.trim())
+            }
 
         // Check if sub-project already exists
         if (parentConfig.subProjects.any { it.name == subProject.name }) {
             println(
-                "${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Sub-project '${subProject.name}' already exists in parent config"
+                "${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Sub-project '${subProject.name}' already exists in parent config",
             )
             return 0
         }
 
         // Add sub-project
-        val updatedConfig = KinfraParentConfigData(
-            projectName = parentConfig.projectName,
-            description = parentConfig.description,
-            terraform = parentConfig.terraform,
-            subProjects = parentConfig.subProjects + subProject,
-            bitwarden = parentConfig.bitwarden,
-            update = parentConfig.update
-        )
+        val updatedConfig =
+            KinfraParentConfigData(
+                projectName = parentConfig.projectName,
+                description = parentConfig.description,
+                terraform = parentConfig.terraform,
+                subProjects = parentConfig.subProjects + subProject,
+                bitwarden = parentConfig.bitwarden,
+                update = parentConfig.update,
+            )
 
         return saveConfig(updatedConfig, subProject, parentConfig)
     }
-    
+
     private fun getOrCreateBaseConfig(): KinfraParentConfig {
         val existingConfig = loginRepo.loadKinfraBaseConfig()
         if (existingConfig != null) {
@@ -245,7 +248,7 @@ private class SubProjectManager(
         }
 
         println(
-            "${AnsiColors.YELLOW}Parent configuration not found. Creating new parent config...${AnsiColors.RESET}"
+            "${AnsiColors.YELLOW}Parent configuration not found. Creating new parent config...${AnsiColors.RESET}",
         )
         print("${AnsiColors.GREEN}Enter parent project name:${AnsiColors.RESET} ")
         val projectName = readlnOrNull()?.trim() ?: "my-infrastructure"
@@ -257,34 +260,36 @@ private class SubProjectManager(
             KinfraParentConfigData(
                 projectName = projectName,
                 description = description,
-                subProjects = emptyList()
-            )
+                subProjects = emptyList(),
+            ),
         )
     }
-    
+
     private fun saveConfig(
         updatedConfig: KinfraParentConfigData,
         subProject: SubProject,
-        parentConfig: KinfraParentConfig
+        parentConfig: KinfraParentConfig,
     ): Int {
         return try {
             parentConfig.saveData(updatedConfig)
-            val displayText = if (subProject.path == subProject.name) {
-                subProject.name
-            } else {
-                "${subProject.name}:${subProject.path}"
-            }
+            val displayText =
+                if (subProject.path == subProject.name) {
+                    subProject.name
+                } else {
+                    "${subProject.name}:${subProject.path}"
+                }
             println(
-                "${AnsiColors.GREEN}✓${AnsiColors.RESET} Sub-project '$displayText' added to parent configuration"
+                "${AnsiColors.GREEN}✓${AnsiColors.RESET} Sub-project '$displayText' added to parent configuration",
             )
             println()
             println("${AnsiColors.BLUE}Current sub-projects:${AnsiColors.RESET}")
             updatedConfig.subProjects.forEachIndexed { index, project ->
-                val projectText = if (project.path == project.name) {
-                    project.name
-                } else {
-                    "${project.name}:${project.path}"
-                }
+                val projectText =
+                    if (project.path == project.name) {
+                        project.name
+                    } else {
+                        "${project.name}:${project.path}"
+                    }
                 println("  ${index + 1}. $projectText")
             }
             println()
@@ -295,7 +300,7 @@ private class SubProjectManager(
             1
         }
     }
-    
+
     private fun showUsage() {
         println("${AnsiColors.RED}Error:${AnsiColors.RESET} Sub-project specification is required")
         println()

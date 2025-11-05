@@ -1,17 +1,19 @@
 package net.kigawa.kinfra.action.actions
 
-import net.kigawa.kinfra.model.config.ConfigRepository
 import net.kigawa.kinfra.model.Action
+import net.kigawa.kinfra.model.config.ConfigRepository
 import net.kigawa.kinfra.model.util.AnsiColors
 import java.io.File
 import java.nio.file.Paths
 
 class CurrentPlanAction(private val configRepository: ConfigRepository) : Action {
-
     /**
      * backendConfigをフラットなキーバリューペアに変換
      */
-    private fun flattenBackendConfig(backendConfig: Map<String, Any>, prefix: String = ""): Map<String, String> {
+    private fun flattenBackendConfig(
+        backendConfig: Map<String, Any>,
+        prefix: String = "",
+    ): Map<String, String> {
         val result = mutableMapOf<String, String>()
 
         backendConfig.forEach { (key, value) ->
@@ -34,7 +36,6 @@ class CurrentPlanAction(private val configRepository: ConfigRepository) : Action
     }
 
     override fun execute(args: List<String>): Int {
-
         val currentDir = File(".").absoluteFile
 
         // カレントディレクトリにTerraformファイルがあるかチェック
@@ -42,7 +43,10 @@ class CurrentPlanAction(private val configRepository: ConfigRepository) : Action
         val hasTerraformFiles = terraformFiles.any { File(currentDir, it).exists() }
 
         if (!hasTerraformFiles) {
-            println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} No Terraform files found in current directory (${currentDir.absolutePath})")
+            println(
+                "${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} No Terraform files found in " +
+                    "current directory (${currentDir.absolutePath})",
+            )
             println("Expected files: ${terraformFiles.joinToString(", ")}")
             return 1
         }
@@ -53,28 +57,30 @@ class CurrentPlanAction(private val configRepository: ConfigRepository) : Action
         println("Config paths: $kinfraConfigPath, $kinfraParentConfigPath")
 
         // 親プロジェクトのbackendConfigを取得
-        val parentBackendConfig: Map<String, Any> = if (configRepository.kinfraParentConfigExists(kinfraParentConfigPath.toString())) {
-            println("kinfra-parent.yaml exists")
-            val config = configRepository.loadKinfraParentConfig(kinfraParentConfigPath.toString())
-            val bc = config?.terraform?.backendConfig
-            println("Backend config from kinfra-parent.yaml: $bc")
-            bc ?: emptyMap()
-        } else {
-            println("kinfra-parent.yaml not found")
-            emptyMap()
-        }
+        val parentBackendConfig: Map<String, Any> =
+            if (configRepository.kinfraParentConfigExists(kinfraParentConfigPath.toString())) {
+                println("kinfra-parent.yaml exists")
+                val config = configRepository.loadKinfraParentConfig(kinfraParentConfigPath.toString())
+                val bc = config?.terraform?.backendConfig
+                println("Backend config from kinfra-parent.yaml: $bc")
+                bc ?: emptyMap()
+            } else {
+                println("kinfra-parent.yaml not found")
+                emptyMap()
+            }
 
         // サブプロジェクトのbackendConfigを取得
-        val subProjectBackendConfig: Map<String, Any> = if (configRepository.kinfraConfigExists(kinfraConfigPath.toString())) {
-            println("kinfra.yaml exists")
-            val config = configRepository.loadKinfraConfig(kinfraConfigPath)
-            val bc = config?.rootProject?.terraform?.backendConfig
-            println("Backend config from kinfra.yaml: $bc")
-            bc ?: emptyMap()
-        } else {
-            println("kinfra.yaml not found")
-            emptyMap()
-        }
+        val subProjectBackendConfig: Map<String, Any> =
+            if (configRepository.kinfraConfigExists(kinfraConfigPath.toString())) {
+                println("kinfra.yaml exists")
+                val config = configRepository.loadKinfraConfig(kinfraConfigPath)
+                val bc = config?.rootProject?.terraform?.backendConfig
+                println("Backend config from kinfra.yaml: $bc")
+                bc ?: emptyMap()
+            } else {
+                println("kinfra.yaml not found")
+                emptyMap()
+            }
 
         // 親プロジェクトとサブプロジェクトの設定をマージ（サブプロジェクトが優先）
         val backendConfig = parentBackendConfig + subProjectBackendConfig
@@ -105,11 +111,12 @@ class CurrentPlanAction(private val configRepository: ConfigRepository) : Action
 
         println("Init args: ${initArgs.joinToString(" ")}")
 
-        val initProcess = ProcessBuilder(initArgs)
-            .directory(currentDir)
-            .redirectOutput(ProcessBuilder.Redirect.INHERIT)
-            .redirectError(ProcessBuilder.Redirect.INHERIT)
-            .start()
+        val initProcess =
+            ProcessBuilder(initArgs)
+                .directory(currentDir)
+                .redirectOutput(ProcessBuilder.Redirect.INHERIT)
+                .redirectError(ProcessBuilder.Redirect.INHERIT)
+                .start()
 
         val initExitCode = initProcess.waitFor()
         if (initExitCode != 0) {
@@ -134,11 +141,12 @@ class CurrentPlanAction(private val configRepository: ConfigRepository) : Action
 
         planArgs.addAll(args)
 
-        val process = ProcessBuilder(planArgs)
-            .directory(currentDir)
-            .redirectOutput(ProcessBuilder.Redirect.INHERIT)
-            .redirectError(ProcessBuilder.Redirect.INHERIT)
-            .start()
+        val process =
+            ProcessBuilder(planArgs)
+                .directory(currentDir)
+                .redirectOutput(ProcessBuilder.Redirect.INHERIT)
+                .redirectError(ProcessBuilder.Redirect.INHERIT)
+                .start()
 
         val exitCode = process.waitFor()
 

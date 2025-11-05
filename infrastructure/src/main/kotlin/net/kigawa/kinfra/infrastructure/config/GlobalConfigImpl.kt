@@ -7,7 +7,7 @@ import java.nio.file.Path
 class GlobalConfigImpl(
     val globalConfigScheme: GlobalConfigScheme,
     val kinfraReposPath: Path,
-): GlobalConfig {
+) : GlobalConfig {
     override val login: LoginConfig?
         get() = globalConfigScheme.login?.toLoginConfig(kinfraReposPath)
 }

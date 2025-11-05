@@ -1,18 +1,18 @@
 package net.kigawa.kinfra.infrastructure.action.actions
 
+import net.kigawa.kinfra.infrastructure.logging.Logger
+import net.kigawa.kinfra.infrastructure.process.ProcessExecutor
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.LoginRepo
-import net.kigawa.kodel.api.err.Res
 import net.kigawa.kinfra.model.util.AnsiColors
-import net.kigawa.kinfra.infrastructure.process.ProcessExecutor
-import net.kigawa.kinfra.infrastructure.logging.Logger
+import net.kigawa.kodel.api.err.Res
 import java.io.File
 import kotlin.io.path.Path
 
 class NextAction(
     private val processExecutor: ProcessExecutor,
     private val loginRepo: LoginRepo,
-    private val logger: Logger
+    private val logger: Logger,
 ) : Action {
     override fun execute(args: List<String>): Int {
         if (args.isNotEmpty()) {
@@ -60,7 +60,10 @@ class NextAction(
                             is Res.Err -> {
                                 println("${AnsiColors.YELLOW}⚠ Failed to restore stashed changes due to conflicts${AnsiColors.RESET}")
                                 println("${AnsiColors.BLUE}The stash entry is kept in case you need it again.${AnsiColors.RESET}")
-                                println("${AnsiColors.BLUE}Please resolve conflicts manually and run 'git stash drop' when done.${AnsiColors.RESET}")
+                                println(
+                                    "${AnsiColors.BLUE}Please resolve conflicts manually and run " +
+                                        "'git stash drop' when done.${AnsiColors.RESET}",
+                                )
                             }
                             is Res.Ok -> {
                                 println("${AnsiColors.GREEN}✓ Stashed changes restored${AnsiColors.RESET}")
@@ -82,7 +85,10 @@ class NextAction(
                     is Res.Err -> {
                         println("${AnsiColors.YELLOW}⚠ Failed to restore stashed changes due to conflicts${AnsiColors.RESET}")
                         println("${AnsiColors.BLUE}The stash entry is kept in case you need it again.${AnsiColors.RESET}")
-                        println("${AnsiColors.BLUE}Please resolve conflicts manually and run 'git stash drop' when done.${AnsiColors.RESET}")
+                        println(
+                            "${AnsiColors.BLUE}Please resolve conflicts manually and run " +
+                                "'git stash drop' when done.${AnsiColors.RESET}",
+                        )
                         // Don't return error, continue with the rest of the process
                     }
                     is Res.Ok -> {

@@ -38,7 +38,13 @@ interface KinfraParentConfig {
      */
     val update: UpdateSettings?
     val filePath: Path
+
     fun toData(): KinfraParentConfigData
+
     fun saveData(updatedConfig: KinfraParentConfigData)
-    fun addSubProject(name: String, path: String): SubProject
+
+    fun addSubProject(
+        name: String,
+        path: String,
+    ): SubProject
 }

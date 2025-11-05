@@ -6,7 +6,6 @@ import java.io.File
  * Gitリポジトリ情報を取得するユーティリティクラス
  */
 object GitRepository {
-
     /**
      * 現在のディレクトリのGitリポジトリ名を取得
      * リポジトリ名は、リモートURLから取得される（例: https://github.com/user/repo.git -> repo）
@@ -14,13 +13,14 @@ object GitRepository {
      * @param workingDir 作業ディレクトリ（デフォルトはカレントディレクトリ）
      * @return リポジトリ名（取得できない場合はnull）
      */
-    fun getRepositoryName(workingDir: File ): String? {
+    fun getRepositoryName(workingDir: File): String? {
         return try {
             // git remote get-url originでリモートURLを取得
-            val process = ProcessBuilder("git", "remote", "get-url", "origin")
-                .directory(workingDir)
-                .redirectErrorStream(true)
-                .start()
+            val process =
+                ProcessBuilder("git", "remote", "get-url", "origin")
+                    .directory(workingDir)
+                    .redirectErrorStream(true)
+                    .start()
 
             val output = process.inputStream.bufferedReader().readText().trim()
             val exitCode = process.waitFor()
@@ -51,5 +51,4 @@ object GitRepository {
         // .gitサフィックスを削除
         return name.removeSuffix(".git")
     }
-
 }

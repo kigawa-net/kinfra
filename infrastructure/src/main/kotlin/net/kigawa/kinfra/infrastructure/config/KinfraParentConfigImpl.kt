@@ -2,15 +2,19 @@ package net.kigawa.kinfra.infrastructure.config
 
 import com.charleskorn.kaml.Yaml
 import net.kigawa.kinfra.infrastructure.SubProjectImpl
+import net.kigawa.kinfra.model.conf.BitwardenSettings
+import net.kigawa.kinfra.model.conf.KinfraParentConfig
+import net.kigawa.kinfra.model.conf.KinfraParentConfigData
+import net.kigawa.kinfra.model.conf.TerraformSettings
+import net.kigawa.kinfra.model.conf.UpdateSettings
 import net.kigawa.kinfra.model.sub.SubProject
-import net.kigawa.kinfra.model.conf.*
 import java.io.File
 import java.nio.file.Path
 
 class KinfraParentConfigImpl(
     private var kinfraParentConfigScheme: KinfraParentConfigScheme,
     val file: File,
-): KinfraParentConfig {
+) : KinfraParentConfig {
     override val projectName: String
         get() = kinfraParentConfigScheme.projectName
     override val description: String?
@@ -37,19 +41,23 @@ class KinfraParentConfigImpl(
         )
     }
 
-     override fun saveData(updatedConfig: KinfraParentConfigData) {
-         kinfraParentConfigScheme = KinfraParentConfigScheme.from(updatedConfig)
-         file.writeText(
-             Yaml.default.encodeToString(
-                 KinfraParentConfigScheme.serializer(), kinfraParentConfigScheme
-             )
-         )
-     }
+    override fun saveData(updatedConfig: KinfraParentConfigData) {
+        kinfraParentConfigScheme = KinfraParentConfigScheme.from(updatedConfig)
+        file.writeText(
+            Yaml.default.encodeToString(
+                KinfraParentConfigScheme.serializer(),
+                kinfraParentConfigScheme,
+            ),
+        )
+    }
 
-     override fun addSubProject(name: String, path: String): SubProject {
-         return SubProjectImpl(name, path)
-     }
-    
+    override fun addSubProject(
+        name: String,
+        path: String,
+    ): SubProject {
+        return SubProjectImpl(name, path)
+    }
+
     companion object {
         /**
          * 後方互換性のためのファクトリメソッド
@@ -66,14 +74,15 @@ class KinfraParentConfigImpl(
                 // 失敗した場合は、文字列形式の古いYAMLとして処理
                 try {
                     val legacyConfig = Yaml.default.decodeFromString(LegacyKinfraParentConfigScheme.serializer(), content)
-                    val newConfig = KinfraParentConfigScheme(
-                        projectName = legacyConfig.projectName,
-                        description = legacyConfig.description,
-                        terraform = legacyConfig.terraform?.let { TerraformSettingsScheme.from(it.toTerraformSettings()) },
-                        subProjects = KinfraParentConfigScheme.fromStringList(legacyConfig.subProjects),
-                        bitwarden = legacyConfig.bitwarden?.let { BitwardenSettingsScheme.from(it.toBitwardenSettings()) },
-                        update = legacyConfig.update?.let { UpdateSettingsScheme.from(it.toUpdateSettings()) }
-                    )
+                    val newConfig =
+                        KinfraParentConfigScheme(
+                            projectName = legacyConfig.projectName,
+                            description = legacyConfig.description,
+                            terraform = legacyConfig.terraform?.let { TerraformSettingsScheme.from(it.toTerraformSettings()) },
+                            subProjects = KinfraParentConfigScheme.fromStringList(legacyConfig.subProjects),
+                            bitwarden = legacyConfig.bitwarden?.let { BitwardenSettingsScheme.from(it.toBitwardenSettings()) },
+                            update = legacyConfig.update?.let { UpdateSettingsScheme.from(it.toUpdateSettings()) },
+                        )
                     KinfraParentConfigImpl(newConfig, file)
                 } catch (e2: Exception) {
                     throw IllegalArgumentException("Failed to parse config file as either new or legacy format", e2)

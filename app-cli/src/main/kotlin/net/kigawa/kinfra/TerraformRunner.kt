@@ -1,7 +1,6 @@
 package net.kigawa.kinfra
 
 import net.kigawa.kinfra.di.DependencyContainer
-import net.kigawa.kinfra.infrastructure.file.SystemHomeDirGetter
 import net.kigawa.kinfra.model.ActionType
 import kotlin.system.exitProcess
 
@@ -17,20 +16,22 @@ class TerraformRunner(private val container: DependencyContainer) {
         logger.info("Starting Terraform Runner with args: ${args.joinToString(" ")}")
 
         // Parse command line arguments
-        val parsedCommand = commandInterpreter.parse(args)
-            ?: run {
-                actionRegistry.getHelpAction()?.execute(emptyList())
-                exitProcess(1)
-            }
+        val parsedCommand =
+            commandInterpreter.parse(args)
+                ?: run {
+                    actionRegistry.getHelpAction()?.execute(emptyList())
+                    exitProcess(1)
+                }
 
         // Use current directory for 'current' commands, logged-in repository for others
-        val workingDir = if (parsedCommand.actionName == ActionType.CURRENT.actionName) {
-            System.getProperty("user.dir")
-        } else {
-            getLoggedInRepoPath()
-        }
+        val workingDir =
+            if (parsedCommand.actionName == ActionType.CURRENT.actionName) {
+                System.getProperty("user.dir")
+            } else {
+                getLoggedInRepoPath()
+            }
         logger.debug("Using working directory: $workingDir")
-        
+
         // Set system property for working directory
         System.setProperty("user.dir", workingDir)
 
@@ -59,7 +60,9 @@ class TerraformRunner(private val container: DependencyContainer) {
 
         // Execute the action
         logger.info(
-            "Executing action: ${parsedCommand.actionName} with args: ${parsedCommand.actionArgs.joinToString(" ")} in directory: $workingDir"
+            "Executing action: ${parsedCommand.actionName} with args: ${parsedCommand.actionArgs.joinToString(
+                " ",
+            )} in directory: $workingDir",
         )
         val exitCode = action.execute(parsedCommand.actionArgs)
         logger.info("Action ${parsedCommand.actionName} finished with exit code: $exitCode")

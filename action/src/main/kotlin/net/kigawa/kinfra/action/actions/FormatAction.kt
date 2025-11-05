@@ -1,16 +1,15 @@
 package net.kigawa.kinfra.action.actions
-import net.kigawa.kinfra.model.util.exitCode
-import net.kigawa.kinfra.model.util.message
-
+import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.GitHelper
 import net.kigawa.kinfra.model.service.TerraformService
-import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.util.AnsiColors
+import net.kigawa.kinfra.model.util.exitCode
 import net.kigawa.kinfra.model.util.isFailure
+import net.kigawa.kinfra.model.util.message
 
 class FormatAction(
     private val terraformService: TerraformService,
-    private val gitHelper: GitHelper
+    private val gitHelper: GitHelper,
 ) : Action {
     override fun execute(args: List<String>): Int {
         // Pull latest changes from git repository

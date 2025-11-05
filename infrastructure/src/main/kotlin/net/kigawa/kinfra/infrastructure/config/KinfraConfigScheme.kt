@@ -4,7 +4,13 @@ import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
-import net.kigawa.kinfra.model.conf.*
+import net.kigawa.kinfra.model.conf.BitwardenSettings
+import net.kigawa.kinfra.model.conf.KinfraConfig
+import net.kigawa.kinfra.model.conf.ProjectInfo
+import net.kigawa.kinfra.model.conf.TerraformOutputMapping
+import net.kigawa.kinfra.model.conf.TerraformSettings
+import net.kigawa.kinfra.model.conf.TerraformVariableMapping
+import net.kigawa.kinfra.model.conf.UpdateSettings
 import net.kigawa.kinfra.model.conf.global.LoginConfig
 
 @Serializable
@@ -14,11 +20,11 @@ data class ProjectInfoScheme(
     override val description: String? = null,
     override val terraform: TerraformSettingsScheme? = null,
     // Backward compatibility for old 'name' property
-    private val name: String? = null
+    private val name: String? = null,
 ) : ProjectInfo {
-
     override val projectId: String
         get() = projectIdField ?: name ?: ""
+
     companion object {
         fun from(projectInfo: ProjectInfo): ProjectInfoScheme {
             if (projectInfo is ProjectInfoScheme) {
@@ -27,24 +33,22 @@ data class ProjectInfoScheme(
             return ProjectInfoScheme(
                 projectIdField = projectInfo.projectId,
                 description = projectInfo.description,
-                terraform = projectInfo.terraform?.let { TerraformSettingsScheme.from(it) }
+                terraform = projectInfo.terraform?.let { TerraformSettingsScheme.from(it) },
             )
         }
     }
 }
 
-
-
 @Serializable
 data class TerraformVariableMappingScheme(
     override val terraformVariable: String,
-    override val bitwardenSecretKey: String
+    override val bitwardenSecretKey: String,
 ) : TerraformVariableMapping
 
 @Serializable
 data class TerraformOutputMappingScheme(
     override val terraformOutput: String,
-    override val bitwardenSecretKey: String
+    override val bitwardenSecretKey: String,
 ) : TerraformOutputMapping
 
 @Serializable
@@ -54,7 +58,7 @@ data class TerraformSettingsScheme(
     override val variableMappings: List<TerraformVariableMappingScheme> = emptyList(),
     override val outputMappings: List<TerraformOutputMappingScheme> = emptyList(),
     override val backendConfig: Map<String, @Contextual Any> = emptyMap(),
-    override val generateOutputDir: String? = null
+    override val generateOutputDir: String? = null,
 ) : TerraformSettings {
     companion object {
         fun from(settings: TerraformSettings): TerraformSettingsScheme {
@@ -64,20 +68,22 @@ data class TerraformSettingsScheme(
             return TerraformSettingsScheme(
                 version = settings.version,
                 workingDirectory = settings.workingDirectory,
-                variableMappings = settings.variableMappings.map {
-                    TerraformVariableMappingScheme(
-                        terraformVariable = it.terraformVariable,
-                        bitwardenSecretKey = it.bitwardenSecretKey
-                    )
-                },
-                outputMappings = settings.outputMappings.map {
-                    TerraformOutputMappingScheme(
-                        terraformOutput = it.terraformOutput,
-                        bitwardenSecretKey = it.bitwardenSecretKey
-                    )
-                },
+                variableMappings =
+                    settings.variableMappings.map {
+                        TerraformVariableMappingScheme(
+                            terraformVariable = it.terraformVariable,
+                            bitwardenSecretKey = it.bitwardenSecretKey,
+                        )
+                    },
+                outputMappings =
+                    settings.outputMappings.map {
+                        TerraformOutputMappingScheme(
+                            terraformOutput = it.terraformOutput,
+                            bitwardenSecretKey = it.bitwardenSecretKey,
+                        )
+                    },
                 backendConfig = settings.backendConfig,
-                generateOutputDir = settings.generateOutputDir
+                generateOutputDir = settings.generateOutputDir,
             )
         }
     }
@@ -87,7 +93,7 @@ data class TerraformSettingsScheme(
 
 @Serializable
 data class BitwardenSettingsScheme(
-    override val projectId: String = ""
+    override val projectId: String = "",
 ) : BitwardenSettings {
     companion object {
         fun from(settings: BitwardenSettings): BitwardenSettingsScheme {
@@ -95,19 +101,20 @@ data class BitwardenSettingsScheme(
                 return settings
             }
             return BitwardenSettingsScheme(
-                projectId = settings.projectId
+                projectId = settings.projectId,
             )
         }
     }
-    
+
     fun toBitwardenSettings(): BitwardenSettings = this
 }
 
 @Serializable
 data class UpdateSettingsScheme(
     override val autoUpdate: Boolean = true,
-    override val checkInterval: Long = 86400000, // 24 hours in milliseconds
-    override val githubRepo: String = "kigawa-net/kinfra"
+    override val checkInterval: Long = 86400000,
+    // 24 hours in milliseconds
+    override val githubRepo: String = "kigawa-net/kinfra",
 ) : UpdateSettings {
     companion object {
         fun from(settings: UpdateSettings): UpdateSettingsScheme {
@@ -117,15 +124,13 @@ data class UpdateSettingsScheme(
             return UpdateSettingsScheme(
                 autoUpdate = settings.autoUpdate,
                 checkInterval = settings.checkInterval,
-                githubRepo = settings.githubRepo
+                githubRepo = settings.githubRepo,
             )
         }
     }
-    
-fun toUpdateSettings(): UpdateSettings = this
+
+    fun toUpdateSettings(): UpdateSettings = this
 }
-
-
 
 @Serializable
 data class KinfraConfigScheme(
@@ -140,15 +145,15 @@ data class KinfraConfigScheme(
     @Transient
     private val loginScheme: LoginConfigScheme? = null,
     // Backward compatibility for old 'project' property - save as 'project' for compatibility
-    private val project: ProjectInfoScheme? = null
+    private val project: ProjectInfoScheme? = null,
 ) : KinfraConfig {
-
     override val rootProject: ProjectInfoScheme
         get() = project ?: rootProjectNew ?: rootProjectField ?: ProjectInfoScheme()
 
     @Deprecated("Login configuration should be in GlobalConfig. This property is kept for backward compatibility.")
     override val login: LoginConfig?
         get() = loginScheme?.toLoginConfig(java.nio.file.Path.of("."))
+
     companion object {
         fun from(kinfraConfig: KinfraConfig): KinfraConfigScheme {
             if (kinfraConfig is KinfraConfigScheme) {
@@ -159,7 +164,7 @@ data class KinfraConfigScheme(
                 bitwarden = kinfraConfig.bitwarden?.let { BitwardenSettingsScheme.from(it) },
                 subProjects = kinfraConfig.subProjects.map { ProjectInfoScheme.from(it) },
                 update = kinfraConfig.update?.let { UpdateSettingsScheme.from(it) },
-                loginScheme = kinfraConfig.login?.let { LoginConfigScheme.from(it) }
+                loginScheme = kinfraConfig.login?.let { LoginConfigScheme.from(it) },
             )
         }
     }

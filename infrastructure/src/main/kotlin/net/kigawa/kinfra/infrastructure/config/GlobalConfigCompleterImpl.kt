@@ -4,12 +4,10 @@ import net.kigawa.kinfra.model.conf.FilePaths
 import net.kigawa.kinfra.model.conf.GlobalConfigCompleter
 import net.kigawa.kinfra.model.conf.global.GlobalConfig
 import net.kigawa.kinfra.model.conf.global.IncompleteGlobalConfig
-import java.nio.file.Path
 
 class GlobalConfigCompleterImpl(
-    private val filePaths: FilePaths
+    private val filePaths: FilePaths,
 ) : GlobalConfigCompleter {
-
     override fun complete(incompleteGlobalConfig: IncompleteGlobalConfig): GlobalConfig {
         // IncompleteGlobalConfig は空のインターフェースなので、
         // 実際には GlobalConfigScheme から変換する
@@ -19,14 +17,16 @@ class GlobalConfigCompleterImpl(
         }
 
         // デフォルトの GlobalConfig を返す
-        val reposPath = filePaths.baseConfigDir?.resolve(filePaths.reposDir)
-            ?: throw IllegalStateException("Config directory not available")
+        val reposPath =
+            filePaths.baseConfigDir?.resolve(filePaths.reposDir)
+                ?: throw IllegalStateException("Config directory not available")
         return GlobalConfigImpl(GlobalConfigScheme(), reposPath)
     }
 
     private fun completeGlobalConfigScheme(scheme: GlobalConfigScheme): GlobalConfig {
-        val reposPath = filePaths.baseConfigDir?.resolve(filePaths.reposDir)
-            ?: throw IllegalStateException("Config directory not available")
+        val reposPath =
+            filePaths.baseConfigDir?.resolve(filePaths.reposDir)
+                ?: throw IllegalStateException("Config directory not available")
 
         val login = scheme.login ?: return GlobalConfigImpl(scheme, reposPath)
 
@@ -54,16 +54,18 @@ class GlobalConfigCompleterImpl(
             }
         }
 
-        val completedScheme = if (modified) {
-            scheme.copy(
-                login = scheme.login?.copy(
-                    repo = repo,
-                    enabledProjects = enabledProjects
+        val completedScheme =
+            if (modified) {
+                scheme.copy(
+                    login =
+                        scheme.login?.copy(
+                            repo = repo,
+                            enabledProjects = enabledProjects,
+                        ),
                 )
-            )
-        } else {
-            scheme
-        }
+            } else {
+                scheme
+            }
 
         return GlobalConfigImpl(completedScheme, reposPath)
     }

@@ -9,11 +9,14 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 class VersionCheckerImpl(
-    private val logger: Logger
+    private val logger: Logger,
 ) : VersionChecker {
     private val gson = Gson()
 
-    override fun checkForUpdates(currentVersion: String, githubRepo: String): VersionInfo {
+    override fun checkForUpdates(
+        currentVersion: String,
+        githubRepo: String,
+    ): VersionInfo {
         return try {
             logger.debug("Checking for updates from GitHub repository: $githubRepo")
 
@@ -31,11 +34,12 @@ class VersionCheckerImpl(
                 val latestVersion = jsonObject.get("tag_name")?.asString?.removePrefix("v") ?: currentVersion
                 val updateAvailable = compareVersions(currentVersion, latestVersion) < 0
 
-                val downloadUrl = if (updateAvailable) {
-                    "https://github.com/$githubRepo/releases/download/v$latestVersion/kinfra-cli-$latestVersion.jar"
-                } else {
-                    ""
-                }
+                val downloadUrl =
+                    if (updateAvailable) {
+                        "https://github.com/$githubRepo/releases/download/v$latestVersion/kinfra-cli-$latestVersion.jar"
+                    } else {
+                        ""
+                    }
 
                 logger.debug("Current version: $currentVersion, Latest version: $latestVersion, Update available: $updateAvailable")
 
@@ -43,7 +47,7 @@ class VersionCheckerImpl(
                     currentVersion = currentVersion,
                     latestVersion = latestVersion,
                     updateAvailable = updateAvailable,
-                    downloadUrl = downloadUrl
+                    downloadUrl = downloadUrl,
                 )
             } else {
                 logger.warn("Failed to check for updates: HTTP ${connection.responseCode}")
@@ -55,12 +59,18 @@ class VersionCheckerImpl(
         }
     }
 
-    override fun shouldCheckForUpdate(lastCheckTime: Long, checkInterval: Long): Boolean {
+    override fun shouldCheckForUpdate(
+        lastCheckTime: Long,
+        checkInterval: Long,
+    ): Boolean {
         val currentTime = System.currentTimeMillis()
         return (currentTime - lastCheckTime) >= checkInterval
     }
 
-    private fun compareVersions(current: String, latest: String): Int {
+    private fun compareVersions(
+        current: String,
+        latest: String,
+    ): Int {
         // Skip comparison for dev versions
         if (current == "dev" || latest == "dev") return 0
 

@@ -3,7 +3,6 @@ package net.kigawa.kinfra.infrastructure.config
 import kotlinx.serialization.Serializable
 import net.kigawa.kinfra.model.conf.KinfraParentConfig
 import net.kigawa.kinfra.model.conf.KinfraParentConfigData
-import net.kigawa.kinfra.model.sub.SubProject
 
 /**
  * Serializable implementation of KinfraParentConfig
@@ -25,7 +24,7 @@ data class KinfraParentConfigScheme(
                 terraform = config.terraform?.let { TerraformSettingsScheme.from(it) },
                 subProjects = config.subProjects.map { SubProjectScheme.from(it) },
                 bitwarden = config.bitwarden?.let { BitwardenSettingsScheme.from(it) },
-                update = config.update?.let { UpdateSettingsScheme.from(it) }
+                update = config.update?.let { UpdateSettingsScheme.from(it) },
             )
         }
 
@@ -36,16 +35,15 @@ data class KinfraParentConfigScheme(
                 terraform = config.terraform?.let { TerraformSettingsScheme.from(it) },
                 subProjects = config.subProjects.map { SubProjectScheme.from(it) },
                 bitwarden = config.bitwarden?.let { BitwardenSettingsScheme.from(it) },
-                update = config.update?.let { UpdateSettingsScheme.from(it) }
-
+                update = config.update?.let { UpdateSettingsScheme.from(it) },
             )
         }
 
         /**
          * 後方互換性のため、文字列形式のYAMLから変換する
          */
-         fun fromStringList(subProjects: List<String>): List<SubProjectScheme> {
-             return subProjects.map { SubProjectScheme(it) }
-         }
+        fun fromStringList(subProjects: List<String>): List<SubProjectScheme> {
+            return subProjects.map { SubProjectScheme(it) }
+        }
     }
 }

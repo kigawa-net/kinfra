@@ -5,7 +5,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 class EntrypointNameTest {
-
     @Test
     fun `should create entrypoint name from string`() {
         // Given

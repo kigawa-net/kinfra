@@ -23,7 +23,10 @@ interface GitHelper {
      * @param targetDir Target directory to clone into
      * @return true if clone was successful, false if failed
      */
-    fun cloneRepository(repoUrl: String, targetDir: File): Boolean
+    fun cloneRepository(
+        repoUrl: String,
+        targetDir: File,
+    ): Boolean
 
     /**
      * Get the configured repository directory
@@ -37,22 +40,22 @@ interface GitHelper {
      */
     fun getStatus(): Pair<Int, String>?
 
-     /**
-      * Add all changes to staging area
-      * @return true if add was successful, false if failed
-      */
-     fun addChanges(): Boolean
+    /**
+     * Add all changes to staging area
+     * @return true if add was successful, false if failed
+     */
+    fun addChanges(): Boolean
 
-     /**
-      * Commit staged changes with a message
-      * @param message Commit message
-      * @return true if commit was successful, false if failed
-      */
-     fun commitChanges(message: String): Boolean
+    /**
+     * Commit staged changes with a message
+     * @param message Commit message
+     * @return true if commit was successful, false if failed
+     */
+    fun commitChanges(message: String): Boolean
 
-     /**
-      * Push changes to remote repository
-      * @return true if push was successful, false if failed
-      */
-     fun pushToRemote(): Boolean
+    /**
+     * Push changes to remote repository
+     * @return true if push was successful, false if failed
+     */
+    fun pushToRemote(): Boolean
 }

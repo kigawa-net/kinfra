@@ -18,5 +18,8 @@ interface EnvFileLoader {
      * @param envFilePath .env ファイルのパス（デフォルト: カレントディレクトリの .env）
      * @return 環境変数の値、存在しない場合は null
      */
-    fun get(key: String, envFilePath: String = ".env"): String?
+    fun get(
+        key: String,
+        envFilePath: String = ".env",
+    ): String?
 }

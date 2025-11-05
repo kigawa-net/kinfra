@@ -11,5 +11,5 @@ data class BitwardenSecret(
     val value: String,
     val note: String,
     val creationDate: String,
-    val revisionDate: String
+    val revisionDate: String,
 )

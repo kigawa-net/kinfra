@@ -1,9 +1,9 @@
 package net.kigawa.kinfra.action.actions
 
-import net.kigawa.kinfra.model.GitHelper
-import net.kigawa.kinfra.model.service.TerraformService
-import net.kigawa.kinfra.model.logging.Logger
 import net.kigawa.kinfra.model.Action
+import net.kigawa.kinfra.model.GitHelper
+import net.kigawa.kinfra.model.logging.Logger
+import net.kigawa.kinfra.model.service.TerraformService
 import net.kigawa.kinfra.model.util.AnsiColors
 import net.kigawa.kinfra.model.util.isSuccess
 import net.kigawa.kinfra.model.util.message
@@ -12,13 +12,12 @@ class HelloAction(
     private val terraformService: TerraformService,
     private val logger: Logger,
     private val gitHelper: GitHelper,
-): Action {
-
+) : Action {
     override fun execute(args: List<String>): Int {
         // Pull latest changes from git repository
         if (!gitHelper.pullRepository()) {
             println(
-                "${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Failed to pull from git repository, continuing anyway..."
+                "${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Failed to pull from git repository, continuing anyway...",
             )
         }
 
@@ -63,7 +62,7 @@ class HelloAction(
             MenuItem("Run Terraform init") { terraformInit() },
             MenuItem("Run Terraform plan") { terraformPlan() },
             MenuItem("Run Terraform init + plan") { terraformInitAndPlan() },
-            MenuItem("Run Terraform apply") { terraformApply() }
+            MenuItem("Run Terraform apply") { terraformApply() },
         )
     }
 
@@ -216,7 +215,7 @@ class HelloAction(
         if (result == null) {
             println("${AnsiColors.RED}Error:${AnsiColors.RESET} No repository configured or repository not found")
             println(
-                "${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Run 'kinfra login <github-repo>' to set up a repository"
+                "${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Run 'kinfra login <github-repo>' to set up a repository",
             )
             return
         }

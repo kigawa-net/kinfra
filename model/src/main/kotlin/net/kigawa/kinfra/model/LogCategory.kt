@@ -6,14 +6,19 @@ package net.kigawa.kinfra.model
 enum class LogCategory {
     /** General information messages */
     INFO,
+
     /** Success messages */
     SUCCESS,
+
     /** Warning messages */
     WARNING,
+
     /** Error messages */
     ERROR,
+
     /** Command execution output */
     COMMAND,
+
     /** Debug messages */
-    DEBUG
+    DEBUG,
 }

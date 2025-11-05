@@ -2,9 +2,9 @@ package net.kigawa.kinfra.infrastructure.bitwarden
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import net.kigawa.kinfra.model.bitwarden.BitwardenSecretManagerRepository
 import net.kigawa.kinfra.infrastructure.process.ProcessExecutor
 import net.kigawa.kinfra.model.BitwardenSecret
+import net.kigawa.kinfra.model.bitwarden.BitwardenSecretManagerRepository
 import java.io.File
 import java.net.URL
 import java.nio.file.Files
@@ -16,9 +16,8 @@ import java.nio.file.StandardCopyOption
 class BitwardenSecretManagerRepositoryImpl(
     private val accessToken: String,
     private val processExecutor: ProcessExecutor,
-    private val projectId: String? = null
+    private val projectId: String? = null,
 ) : BitwardenSecretManagerRepository {
-
     private val gson = Gson()
     private val bwsPath: String
 
@@ -55,14 +54,15 @@ class BitwardenSecretManagerRepositoryImpl(
         val os = System.getProperty("os.name").lowercase()
         val arch = System.getProperty("os.arch").lowercase()
 
-        val platform = when {
-            os.contains("linux") && (arch.contains("amd64") || arch.contains("x86_64")) -> "x86_64-unknown-linux-gnu"
-            os.contains("linux") && arch.contains("aarch64") -> "aarch64-unknown-linux-gnu"
-            os.contains("mac") && arch.contains("aarch64") -> "aarch64-apple-darwin"
-            os.contains("mac") && (arch.contains("x86_64") || arch.contains("amd64")) -> "x86_64-apple-darwin"
-            os.contains("windows") -> "x86_64-pc-windows-msvc"
-            else -> throw IllegalStateException("Unsupported platform: $os $arch")
-        }
+        val platform =
+            when {
+                os.contains("linux") && (arch.contains("amd64") || arch.contains("x86_64")) -> "x86_64-unknown-linux-gnu"
+                os.contains("linux") && arch.contains("aarch64") -> "aarch64-unknown-linux-gnu"
+                os.contains("mac") && arch.contains("aarch64") -> "aarch64-apple-darwin"
+                os.contains("mac") && (arch.contains("x86_64") || arch.contains("amd64")) -> "x86_64-apple-darwin"
+                os.contains("windows") -> "x86_64-pc-windows-msvc"
+                else -> throw IllegalStateException("Unsupported platform: $os $arch")
+            }
 
         // 最新バージョンをダウンロード
         val version = "1.0.0"
@@ -80,10 +80,11 @@ class BitwardenSecretManagerRepositoryImpl(
 
             // zipファイルを展開
             println("Extracting bws...")
-            val unzipResult = processExecutor.executeWithOutput(
-                arrayOf("unzip", "-o", zipFile.absolutePath, "-d", binDir.absolutePath),
-                null
-            )
+            val unzipResult =
+                processExecutor.executeWithOutput(
+                    arrayOf("unzip", "-o", zipFile.absolutePath, "-d", binDir.absolutePath),
+                    null,
+                )
 
             if (unzipResult.exitCode != 0) {
                 throw IllegalStateException("Failed to unzip: unzip command returned ${unzipResult.exitCode}")
@@ -103,17 +104,21 @@ class BitwardenSecretManagerRepositoryImpl(
             }
         } catch (e: Exception) {
             zipFile.delete()
-            throw IllegalStateException("Failed to install bws CLI: ${e.message}\n" +
-                "Please install manually: https://github.com/bitwarden/sdk-sm/releases", e)
+            throw IllegalStateException(
+                "Failed to install bws CLI: ${e.message}\n" +
+                    "Please install manually: https://github.com/bitwarden/sdk-sm/releases",
+                e,
+            )
         }
     }
 
     override fun listSecrets(): List<BitwardenSecret> {
         return try {
-            val result = processExecutor.executeWithOutput(
-                arrayOf(bwsPath, "secret", "list", "--access-token", accessToken, "--output", "json"),
-                null
-            )
+            val result =
+                processExecutor.executeWithOutput(
+                    arrayOf(bwsPath, "secret", "list", "--access-token", accessToken, "--output", "json"),
+                    null,
+                )
 
             if (result.exitCode != 0) {
                 println("Error listing secrets: ${result.error}")
@@ -121,18 +126,19 @@ class BitwardenSecretManagerRepositoryImpl(
             }
 
             val jsonArray = gson.fromJson(result.output, Array<JsonObject>::class.java)
-            val allSecrets = jsonArray.map { json ->
-                BitwardenSecret(
-                    id = json.get("id").asString,
-                    organizationId = json.get("organizationId")?.asString ?: "",
-                    projectId = json.get("projectId")?.asString,
-                    key = json.get("key").asString,
-                    value = json.get("value").asString,
-                    note = json.get("note")?.asString ?: "",
-                    creationDate = json.get("creationDate")?.asString ?: "",
-                    revisionDate = json.get("revisionDate")?.asString ?: ""
-                )
-            }
+            val allSecrets =
+                jsonArray.map { json ->
+                    BitwardenSecret(
+                        id = json.get("id").asString,
+                        organizationId = json.get("organizationId")?.asString ?: "",
+                        projectId = json.get("projectId")?.asString,
+                        key = json.get("key").asString,
+                        value = json.get("value").asString,
+                        note = json.get("note")?.asString ?: "",
+                        creationDate = json.get("creationDate")?.asString ?: "",
+                        revisionDate = json.get("revisionDate")?.asString ?: "",
+                    )
+                }
 
             // プロジェクトIDが指定されている場合はフィルタリング
             if (projectId != null) {
@@ -148,10 +154,11 @@ class BitwardenSecretManagerRepositoryImpl(
 
     override fun getSecret(id: String): BitwardenSecret? {
         return try {
-            val result = processExecutor.executeWithOutput(
-                arrayOf(bwsPath, "secret", "get", id, "--access-token", accessToken, "--output", "json"),
-                null
-            )
+            val result =
+                processExecutor.executeWithOutput(
+                    arrayOf(bwsPath, "secret", "get", id, "--access-token", accessToken, "--output", "json"),
+                    null,
+                )
 
             if (result.exitCode != 0) {
                 return null
@@ -166,7 +173,7 @@ class BitwardenSecretManagerRepositoryImpl(
                 value = json.get("value").asString,
                 note = json.get("note")?.asString ?: "",
                 creationDate = json.get("creationDate")?.asString ?: "",
-                revisionDate = json.get("revisionDate")?.asString ?: ""
+                revisionDate = json.get("revisionDate")?.asString ?: "",
             )
         } catch (e: Exception) {
             null

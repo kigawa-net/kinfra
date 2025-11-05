@@ -5,5 +5,4 @@ import net.kigawa.kodel.api.dep.DepsBase
 
 class RootDeps(
     depContext: DepContext<KinfraDepScope>,
-): DepsBase<KinfraDepScope>(depContext) {
-}
+) : DepsBase<KinfraDepScope>(depContext)

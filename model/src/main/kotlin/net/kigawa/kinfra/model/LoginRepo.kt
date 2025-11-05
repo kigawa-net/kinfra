@@ -9,11 +9,18 @@ import java.nio.file.Path
 interface LoginRepo {
     val repoPath: Path
     val loginConfig: LoginConfig
+
     fun kinfraConfigPath(): Path
+
     fun loadKinfraConfig(): KinfraConfig?
+
     fun saveKinfraConfig(config: KinfraConfig)
+
     fun kinfraConfigExists(): Boolean
+
     fun loadKinfraBaseConfig(): KinfraParentConfig?
+
     fun createKinfraParentConfig(kinfraParentConfigData: KinfraParentConfigData): KinfraParentConfig
+
     fun kinfraBaseConfigPath(): Path
 }

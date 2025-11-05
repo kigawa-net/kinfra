@@ -1,18 +1,17 @@
 package net.kigawa.kinfra.action.actions
-import net.kigawa.kinfra.model.util.exitCode
-import net.kigawa.kinfra.model.util.message
-
-import net.kigawa.kinfra.model.GitHelper
-import net.kigawa.kinfra.model.service.TerraformService
-import net.kigawa.kinfra.model.execution.SubProjectExecutor
 import net.kigawa.kinfra.model.Action
+import net.kigawa.kinfra.model.GitHelper
+import net.kigawa.kinfra.model.execution.SubProjectExecutor
+import net.kigawa.kinfra.model.service.TerraformService
 import net.kigawa.kinfra.model.util.AnsiColors
+import net.kigawa.kinfra.model.util.exitCode
 import net.kigawa.kinfra.model.util.isFailure
+import net.kigawa.kinfra.model.util.message
 
 class PlanAction(
     private val terraformService: TerraformService,
     private val gitHelper: GitHelper,
-    private val subProjectExecutor: SubProjectExecutor
+    private val subProjectExecutor: SubProjectExecutor,
 ) : Action {
     override fun execute(args: List<String>): Int {
         // Pull latest changes from git repository
@@ -56,48 +55,54 @@ class PlanAction(
             println()
             println("${AnsiColors.BLUE}Found ${subProjects.size} sub-project(s)${AnsiColors.RESET}")
 
-            val subResult = subProjectExecutor.executeInSubProjects(subProjects) { subProject, subProjectDir ->
-                println("${AnsiColors.BLUE}Planning Terraform changes for sub-project:${AnsiColors.RESET} ${subProject.name} (${subProjectDir.absolutePath})")
+            val subResult =
+                subProjectExecutor.executeInSubProjects(subProjects) { subProject, subProjectDir ->
+                    println(
+                        "${AnsiColors.BLUE}Planning Terraform changes for sub-project:${AnsiColors.RESET} " +
+                            "${subProject.name} (${subProjectDir.absolutePath})",
+                    )
 
-                // サブプロジェクトのマージされたbackendConfigを読み込み
-                val backendConfig = subProjectExecutor.getMergedBackendConfig(subProject)
+                    // サブプロジェクトのマージされたbackendConfigを読み込み
+                    val backendConfig = subProjectExecutor.getMergedBackendConfig(subProject)
 
-                // サブプロジェクトでもplan前にinitを実行
-                println("${AnsiColors.BLUE}Initializing Terraform for sub-project...${AnsiColors.RESET}")
-                val initArgs = mutableListOf("terraform", "init", "-input=false")
+                    // サブプロジェクトでもplan前にinitを実行
+                    println("${AnsiColors.BLUE}Initializing Terraform for sub-project...${AnsiColors.RESET}")
+                    val initArgs = mutableListOf("terraform", "init", "-input=false")
 
-                // backendConfigから-backend-configオプションを追加
-                backendConfig.forEach { (key, value) ->
-                    initArgs.add("-backend-config=$key=$value")
+                    // backendConfigから-backend-configオプションを追加
+                    backendConfig.forEach { (key, value) ->
+                        initArgs.add("-backend-config=$key=$value")
+                    }
+
+                    val initProcess =
+                        ProcessBuilder(initArgs)
+                            .directory(subProjectDir)
+                            .redirectOutput(ProcessBuilder.Redirect.INHERIT)
+                            .redirectError(ProcessBuilder.Redirect.INHERIT)
+                            .start()
+
+                    val initExitCode = initProcess.waitFor()
+                    if (initExitCode != 0) {
+                        println("${AnsiColors.RED}Terraform init failed for sub-project ${subProject.name}${AnsiColors.RESET}")
+                        return@executeInSubProjects initExitCode
+                    }
+
+                    val planArgs = mutableListOf("terraform", "plan", "-input=false")
+
+                    // backendConfigから-backend-configオプションを追加
+                    backendConfig.forEach { (key, value) ->
+                        planArgs.add("-backend-config=$key=$value")
+                    }
+
+                    val process =
+                        ProcessBuilder(planArgs)
+                            .directory(subProjectDir)
+                            .redirectOutput(ProcessBuilder.Redirect.INHERIT)
+                            .redirectError(ProcessBuilder.Redirect.INHERIT)
+                            .start()
+
+                    process.waitFor()
                 }
-
-                val initProcess = ProcessBuilder(initArgs)
-                    .directory(subProjectDir)
-                    .redirectOutput(ProcessBuilder.Redirect.INHERIT)
-                    .redirectError(ProcessBuilder.Redirect.INHERIT)
-                    .start()
-
-                val initExitCode = initProcess.waitFor()
-                if (initExitCode != 0) {
-                    println("${AnsiColors.RED}Terraform init failed for sub-project ${subProject.name}${AnsiColors.RESET}")
-                    return@executeInSubProjects initExitCode
-                }
-
-                val planArgs = mutableListOf("terraform", "plan", "-input=false")
-
-                // backendConfigから-backend-configオプションを追加
-                backendConfig.forEach { (key, value) ->
-                    planArgs.add("-backend-config=$key=$value")
-                }
-
-                val process = ProcessBuilder(planArgs)
-                    .directory(subProjectDir)
-                    .redirectOutput(ProcessBuilder.Redirect.INHERIT)
-                    .redirectError(ProcessBuilder.Redirect.INHERIT)
-                    .start()
-
-                process.waitFor()
-            }
 
             if (subResult != 0) {
                 println("${AnsiColors.RED}Sub-project planning failed${AnsiColors.RESET}")

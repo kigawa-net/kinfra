@@ -7,7 +7,9 @@ import java.io.File
  */
 interface FileRepository {
     fun createDirectory(path: File): Boolean
+
     fun exists(path: File): Boolean
+
     fun getAbsolutePath(path: File): String
 }
 

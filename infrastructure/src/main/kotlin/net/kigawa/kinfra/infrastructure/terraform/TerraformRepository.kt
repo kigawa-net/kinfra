@@ -1,7 +1,7 @@
 package net.kigawa.kinfra.infrastructure.terraform
 
-import net.kigawa.kinfra.model.conf.TerraformConfig
 import net.kigawa.kinfra.infrastructure.file.FileRepository
+import net.kigawa.kinfra.model.conf.TerraformConfig
 import net.kigawa.kinfra.model.config.ConfigRepository
 import java.io.File
 
@@ -15,9 +15,8 @@ interface TerraformRepository {
 class TerraformRepositoryImpl(
     private val fileRepository: FileRepository,
     private val configRepository: ConfigRepository,
-    private val loginRepo: net.kigawa.kinfra.model.LoginRepo
+    private val loginRepo: net.kigawa.kinfra.model.LoginRepo,
 ) : TerraformRepository {
-
     override fun getTerraformConfig(): TerraformConfig? {
         // 設定ファイルからTerraform設定を読み込む
         val kinfraConfig = loginRepo.loadKinfraConfig()
@@ -28,20 +27,21 @@ class TerraformRepositoryImpl(
         }
 
         // Terraformのワーキングディレクトリを決定
-        val terraformDir = if (kinfraConfig.rootProject.terraform != null) {
-            // 設定ファイルからworkingDirectoryを読み込む
-            val workingDirPath = kinfraConfig.rootProject.terraform!!.workingDirectory
-            if (workingDirPath.startsWith("/")) {
-                // 絶対パス
-                File(workingDirPath)
+        val terraformDir =
+            if (kinfraConfig.rootProject.terraform != null) {
+                // 設定ファイルからworkingDirectoryを読み込む
+                val workingDirPath = kinfraConfig.rootProject.terraform!!.workingDirectory
+                if (workingDirPath.startsWith("/")) {
+                    // 絶対パス
+                    File(workingDirPath)
+                } else {
+                    // 相対パス：プロジェクトルートからの相対パス
+                    File(loginRepo.repoPath.toFile(), workingDirPath)
+                }
             } else {
-                // 相対パス：プロジェクトルートからの相対パス
-                File(loginRepo.repoPath.toFile(), workingDirPath)
+                // Terraform設定がない場合はnullを返す
+                return null
             }
-        } else {
-            // Terraform設定がない場合はnullを返す
-            return null
-        }
 
         // tfvarsファイルの存在確認（terraformディレクトリ内を検索）
         val tfvarsFile = File(terraformDir, "terraform.tfvars")
@@ -55,9 +55,7 @@ class TerraformRepositoryImpl(
             workingDirectory = terraformDir,
             varFile = varFile,
             sshConfigPath = sshConfigPath,
-            backendConfig = kinfraConfig.rootProject.terraform?.backendConfig ?: emptyMap()
+            backendConfig = kinfraConfig.rootProject.terraform?.backendConfig ?: emptyMap(),
         )
     }
-    
-    
 }

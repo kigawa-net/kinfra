@@ -5,9 +5,8 @@ import net.kigawa.kinfra.model.LoginRepo
 import net.kigawa.kinfra.model.util.AnsiColors
 
 class SubListAction(
-    private val loginRepo: LoginRepo
+    private val loginRepo: LoginRepo,
 ) : Action {
-
     override fun execute(args: List<String>): Int {
         val parentConfig = loginRepo.loadKinfraBaseConfig()
         if (parentConfig == null) {

@@ -7,7 +7,6 @@ import java.io.File
  * .env ファイルを読み込む実装
  */
 class EnvFileLoaderImpl : EnvFileLoader {
-
     /**
      * .env ファイルから環境変数を読み込む
      * @param envFilePath .env ファイルのパス（デフォルト: カレントディレクトリの .env）
@@ -48,7 +47,10 @@ class EnvFileLoaderImpl : EnvFileLoader {
      * @param envFilePath .env ファイルのパス（デフォルト: カレントディレクトリの .env）
      * @return 環境変数の値、存在しない場合は null
      */
-    override fun get(key: String, envFilePath: String): String? {
+    override fun get(
+        key: String,
+        envFilePath: String,
+    ): String? {
         // 環境変数を優先
         System.getenv(key)?.let { return it }
 

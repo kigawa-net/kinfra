@@ -1,15 +1,15 @@
 package net.kigawa.kinfra.action.actions
 
-import net.kigawa.kinfra.model.service.TerraformService
-import net.kigawa.kinfra.model.config.ConfigRepository
-import net.kigawa.kinfra.model.execution.SubProjectExecutor
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.LoginRepo
+import net.kigawa.kinfra.model.config.ConfigRepository
+import net.kigawa.kinfra.model.execution.SubProjectExecutor
+import net.kigawa.kinfra.model.logging.Logger
+import net.kigawa.kinfra.model.service.TerraformService
 import net.kigawa.kinfra.model.util.AnsiColors
 import net.kigawa.kinfra.model.util.exitCode
 import net.kigawa.kinfra.model.util.isFailure
 import net.kigawa.kinfra.model.util.message
-import net.kigawa.kinfra.model.logging.Logger
 import java.io.File
 
 /**
@@ -19,9 +19,8 @@ class DeployActionWithSDK(
     private val terraformService: TerraformService,
     configRepository: ConfigRepository,
     loginRepo: LoginRepo,
-    private val logger: Logger
-): Action {
-
+    private val logger: Logger,
+) : Action {
     private val subProjectExecutor = SubProjectExecutor(configRepository, loginRepo)
 
     override fun execute(args: List<String>): Int {
@@ -45,7 +44,9 @@ class DeployActionWithSDK(
         val initResult = terraformService.init(emptyList())
         if (initResult.isFailure()) {
             logger.error("Terraform init failed with exit code: ${initResult.exitCode()}")
-            println("${AnsiColors.RED}Terraform init failed: ${initResult.message()} (exit code: ${initResult.exitCode()})${AnsiColors.RESET}")
+            println(
+                "${AnsiColors.RED}Terraform init failed: ${initResult.message()} (exit code: ${initResult.exitCode()})${AnsiColors.RESET}",
+            )
             println("${AnsiColors.RED}Parent project deployment failed${AnsiColors.RESET}")
             return initResult.exitCode()
         }
@@ -59,7 +60,9 @@ class DeployActionWithSDK(
         val planResult = terraformService.plan(additionalArgs, planFile = "tfplan")
         if (planResult.isFailure()) {
             logger.error("Terraform plan failed with exit code: ${planResult.exitCode()}")
-            println("${AnsiColors.RED}Terraform plan failed: ${planResult.message()} (exit code: ${planResult.exitCode()})${AnsiColors.RESET}")
+            println(
+                "${AnsiColors.RED}Terraform plan failed: ${planResult.message()} (exit code: ${planResult.exitCode()})${AnsiColors.RESET}",
+            )
             println("${AnsiColors.RED}Parent project deployment failed${AnsiColors.RESET}")
             return planResult.exitCode()
         }
@@ -70,16 +73,20 @@ class DeployActionWithSDK(
         // Step 3: Apply
         logger.info("Step 3: Applying changes")
         println("${AnsiColors.BLUE}Step 3/3: Applying changes${AnsiColors.RESET}")
-        val applyArgsWithAutoApprove = if (additionalArgs.contains("-auto-approve")) {
-            additionalArgs
-        } else {
-            additionalArgs + "-auto-approve"
-        }
+        val applyArgsWithAutoApprove =
+            if (additionalArgs.contains("-auto-approve")) {
+                additionalArgs
+            } else {
+                additionalArgs + "-auto-approve"
+            }
         val applyResult = terraformService.apply(planFile = "tfplan", additionalArgs = applyArgsWithAutoApprove)
 
         if (applyResult.isFailure()) {
             logger.error("Terraform apply failed with exit code: ${applyResult.exitCode()}")
-            println("${AnsiColors.RED}Terraform apply failed: ${applyResult.message()} (exit code: ${applyResult.exitCode()})${AnsiColors.RESET}")
+            println(
+                "${AnsiColors.RED}Terraform apply failed: ${applyResult.message()} " +
+                    "(exit code: ${applyResult.exitCode()})${AnsiColors.RESET}",
+            )
             println("${AnsiColors.RED}Parent project deployment failed${AnsiColors.RESET}")
             return applyResult.exitCode()
         }
@@ -94,9 +101,10 @@ class DeployActionWithSDK(
             println()
             println("${AnsiColors.BLUE}Found ${subProjects.size} sub-project(s)${AnsiColors.RESET}")
 
-            val subResult = subProjectExecutor.executeInSubProjects(subProjects) { _, subProjectDir ->
-                executeSubProjectDeployment(additionalArgs, subProjectDir)
-            }
+            val subResult =
+                subProjectExecutor.executeInSubProjects(subProjects) { _, subProjectDir ->
+                    executeSubProjectDeployment(additionalArgs, subProjectDir)
+                }
 
             if (subResult != 0) {
                 println("${AnsiColors.RED}Sub-project deployment failed${AnsiColors.RESET}")
@@ -124,7 +132,10 @@ class DeployActionWithSDK(
         return 0
     }
 
-    private fun executeSubProjectDeployment(additionalArgs: List<String>, subProjectDir: File): Int {
+    private fun executeSubProjectDeployment(
+        additionalArgs: List<String>,
+        subProjectDir: File,
+    ): Int {
         logger.info("Deploying sub-project in directory: ${subProjectDir.absolutePath}")
 
         // Step 1: Initialize
@@ -166,11 +177,12 @@ class DeployActionWithSDK(
         // Step 3: Apply
         logger.info("Step 3: Applying changes for sub-project")
         println("${AnsiColors.BLUE}Step 3/3: Applying changes${AnsiColors.RESET}")
-        val applyArgsWithAutoApprove = if (additionalArgs.contains("-auto-approve")) {
-            additionalArgs
-        } else {
-            additionalArgs + "-auto-approve"
-        }
+        val applyArgsWithAutoApprove =
+            if (additionalArgs.contains("-auto-approve")) {
+                additionalArgs
+            } else {
+                additionalArgs + "-auto-approve"
+            }
         val applyResult = terraformService.apply(additionalArgs = applyArgsWithAutoApprove)
 
         if (applyResult.isFailure()) {
@@ -192,15 +204,14 @@ class DeployActionWithSDK(
         return "Full deployment pipeline using Secret Manager SDK (init → plan → apply)"
     }
 
-
-
     private fun gitPush(): Boolean {
         return try {
             logger.debug("Executing git push")
-            val process = ProcessBuilder("git", "push")
-                .redirectOutput(ProcessBuilder.Redirect.PIPE)
-                .redirectError(ProcessBuilder.Redirect.PIPE)
-                .start()
+            val process =
+                ProcessBuilder("git", "push")
+                    .redirectOutput(ProcessBuilder.Redirect.PIPE)
+                    .redirectError(ProcessBuilder.Redirect.PIPE)
+                    .start()
 
             val exitCode = process.waitFor()
             if (exitCode != 0) {

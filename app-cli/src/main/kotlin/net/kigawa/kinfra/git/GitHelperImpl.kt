@@ -9,7 +9,7 @@ import java.io.File
  * Git repository operations implementation
  */
 class GitHelperImpl(
-    private val configRepository: ConfigRepository
+    private val configRepository: ConfigRepository,
 ) : GitHelper {
     /**
      * Check if the specified directory is a git repository
@@ -60,11 +60,12 @@ class GitHelperImpl(
 
         return try {
             println("${AnsiColors.BLUE}Pulling latest changes from git repository...${AnsiColors.RESET}")
-            val process = ProcessBuilder("git", "pull")
-                .directory(repoDir)
-                .redirectOutput(ProcessBuilder.Redirect.PIPE)
-                .redirectError(ProcessBuilder.Redirect.PIPE)
-                .start()
+            val process =
+                ProcessBuilder("git", "pull")
+                    .directory(repoDir)
+                    .redirectOutput(ProcessBuilder.Redirect.PIPE)
+                    .redirectError(ProcessBuilder.Redirect.PIPE)
+                    .start()
 
             val exitCode = process.waitFor()
             val output = process.inputStream.bufferedReader().readText()
@@ -102,7 +103,10 @@ class GitHelperImpl(
      * @param targetDir Target directory to clone into
      * @return true if clone was successful, false if failed
      */
-    override fun cloneRepository(repoUrl: String, targetDir: File): Boolean {
+    override fun cloneRepository(
+        repoUrl: String,
+        targetDir: File,
+    ): Boolean {
         if (targetDir.exists()) {
             if (targetDir.listFiles()?.isNotEmpty() == true) {
                 println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Target directory is not empty: ${targetDir.absolutePath}")
@@ -123,10 +127,11 @@ class GitHelperImpl(
 
         return try {
             println("${AnsiColors.BLUE}Cloning repository from $repoUrl...${AnsiColors.RESET}")
-            val process = ProcessBuilder("git", "clone", repoUrl, targetDir.absolutePath)
-                .redirectOutput(ProcessBuilder.Redirect.PIPE)
-                .redirectError(ProcessBuilder.Redirect.PIPE)
-                .start()
+            val process =
+                ProcessBuilder("git", "clone", repoUrl, targetDir.absolutePath)
+                    .redirectOutput(ProcessBuilder.Redirect.PIPE)
+                    .redirectError(ProcessBuilder.Redirect.PIPE)
+                    .start()
 
             val exitCode = process.waitFor()
             val output = process.inputStream.bufferedReader().readText()
@@ -174,11 +179,12 @@ class GitHelperImpl(
         }
 
         return try {
-            val process = ProcessBuilder("git", "status")
-                .directory(repoDir)
-                .redirectOutput(ProcessBuilder.Redirect.PIPE)
-                .redirectError(ProcessBuilder.Redirect.PIPE)
-                .start()
+            val process =
+                ProcessBuilder("git", "status")
+                    .directory(repoDir)
+                    .redirectOutput(ProcessBuilder.Redirect.PIPE)
+                    .redirectError(ProcessBuilder.Redirect.PIPE)
+                    .start()
 
             val exitCode = process.waitFor()
             val output = process.inputStream.bufferedReader().readText()
@@ -190,98 +196,100 @@ class GitHelperImpl(
         }
     }
 
-     /**
-      * Add all changes to staging area
-      * @return true if add was successful, false if failed
-      */
-     override fun addChanges(): Boolean {
-         val repoDir = getRepositoryPath() ?: return false
+    /**
+     * Add all changes to staging area
+     * @return true if add was successful, false if failed
+     */
+    override fun addChanges(): Boolean {
+        val repoDir = getRepositoryPath() ?: return false
 
-         if (!repoDir.exists() || !isGitRepository(repoDir)) {
-             println("${AnsiColors.RED}Error:${AnsiColors.RESET} Repository not found or not a git repository: ${repoDir.absolutePath}")
-             return false
-         }
+        if (!repoDir.exists() || !isGitRepository(repoDir)) {
+            println("${AnsiColors.RED}Error:${AnsiColors.RESET} Repository not found or not a git repository: ${repoDir.absolutePath}")
+            return false
+        }
 
-         return try {
-             println("${AnsiColors.BLUE}Adding all changes...${AnsiColors.RESET}")
-             val process = ProcessBuilder("git", "add", ".")
-                 .directory(repoDir)
-                 .redirectOutput(ProcessBuilder.Redirect.PIPE)
-                 .redirectError(ProcessBuilder.Redirect.PIPE)
-                 .start()
+        return try {
+            println("${AnsiColors.BLUE}Adding all changes...${AnsiColors.RESET}")
+            val process =
+                ProcessBuilder("git", "add", ".")
+                    .directory(repoDir)
+                    .redirectOutput(ProcessBuilder.Redirect.PIPE)
+                    .redirectError(ProcessBuilder.Redirect.PIPE)
+                    .start()
 
-             val exitCode = process.waitFor()
-             val output = process.inputStream.bufferedReader().readText()
-             val errorOutput = process.errorStream.bufferedReader().readText()
+            val exitCode = process.waitFor()
+            val output = process.inputStream.bufferedReader().readText()
+            val errorOutput = process.errorStream.bufferedReader().readText()
 
-             if (exitCode == 0) {
-                 println("${AnsiColors.GREEN}✓ Successfully added changes${AnsiColors.RESET}")
-                 true
-             } else {
-                 println("${AnsiColors.RED}Error adding changes:${AnsiColors.RESET}")
-                 if (errorOutput.isNotBlank()) {
-                     println(errorOutput.trim())
-                 }
-                 false
-             }
-         } catch (e: Exception) {
-             println("${AnsiColors.RED}Error:${AnsiColors.RESET} Failed to execute git add: ${e.message}")
-             false
-         }
-     }
+            if (exitCode == 0) {
+                println("${AnsiColors.GREEN}✓ Successfully added changes${AnsiColors.RESET}")
+                true
+            } else {
+                println("${AnsiColors.RED}Error adding changes:${AnsiColors.RESET}")
+                if (errorOutput.isNotBlank()) {
+                    println(errorOutput.trim())
+                }
+                false
+            }
+        } catch (e: Exception) {
+            println("${AnsiColors.RED}Error:${AnsiColors.RESET} Failed to execute git add: ${e.message}")
+            false
+        }
+    }
 
-     /**
-      * Commit staged changes with a message
-      * @param message Commit message
-      * @return true if commit was successful, false if failed
-      */
-     override fun commitChanges(message: String): Boolean {
-         val repoDir = getRepositoryPath() ?: return false
+    /**
+     * Commit staged changes with a message
+     * @param message Commit message
+     * @return true if commit was successful, false if failed
+     */
+    override fun commitChanges(message: String): Boolean {
+        val repoDir = getRepositoryPath() ?: return false
 
-         if (!repoDir.exists() || !isGitRepository(repoDir)) {
-             println("${AnsiColors.RED}Error:${AnsiColors.RESET} Repository not found or not a git repository: ${repoDir.absolutePath}")
-             return false
-         }
+        if (!repoDir.exists() || !isGitRepository(repoDir)) {
+            println("${AnsiColors.RED}Error:${AnsiColors.RESET} Repository not found or not a git repository: ${repoDir.absolutePath}")
+            return false
+        }
 
-         return try {
-             println("${AnsiColors.BLUE}Committing changes with message: $message${AnsiColors.RESET}")
-             val process = ProcessBuilder("git", "commit", "-m", message)
-                 .directory(repoDir)
-                 .redirectOutput(ProcessBuilder.Redirect.PIPE)
-                 .redirectError(ProcessBuilder.Redirect.PIPE)
-                 .start()
+        return try {
+            println("${AnsiColors.BLUE}Committing changes with message: $message${AnsiColors.RESET}")
+            val process =
+                ProcessBuilder("git", "commit", "-m", message)
+                    .directory(repoDir)
+                    .redirectOutput(ProcessBuilder.Redirect.PIPE)
+                    .redirectError(ProcessBuilder.Redirect.PIPE)
+                    .start()
 
-             val exitCode = process.waitFor()
-             val output = process.inputStream.bufferedReader().readText()
-             val errorOutput = process.errorStream.bufferedReader().readText()
+            val exitCode = process.waitFor()
+            val output = process.inputStream.bufferedReader().readText()
+            val errorOutput = process.errorStream.bufferedReader().readText()
 
-             if (exitCode == 0) {
-                 println("${AnsiColors.GREEN}✓ Successfully committed changes${AnsiColors.RESET}")
-                 if (output.isNotBlank()) {
-                     println(output.trim())
-                 }
-                 true
-             } else if (errorOutput.contains("nothing to commit")) {
-                 println("${AnsiColors.YELLOW}Nothing to commit${AnsiColors.RESET}")
-                 true // Not an error
-             } else {
-                 println("${AnsiColors.RED}Error committing changes:${AnsiColors.RESET}")
-                 if (errorOutput.isNotBlank()) {
-                     println(errorOutput.trim())
-                 }
-                 false
-             }
-         } catch (e: Exception) {
-             println("${AnsiColors.RED}Error:${AnsiColors.RESET} Failed to execute git commit: ${e.message}")
-             false
-         }
-     }
+            if (exitCode == 0) {
+                println("${AnsiColors.GREEN}✓ Successfully committed changes${AnsiColors.RESET}")
+                if (output.isNotBlank()) {
+                    println(output.trim())
+                }
+                true
+            } else if (errorOutput.contains("nothing to commit")) {
+                println("${AnsiColors.YELLOW}Nothing to commit${AnsiColors.RESET}")
+                true // Not an error
+            } else {
+                println("${AnsiColors.RED}Error committing changes:${AnsiColors.RESET}")
+                if (errorOutput.isNotBlank()) {
+                    println(errorOutput.trim())
+                }
+                false
+            }
+        } catch (e: Exception) {
+            println("${AnsiColors.RED}Error:${AnsiColors.RESET} Failed to execute git commit: ${e.message}")
+            false
+        }
+    }
 
-     /**
-      * Push changes to remote repository
-      * @return true if push was successful, false if failed
-      */
-     override fun pushToRemote(): Boolean {
+    /**
+     * Push changes to remote repository
+     * @return true if push was successful, false if failed
+     */
+    override fun pushToRemote(): Boolean {
         val repoDir = getRepositoryPath()
 
         if (repoDir == null) {
@@ -296,11 +304,12 @@ class GitHelperImpl(
 
         return try {
             // Get current branch
-            val branchProcess = ProcessBuilder("git", "rev-parse", "--abbrev-ref", "HEAD")
-                .directory(repoDir)
-                .redirectOutput(ProcessBuilder.Redirect.PIPE)
-                .redirectError(ProcessBuilder.Redirect.PIPE)
-                .start()
+            val branchProcess =
+                ProcessBuilder("git", "rev-parse", "--abbrev-ref", "HEAD")
+                    .directory(repoDir)
+                    .redirectOutput(ProcessBuilder.Redirect.PIPE)
+                    .redirectError(ProcessBuilder.Redirect.PIPE)
+                    .start()
 
             val branchExitCode = branchProcess.waitFor()
             val branchOutput = branchProcess.inputStream.bufferedReader().readText().trim()
@@ -322,11 +331,12 @@ class GitHelperImpl(
             println()
 
             // Show status
-            val statusProcess = ProcessBuilder("git", "status", "--short")
-                .directory(repoDir)
-                .redirectOutput(ProcessBuilder.Redirect.PIPE)
-                .redirectError(ProcessBuilder.Redirect.PIPE)
-                .start()
+            val statusProcess =
+                ProcessBuilder("git", "status", "--short")
+                    .directory(repoDir)
+                    .redirectOutput(ProcessBuilder.Redirect.PIPE)
+                    .redirectError(ProcessBuilder.Redirect.PIPE)
+                    .start()
 
             statusProcess.waitFor()
             val statusOutput = statusProcess.inputStream.bufferedReader().readText()
@@ -350,11 +360,12 @@ class GitHelperImpl(
             println("${AnsiColors.BLUE}Pushing to origin/$currentBranch...${AnsiColors.RESET}")
 
             // Execute push
-            val pushProcess = ProcessBuilder("git", "push", "origin", currentBranch)
-                .directory(repoDir)
-                .redirectOutput(ProcessBuilder.Redirect.PIPE)
-                .redirectError(ProcessBuilder.Redirect.PIPE)
-                .start()
+            val pushProcess =
+                ProcessBuilder("git", "push", "origin", currentBranch)
+                    .directory(repoDir)
+                    .redirectOutput(ProcessBuilder.Redirect.PIPE)
+                    .redirectError(ProcessBuilder.Redirect.PIPE)
+                    .start()
 
             val pushExitCode = pushProcess.waitFor()
             val pushOutput = pushProcess.inputStream.bufferedReader().readText()

@@ -1,14 +1,14 @@
 package net.kigawa.kinfra.action.actions
 
-import net.kigawa.kinfra.model.service.TerraformService
 import net.kigawa.kinfra.model.Action
-import net.kigawa.kinfra.model.util.exitCode
-import net.kigawa.kinfra.model.util.message
+import net.kigawa.kinfra.model.service.TerraformService
 import net.kigawa.kinfra.model.util.AnsiColors
+import net.kigawa.kinfra.model.util.exitCode
 import net.kigawa.kinfra.model.util.isFailure
+import net.kigawa.kinfra.model.util.message
 
 class ApplyAction(
-    private val terraformService: TerraformService
+    private val terraformService: TerraformService,
 ) : Action {
     override fun execute(args: List<String>): Int {
         // Terraform設定が取得できない場合は静かにスキップ
@@ -18,12 +18,14 @@ class ApplyAction(
         }
 
         // Check if first arg is a plan file
-        val planFile = if (args.isNotEmpty() &&
-            (args[0].endsWith(".tfplan") || args[0] == "tfplan")) {
-            args[0]
-        } else {
-            null
-        }
+        val planFile =
+            if (args.isNotEmpty() &&
+                (args[0].endsWith(".tfplan") || args[0] == "tfplan")
+            ) {
+                args[0]
+            } else {
+                null
+            }
 
         val argsWithoutPlan = if (planFile != null) args.drop(1) else args
 

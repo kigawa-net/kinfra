@@ -10,7 +10,7 @@ import java.nio.file.Path
  * @param homeDirGetter ホームディレクトリを取得するための実装
  */
 class FilePaths(
-    private val homeDirGetter: HomeDirGetter
+    private val homeDirGetter: HomeDirGetter,
 ) {
     /**
      * ユーザーホームディレクトリを取得
@@ -21,25 +21,25 @@ class FilePaths(
      * ベース設定ディレクトリ
      * デフォルト: ~/.local/kinfra
      */
-     val baseConfigDirName = ".local/kinfra"
+    val baseConfigDirName = ".local/kinfra"
     val baseConfigDir: Path? = userHome.resolve(baseConfigDirName).toAbsolutePath()
 
     /**
      * 設定ファイル名
      */
-     val projectConfigFileName = "project.yaml"
-     val kinfraConfigFileName = "kinfra.yaml"
-     val kinfraParentConfigFileName = "kinfra-parent.yaml"
+    val projectConfigFileName = "project.yaml"
+    val kinfraConfigFileName = "kinfra.yaml"
+    val kinfraParentConfigFileName = "kinfra-parent.yaml"
 
     /**
      * Bitwarden関連ファイル
      */
-     val bwSessionFileName = ".bw_session"
-     val bwsTokenFileName = ".bws_token"
-     val bwsTokenFile: Path? = baseConfigDir?.resolve(bwsTokenFileName)
+    val bwSessionFileName = ".bw_session"
+    val bwsTokenFileName = ".bws_token"
+    val bwsTokenFile: Path? = baseConfigDir?.resolve(bwsTokenFileName)
 
     /**
      * リポジトリディレクトリ名
      */
-     val reposDir = "repos"
+    val reposDir = "repos"
 }

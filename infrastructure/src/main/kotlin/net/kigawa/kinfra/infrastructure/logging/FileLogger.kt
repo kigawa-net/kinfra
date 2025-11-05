@@ -9,9 +9,8 @@ import java.time.format.DateTimeFormatter
  */
 class FileLogger(
     private val logDirectory: String = "logs",
-    private val logLevel: LogLevel = LogLevel.INFO
+    private val logLevel: LogLevel = LogLevel.INFO,
 ) : Logger {
-
     private val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     private val timestampFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
 
@@ -31,20 +30,25 @@ class FileLogger(
     /**
      * ログメッセージを書き込む
      */
-    private fun log(level: LogLevel, message: String, throwable: Throwable? = null) {
+    private fun log(
+        level: LogLevel,
+        message: String,
+        throwable: Throwable? = null,
+    ) {
         if (level.ordinal < logLevel.ordinal) {
             return
         }
 
         val timestamp = LocalDateTime.now().format(timestampFormatter)
-        val logMessage = buildString {
-            append("[$timestamp] [${level.name}] $message")
-            if (throwable != null) {
+        val logMessage =
+            buildString {
+                append("[$timestamp] [${level.name}] $message")
+                if (throwable != null) {
+                    append("\n")
+                    append(throwable.stackTraceToString())
+                }
                 append("\n")
-                append(throwable.stackTraceToString())
             }
-            append("\n")
-        }
 
         try {
             getLogFile().appendText(logMessage)
@@ -69,7 +73,10 @@ class FileLogger(
         log(LogLevel.ERROR, message)
     }
 
-    override fun error(message: String, throwable: Throwable) {
+    override fun error(
+        message: String,
+        throwable: Throwable,
+    ) {
         log(LogLevel.ERROR, message, throwable)
     }
 }

@@ -5,11 +5,11 @@ import kotlin.test.assertEquals
 import kotlin.test.fail
 
 class ResTest {
-
     @Test
     fun `should create Ok result`() {
         // Given
         val value = 42
+
         fun createResult(): Res<Int, Exception> = Res.Ok(value)
 
         // When
@@ -26,6 +26,7 @@ class ResTest {
     fun `should create Err result`() {
         // Given
         val error = Exception("Test error")
+
         fun createResult(): Res<Int, Exception> = Res.Err(error)
 
         // When
@@ -42,6 +43,7 @@ class ResTest {
     fun `should handle string values`() {
         // Given
         fun createOk(): Res<String, Exception> = Res.Ok("success")
+
         fun createErr(): Res<String, Exception> = Res.Err(Exception("failure"))
 
         // When
@@ -63,10 +65,11 @@ class ResTest {
     @Test
     fun `should support when expression`() {
         // Given
-        fun processResult(result: Res<Int, Exception>): Int = when (result) {
-            is Res.Ok -> result.value
-            is Res.Err -> -1
-        }
+        fun processResult(result: Res<Int, Exception>): Int =
+            when (result) {
+                is Res.Ok -> result.value
+                is Res.Err -> -1
+            }
 
         // When
         val okValue = processResult(Res.Ok(100))
@@ -82,6 +85,7 @@ class ResTest {
         // Given
         data class User(val id: Int, val name: String)
         val user = User(1, "Alice")
+
         fun createResult(): Res<User, Exception> = Res.Ok(user)
 
         // When
@@ -100,6 +104,7 @@ class ResTest {
     fun `should handle ActionException`() {
         // Given
         val exception = ActionException(1, "Command failed")
+
         fun createResult(): Res<Unit, ActionException> = Res.Err(exception)
 
         // When

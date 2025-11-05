@@ -1,5 +1,8 @@
 package net.kigawa.kinfra.action.actions
 
+import net.kigawa.kinfra.model.Action
+import net.kigawa.kinfra.model.LoginRepo
+import net.kigawa.kinfra.model.bitwarden.BitwardenRepository
 import net.kigawa.kinfra.model.config.ConfigRepository
 import net.kigawa.kinfra.model.execution.ActionExecutor
 import net.kigawa.kinfra.model.execution.DeploymentPipeline
@@ -7,9 +10,6 @@ import net.kigawa.kinfra.model.execution.ExecutionStep
 import net.kigawa.kinfra.model.execution.SubProjectExecutor
 import net.kigawa.kinfra.model.logging.Logger
 import net.kigawa.kinfra.model.service.TerraformService
-import net.kigawa.kinfra.model.bitwarden.BitwardenRepository
-import net.kigawa.kinfra.model.Action
-import net.kigawa.kinfra.model.LoginRepo
 import net.kigawa.kinfra.model.util.AnsiColors
 
 class DeployAction(
@@ -17,9 +17,8 @@ class DeployAction(
     private val bitwardenRepository: BitwardenRepository,
     configRepository: ConfigRepository,
     loginRepo: LoginRepo,
-    private val logger: Logger
+    private val logger: Logger,
 ) : Action {
-
     private val executor = ActionExecutor(logger)
     private val pipeline = DeploymentPipeline(terraformService, bitwardenRepository)
     private val subProjectExecutor = SubProjectExecutor(configRepository, loginRepo)
@@ -37,11 +36,18 @@ class DeployAction(
         println("${AnsiColors.CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${AnsiColors.RESET}")
         println()
 
-        val steps = listOf(
-            ExecutionStep("Initialize Terraform") { executor.executeWithErrorHandling("Initialize Terraform", { pipeline.initializeTerraform(additionalArgs) }) },
-            ExecutionStep("Create execution plan") { executor.executeWithErrorHandling("Create execution plan", { pipeline.createExecutionPlan(additionalArgs) }) },
-            ExecutionStep("Apply changes") { executor.executeWithErrorHandling("Apply changes", { pipeline.applyChanges(additionalArgs) }) }
-        )
+        val steps =
+            listOf(
+                ExecutionStep("Initialize Terraform") {
+                    executor.executeWithErrorHandling("Initialize Terraform", { pipeline.initializeTerraform(additionalArgs) })
+                },
+                ExecutionStep("Create execution plan") {
+                    executor.executeWithErrorHandling("Create execution plan", { pipeline.createExecutionPlan(additionalArgs) })
+                },
+                ExecutionStep(
+                    "Apply changes",
+                ) { executor.executeWithErrorHandling("Apply changes", { pipeline.applyChanges(additionalArgs) }) },
+            )
 
         val result = executor.executeSteps(steps)
 
@@ -60,9 +66,10 @@ class DeployAction(
             println()
             println("${AnsiColors.BLUE}Found ${subProjects.size} sub-project(s)${AnsiColors.RESET}")
 
-            val subResult = subProjectExecutor.executeInSubProjects(subProjects) { _, _ ->
-                executeSubProjectDeployment(additionalArgs)
-            }
+            val subResult =
+                subProjectExecutor.executeInSubProjects(subProjects) { _, _ ->
+                    executeSubProjectDeployment(additionalArgs)
+                }
 
             if (subResult != 0) {
                 println("${AnsiColors.RED}Sub-project deployment failed${AnsiColors.RESET}")
@@ -82,15 +89,16 @@ class DeployAction(
         val subPipeline = DeploymentPipeline(terraformService, bitwardenRepository)
         val subExecutor = ActionExecutor(logger)
 
-        val steps = listOf(
-            ExecutionStep("Initialize Terraform") { subPipeline.initializeTerraform(additionalArgs) },
-            ExecutionStep("Create execution plan") { subPipeline.createExecutionPlan(additionalArgs) },
-            ExecutionStep("Apply changes") { subPipeline.applyChanges(additionalArgs) }
-        )
+        val steps =
+            listOf(
+                ExecutionStep("Initialize Terraform") { subPipeline.initializeTerraform(additionalArgs) },
+                ExecutionStep("Create execution plan") { subPipeline.createExecutionPlan(additionalArgs) },
+                ExecutionStep("Apply changes") { subPipeline.applyChanges(additionalArgs) },
+            )
 
         return subExecutor.executeSteps(steps)
     }
-    
+
     private fun handleSuccessfulDeployment() {
         println()
         println("${AnsiColors.GREEN}✅ Deployment completed successfully!${AnsiColors.RESET}")
@@ -104,9 +112,7 @@ class DeployAction(
         }
     }
 
-override fun getDescription(): String {
+    override fun getDescription(): String {
         return "Full deployment pipeline (init → plan → apply)"
     }
-
-
 }

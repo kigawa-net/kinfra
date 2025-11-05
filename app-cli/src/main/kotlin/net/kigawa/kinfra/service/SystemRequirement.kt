@@ -4,13 +4,13 @@ import net.kigawa.kinfra.model.logging.Logger
 import net.kigawa.kinfra.model.util.AnsiColors
 
 class SystemRequirement(private val logger: Logger) {
-
     fun isTerraformInstalled(): Boolean {
         return try {
-            val process = ProcessBuilder("terraform", "version")
-                .redirectOutput(ProcessBuilder.Redirect.DISCARD)
-                .redirectError(ProcessBuilder.Redirect.DISCARD)
-                .start()
+            val process =
+                ProcessBuilder("terraform", "version")
+                    .redirectOutput(ProcessBuilder.Redirect.DISCARD)
+                    .redirectError(ProcessBuilder.Redirect.DISCARD)
+                    .start()
             process.waitFor() == 0
         } catch (_: Exception) {
             false

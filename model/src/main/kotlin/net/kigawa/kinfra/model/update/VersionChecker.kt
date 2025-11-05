@@ -4,10 +4,17 @@ data class VersionInfo(
     val currentVersion: String,
     val latestVersion: String,
     val updateAvailable: Boolean,
-    val downloadUrl: String = ""
+    val downloadUrl: String = "",
 )
 
 interface VersionChecker {
-    fun checkForUpdates(currentVersion: String, githubRepo: String): VersionInfo
-    fun shouldCheckForUpdate(lastCheckTime: Long, checkInterval: Long): Boolean
+    fun checkForUpdates(
+        currentVersion: String,
+        githubRepo: String,
+    ): VersionInfo
+
+    fun shouldCheckForUpdate(
+        lastCheckTime: Long,
+        checkInterval: Long,
+    ): Boolean
 }

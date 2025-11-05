@@ -2,7 +2,10 @@ package net.kigawa.kinfra.infrastructure.config
 
 import com.charleskorn.kaml.Yaml
 import net.kigawa.kinfra.model.LoginRepo
-import net.kigawa.kinfra.model.conf.*
+import net.kigawa.kinfra.model.conf.FilePaths
+import net.kigawa.kinfra.model.conf.KinfraConfig
+import net.kigawa.kinfra.model.conf.KinfraParentConfig
+import net.kigawa.kinfra.model.conf.KinfraParentConfigData
 import net.kigawa.kinfra.model.conf.global.GlobalConfig
 import net.kigawa.kinfra.model.conf.global.LoginConfig
 import java.io.File
@@ -11,25 +14,26 @@ import java.nio.file.Path
 class LoginRepoImpl(
     private val filePaths: FilePaths,
     private val globalConfig: GlobalConfig,
-): LoginRepo {
-
+) : LoginRepo {
     override val loginConfig: LoginConfig
-        get() = globalConfig.login ?: throw IllegalStateException("Login config not available. Please run 'kinfra login <repository>' first.")
-    
+        get() =
+            globalConfig.login
+                ?: throw IllegalStateException(
+                    "Login config not available. Please run 'kinfra login <repository>' first.",
+                )
+
     override val repoPath: Path by lazy {
         if (loginConfig.repoPath.toString().isNotEmpty()) {
             loginConfig.repoPath
         } else {
             File(
-                "${filePaths.baseConfigDir}/${filePaths.reposDir}/" +
-                    loginConfig.repo.value
+                "${filePaths.baseConfigDir}/${filePaths.reposDir}/${loginConfig.repo.value}",
             ).toPath()
         }
     }
 
     override fun kinfraConfigPath(): Path {
         return repoPath.resolve(filePaths.kinfraConfigFileName)
-
     }
 
     override fun kinfraBaseConfigPath(): Path {
@@ -37,6 +41,7 @@ class LoginRepoImpl(
     }
 
     val kinfraParentConfigFile: File by lazy { kinfraBaseConfigPath().toFile() }
+
     override fun loadKinfraBaseConfig(): KinfraParentConfigImpl? {
         if (!kinfraParentConfigFile.exists()) {
             return null
@@ -44,15 +49,14 @@ class LoginRepoImpl(
         return KinfraParentConfigImpl.fromFile(kinfraParentConfigFile)
     }
 
-    override fun createKinfraParentConfig(
-        kinfraParentConfigData: KinfraParentConfigData,
-    ): KinfraParentConfig {
+    override fun createKinfraParentConfig(kinfraParentConfigData: KinfraParentConfigData): KinfraParentConfig {
         kinfraParentConfigFile.parentFile.mkdirs()
         val scheme = KinfraParentConfigScheme.from(kinfraParentConfigData)
         kinfraParentConfigFile.writeText(
             Yaml.default.encodeToString(
-                KinfraParentConfigScheme.serializer(), scheme
-            )
+                KinfraParentConfigScheme.serializer(),
+                scheme,
+            ),
         )
         return KinfraParentConfigImpl(scheme, kinfraParentConfigFile)
     }
