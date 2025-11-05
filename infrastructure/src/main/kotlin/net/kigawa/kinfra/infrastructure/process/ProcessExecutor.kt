@@ -1,7 +1,7 @@
 package net.kigawa.kinfra.infrastructure.process
 
-import net.kigawa.kodel.err.ActionException
-import net.kigawa.kodel.err.Res
+import net.kigawa.kodel.api.err.ActionException
+import net.kigawa.kodel.api.err.Res
 import java.io.File
 import java.io.IOException
 
@@ -101,7 +101,7 @@ class ProcessExecutorImpl : ProcessExecutor {
             val error = if (quiet) "" else errorBuilder.toString()
             
             if (exitCode == 0) {
-                Res.Ok(exitCode)
+                Res.Ok<Int, ActionException>(exitCode)
             } else {
                 // エラーの場合はより詳細な情報を含める
                 val errorMessage = buildString {
@@ -118,10 +118,10 @@ class ProcessExecutorImpl : ProcessExecutor {
                         appendLine(output)
                     }
                 }
-                Res.Err(ActionException(exitCode, errorMessage))
+                Res.Err<Int, ActionException>(ActionException(exitCode, errorMessage))
             }
         } catch (e: IOException) {
-            Res.Err(ActionException(1, "Error executing command: ${e.message}"))
+            Res.Err<Int, ActionException>(ActionException(1, "Error executing command: ${e.message}"))
         }
     }
 

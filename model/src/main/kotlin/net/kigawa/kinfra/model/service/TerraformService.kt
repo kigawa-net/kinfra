@@ -1,14 +1,14 @@
 package net.kigawa.kinfra.model.service
 
 import net.kigawa.kinfra.model.conf.TerraformConfig
-import net.kigawa.kodel.err.ActionException
-import net.kigawa.kodel.err.Res
+import net.kigawa.kodel.api.err.ActionException
+import net.kigawa.kodel.api.err.Res
 
 /**
  * Terraformコマンドの実行を管理するサービス
  */
 interface TerraformService {
-    fun init(additionalArgs: List<String> , quiet: Boolean = false): Res<Int, ActionException>
+    fun init(additionalArgs: List<String>, quiet: Boolean = false): Res<Int, ActionException>
     fun plan(additionalArgs: List<String>, quiet: Boolean = false, planFile: String? = null): Res<Int, ActionException>
     fun apply(planFile: String? = null, additionalArgs: List<String>, quiet: Boolean = false): Res<Int, ActionException>
     fun destroy(additionalArgs: List<String>, quiet: Boolean = false): Res<Int, ActionException>
