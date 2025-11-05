@@ -1,9 +1,14 @@
 package net.kigawa.kinfra.infrastructure.config
 
-import kotlinx.serialization.Contextual
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
+import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 import net.kigawa.kinfra.model.conf.BitwardenSettings
 import net.kigawa.kinfra.model.conf.KinfraConfig
 import net.kigawa.kinfra.model.conf.ProjectInfo
@@ -12,6 +17,27 @@ import net.kigawa.kinfra.model.conf.TerraformSettings
 import net.kigawa.kinfra.model.conf.TerraformVariableMapping
 import net.kigawa.kinfra.model.conf.UpdateSettings
 import net.kigawa.kinfra.model.conf.global.LoginConfig
+
+object BackendConfigSerializer : KSerializer<Map<String, String>> {
+    override val descriptor: SerialDescriptor = MapSerializer(String.serializer(), String.serializer()).descriptor
+    
+    override fun serialize(encoder: Encoder, value: Map<String, String>) {
+        val mapSerializer = MapSerializer(String.serializer(), String.serializer())
+        mapSerializer.serialize(encoder, value)
+    }
+    
+    override fun deserialize(decoder: Decoder): Map<String, String> {
+        return try {
+            val mapSerializer = MapSerializer(String.serializer(), String.serializer())
+            mapSerializer.deserialize(decoder)
+        } catch (e: Exception) {
+            // Fallback for YAML parsing errors
+            emptyMap()
+        }
+    }
+}
+
+
 
 @Serializable
 data class ProjectInfoScheme(
@@ -57,7 +83,8 @@ data class TerraformSettingsScheme(
     override val workingDirectory: String = ".",
     override val variableMappings: List<TerraformVariableMappingScheme> = emptyList(),
     override val outputMappings: List<TerraformOutputMappingScheme> = emptyList(),
-    override val backendConfig: Map<String, @Contextual Any> = emptyMap(),
+    @Serializable(with = BackendConfigSerializer::class)
+    override val backendConfig: Map<String, String> = emptyMap(),
     override val generateOutputDir: String? = null,
 ) : TerraformSettings {
     companion object {
