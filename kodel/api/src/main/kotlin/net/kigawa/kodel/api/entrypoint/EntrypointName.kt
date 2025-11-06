@@ -5,6 +5,7 @@ package net.kigawa.kodel.api.entrypoint
  * 小文字、数字、ハイフンのみ許可。
  *
  * @param raw 生の名前文字列
+ * @throws IllegalArgumentException 名前が空白、スペースを含む、または不正な文字を含む場合
  */
 data class EntrypointName(
     val raw: String,
@@ -17,7 +18,7 @@ data class EntrypointName(
             if (it.isDigit()) return@forEach
             require(it.isLowerCase()) { "entrypoint name must be lowercase" }
             require(it.isLetterOrDigit()) {
-                "entrypoint name can contain only lowercase letters, digits, underscore and hyphen"
+                "entrypoint name can contain only lowercase letters, digits, hyphen"
             }
         }
     }

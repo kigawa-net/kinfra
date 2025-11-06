@@ -23,6 +23,7 @@ class Dep<T, S : DepScope<S>>(
     /**
      * 依存を取得する。
      *
+     * @param childContext 子依存コンテキスト（context receiver）
      * @return 依存のインスタンス
      */
     suspend context(childContext: DepContext<S>) fun get(): T {
