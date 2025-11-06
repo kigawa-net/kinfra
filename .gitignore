@@ -92,3 +92,4 @@ terraform/hosts.auto.tfvars
 # Serena MCP server files
 .serena/memories/
 .serena/*.db
+/.kotlin/

@@ -5,7 +5,6 @@ import net.kigawa.kinfra.di.DependencyContainer
 import net.kigawa.kinfra.infrastructure.dep.InfraDeps
 import net.kigawa.kodel.api.dep.DepContext
 import net.kigawa.kodel.api.dep.DepsBase
-import net.kigawa.kodel.core.dep.DefaultDepProviders
 
 class CliDeps(depContext: DepContext<CliScope>): DepsBase<CliScope>(depContext) {
     val infraDeps = dep {
@@ -14,7 +13,7 @@ class CliDeps(depContext: DepContext<CliScope>): DepsBase<CliScope>(depContext) 
     val container = dep { DependencyContainer() }
     val terraformRunner = dep { container.get().terraformRunner }
 
-    fun main(args: Array<String>) = dep(depProviderFactory = DefaultDepProviders.Singleton) {
+    suspend fun main(args: Array<String>) = useDep {
         terraformRunner.get().run(args)
     }
 }
