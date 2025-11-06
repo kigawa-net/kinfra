@@ -8,7 +8,9 @@ import net.kigawa.kodel.api.dep.DepContext
 fun main(args: Array<String>) {
     val context = DepContext(CliScope.create())
     try {
-        CliDeps(context).main(args)
+        runBlocking {
+            CliDeps(context).main(args)
+        }
     } catch (e: Exception) {
         System.err.println("Fatal error during initialization: ${e.message}")
         e.printStackTrace()
