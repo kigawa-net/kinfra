@@ -5,7 +5,13 @@ import net.kigawa.kodel.api.dep.DepProviderFactory
 import net.kigawa.kodel.api.dep.context.DepScope
 import net.kigawa.kodel.api.dep.initializer.DepProvider
 
+/**
+ * デフォルトの依存プロバイダを提供するオブジェクト。
+ */
 object DefaultDepProviders {
+    /**
+     * シングルトンプロバイダファクトリ。
+     */
     object Singleton : DepProviderFactory {
         override fun <T, S : DepScope<S>> create(
             block: suspend context(DepContext<S>)
@@ -16,6 +22,9 @@ object DefaultDepProviders {
         }
     }
 
+    /**
+     * レイジープロバイダファクトリ。
+     */
     object Lazy : DepProviderFactory {
         override fun <T, S : DepScope<S>> create(
             block: suspend context(DepContext<S>)

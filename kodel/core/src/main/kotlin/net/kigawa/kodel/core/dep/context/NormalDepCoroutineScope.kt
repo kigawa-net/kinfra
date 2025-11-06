@@ -5,6 +5,12 @@ import net.kigawa.kodel.api.dep.context.DepCoroutineScope
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.cancellation.CancellationException
 
+/**
+ * 通常の依存コルーチンスコープの実装。
+ * コルーチンの起動と管理を行う。
+ *
+ * @param ownCoroutineContext 独自のコルーチンコンテキスト
+ */
 class NormalDepCoroutineScope(
     private val ownCoroutineContext: CoroutineContext,
 ): DepCoroutineScope {
@@ -12,6 +18,12 @@ class NormalDepCoroutineScope(
         get() = ownCoroutineContext + SupervisorJob()
 
     companion object {
+        /**
+         * NormalDepCoroutineScopeを作成する。
+         *
+         * @param context コルーチンコンテキスト
+         * @return NormalDepCoroutineScopeのインスタンス
+         */
         fun create(context: CoroutineContext = Dispatchers.Default) = NormalDepCoroutineScope(context)
     }
 
@@ -39,14 +51,28 @@ class NormalDepCoroutineScope(
         }
     }
 
+    /**
+     * 別のスコープと結合する。
+     *
+     * @param depCoroutineScope 結合するスコープ
+     * @return 結合されたスコープ
+     */
     fun plus(depCoroutineScope: NormalDepCoroutineScope): NormalDepCoroutineScope {
         return NormalDepCoroutineScope(ownCoroutineContext + depCoroutineScope.ownCoroutineContext + SupervisorJob())
     }
 
+    /**
+     * 新しいスコープを作成する。
+     *
+     * @return 新しいNormalDepCoroutineScope
+     */
     fun newScope(): NormalDepCoroutineScope {
         return NormalDepCoroutineScope(coroutineContext)
     }
 
+    /**
+     * スコープをクローズする。
+     */
     fun close() {
         ownCoroutineContext.cancel()
     }
