@@ -1,5 +1,11 @@
 package net.kigawa.kodel.api.entrypoint
 
+/**
+ * エントリーポイントの名前を表すデータクラス。
+ * 小文字、数字、ハイフンのみ許可。
+ *
+ * @param raw 生の名前文字列
+ */
 data class EntrypointName(
     val raw: String,
 ) {

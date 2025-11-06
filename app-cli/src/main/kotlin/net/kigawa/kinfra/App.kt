@@ -5,6 +5,12 @@ import net.kigawa.kinfra.cli.CliDeps
 import net.kigawa.kinfra.cli.CliScope
 import net.kigawa.kodel.api.dep.DepContext
 
+/**
+ * アプリケーションのメインエントリーポイント。
+ * CLI依存を初期化し、メイン処理を実行する。
+ *
+ * @param args コマンドライン引数
+ */
 fun main(args: Array<String>) {
     val context = DepContext(CliScope.create())
     try {

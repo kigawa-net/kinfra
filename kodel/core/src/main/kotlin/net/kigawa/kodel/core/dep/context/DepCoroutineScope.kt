@@ -8,6 +8,16 @@ import net.kigawa.kodel.api.dep.context.DepCoroutineScope
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
+/**
+ * DepCoroutineScopeの拡張関数。
+ * 非同期タスクを開始する。
+ *
+ * @param T 結果の型
+ * @param context コルーチンコンテキスト
+ * @param start 開始モード
+ * @param block 実行するブロック
+ * @return Deferredオブジェクト
+ */
 fun <T> DepCoroutineScope.async(
     context: CoroutineContext = EmptyCoroutineContext,
     start: CoroutineStart = CoroutineStart.DEFAULT,
