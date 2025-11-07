@@ -1,29 +1,7 @@
 package net.kigawa.kinfra.di
 
 import net.kigawa.kinfra.TerraformRunner
-import net.kigawa.kinfra.action.actions.ApplyAction
-import net.kigawa.kinfra.action.actions.ConfigAction
-import net.kigawa.kinfra.action.actions.ConfigEditAction
-import net.kigawa.kinfra.action.actions.CurrentGenerateVariableAction
-import net.kigawa.kinfra.action.actions.CurrentPlanAction
-import net.kigawa.kinfra.action.actions.DeployAction
-import net.kigawa.kinfra.action.actions.DeployActionWithSDK
-import net.kigawa.kinfra.action.actions.DestroyAction
-import net.kigawa.kinfra.action.actions.FormatAction
-import net.kigawa.kinfra.action.actions.HelloAction
-import net.kigawa.kinfra.action.actions.HelpAction
-import net.kigawa.kinfra.action.actions.InitAction
-import net.kigawa.kinfra.action.actions.PlanAction
-import net.kigawa.kinfra.action.actions.PushAction
-import net.kigawa.kinfra.action.actions.SelfUpdateAction
-import net.kigawa.kinfra.action.actions.StatusAction
-import net.kigawa.kinfra.action.actions.SubAddAction
-import net.kigawa.kinfra.action.actions.SubEditAction
-import net.kigawa.kinfra.action.actions.SubListAction
-import net.kigawa.kinfra.action.actions.SubPlanAction
-import net.kigawa.kinfra.action.actions.SubRemoveAction
-import net.kigawa.kinfra.action.actions.SubShowAction
-import net.kigawa.kinfra.action.actions.ValidateAction
+import net.kigawa.kinfra.action.actions.*
 import net.kigawa.kinfra.actions.LoginAction
 import net.kigawa.kinfra.git.GitHelperImpl
 import net.kigawa.kinfra.infrastructure.action.actions.NextAction
@@ -39,15 +17,10 @@ import net.kigawa.kinfra.infrastructure.file.SystemHomeDirGetter
 import net.kigawa.kinfra.infrastructure.logging.FileLogger
 import net.kigawa.kinfra.infrastructure.logging.LogLevel
 import net.kigawa.kinfra.infrastructure.process.ProcessExecutorImpl
-import net.kigawa.kinfra.infrastructure.service.TerraformServiceImpl
 import net.kigawa.kinfra.infrastructure.terraform.TerraformRepositoryImpl
 import net.kigawa.kinfra.infrastructure.update.AutoUpdaterImpl
 import net.kigawa.kinfra.infrastructure.update.VersionCheckerImpl
-import net.kigawa.kinfra.model.Action
-import net.kigawa.kinfra.model.ActionType
-import net.kigawa.kinfra.model.GitHelper
-import net.kigawa.kinfra.model.LoginRepo
-import net.kigawa.kinfra.model.SubActionType
+import net.kigawa.kinfra.model.*
 import net.kigawa.kinfra.model.bitwarden.BitwardenRepository
 import net.kigawa.kinfra.model.bitwarden.BitwardenSecretManagerRepository
 import net.kigawa.kinfra.model.conf.FilePaths
@@ -89,9 +62,7 @@ class DependencyContainer {
     val globalConfigCompleter: GlobalConfigCompleter by lazy { GlobalConfigCompleterImpl(filePaths) }
     val configRepository: ConfigRepository by lazy { ConfigRepositoryImpl(filePaths, logger, globalConfigCompleter) }
     val terraformRepository by lazy { TerraformRepositoryImpl(fileRepository, loginRepo) }
-    val terraformService: TerraformService by lazy {
-        TerraformServiceImpl(processExecutor, terraformRepository, configRepository, bitwardenSecretManagerRepository)
-    }
+
     val bitwardenRepository: BitwardenRepository by lazy { BitwardenRepositoryImpl(processExecutor, filePaths) }
 
     val globalConfig: GlobalConfig by lazy {
@@ -136,20 +107,20 @@ class DependencyContainer {
         }
     }
 
-    // Service layer
-    val actionRegistry: ActionRegistry by lazy { ActionRegistry(this) }
     val commandInterpreter: CommandInterpreter by lazy { CommandInterpreter(logger) }
     val systemRequirement: SystemRequirement by lazy { SystemRequirement(logger) }
-    val updateHandler: UpdateHandler by lazy { UpdateHandler(versionChecker, autoUpdater, logger, configRepository, loginRepo) }
+    val updateHandler: UpdateHandler by lazy {
+        UpdateHandler(
+            versionChecker, autoUpdater, logger, configRepository, loginRepo
+        )
+    }
 
     val subProjectExecutor: SubProjectExecutor by lazy { SubProjectExecutor(configRepository, loginRepo) }
 
-    // Presentation layer
-    val terraformRunner: TerraformRunner by lazy { TerraformRunner(this) }
 
     // Actions (without HelpAction first to avoid circular dependency)
-    private val actionsWithoutHelp: Map<Pair<String, SubActionType?>, Action> by lazy {
-        buildMap {
+    private fun actionsWithoutHelp(terraformService: TerraformService): Map<Pair<String, SubActionType?>, Action> {
+        return buildMap {
             // Regular actions
             put(Pair(ActionType.FMT.actionName, null), FormatAction(terraformService, gitHelper))
             put(Pair(ActionType.VALIDATE.actionName, null), ValidateAction(terraformService, gitHelper))
@@ -192,7 +163,10 @@ class DependencyContainer {
                     logger,
                 ),
             )
-            put(Pair(ActionType.CURRENT.actionName, SubActionType.GENERATE), CurrentGenerateVariableAction(configRepository))
+            put(
+                Pair(ActionType.CURRENT.actionName, SubActionType.GENERATE),
+                CurrentGenerateVariableAction(configRepository)
+            )
             put(Pair(ActionType.CURRENT.actionName, SubActionType.PLAN), CurrentPlanAction(configRepository))
             put(Pair(ActionType.NEXT.actionName, null), NextAction(processExecutor, loginRepo, logger))
             put(Pair(ActionType.SUBMODULE.actionName, null), SubmoduleAction(processExecutor, logger))
@@ -240,20 +214,21 @@ class DependencyContainer {
     }
 
     // All actions including HelpAction
-    private val actions: Map<Pair<String, SubActionType?>, Action> by lazy {
-        actionsWithoutHelp.toMutableMap().apply {
+    private fun actions(terraformService: TerraformService): Map<Pair<String, SubActionType?>, Action> {
+        val actionsMap = actionsWithoutHelp(terraformService)
+        return actionsMap.toMutableMap().apply {
             // Help action needs access to all actions (without help itself)
             val actionsForHelp =
                 buildMap {
                     ActionType.entries.forEach { actionType ->
                         if (actionType == ActionType.SUB || actionType == ActionType.CURRENT) {
                             SubActionType.entries.forEach { subActionType ->
-                                actionsWithoutHelp[Pair(actionType.actionName, subActionType)]?.let {
+                                actionsMap[Pair(actionType.actionName, subActionType)]?.let {
                                     put("${actionType.actionName} ${subActionType.actionName}", it)
                                 }
                             }
                         } else if (actionType != ActionType.HELP) {
-                            actionsWithoutHelp[Pair(actionType.actionName, null)]?.let {
+                            actionsMap[Pair(actionType.actionName, null)]?.let {
                                 put(actionType.actionName, it)
                             }
                         }
@@ -266,7 +241,9 @@ class DependencyContainer {
     fun getAction(
         actionName: String,
         subActionType: SubActionType? = null,
+        terraformService: TerraformService,
     ): Action? {
+        val actions = actions(terraformService)
         return actions[Pair(actionName, subActionType)]
     }
 

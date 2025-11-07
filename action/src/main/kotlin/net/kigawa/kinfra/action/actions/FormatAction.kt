@@ -18,10 +18,7 @@ class FormatAction(
         }
 
         // Terraform設定が取得できない場合は静かにスキップ
-        val config = terraformService.getTerraformConfig()
-        if (config == null) {
-            return 0
-        }
+        val config = terraformService.terraformConfig
 
         val result = terraformService.format(recursive = true, quiet = false)
 

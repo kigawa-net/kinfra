@@ -20,34 +20,30 @@ class PlanAction(
         }
 
         // Terraform設定を取得
-        val config = terraformService.getTerraformConfig()
+        val config = terraformService.terraformConfig
 
         // 親プロジェクトのplanを実行（設定がある場合のみ）
-        if (config != null) {
-            // プロジェクト名を表示
-            println("${AnsiColors.BLUE}Planning Terraform changes for project:${AnsiColors.RESET} ${config.workingDirectory.absolutePath}")
+        // プロジェクト名を表示
+        println("${AnsiColors.BLUE}Planning Terraform changes for project:${AnsiColors.RESET} ${config.workingDirectory.absolutePath}")
 
-            // plan実行前に自動でinitを実行
-            println("${AnsiColors.BLUE}Initializing Terraform...${AnsiColors.RESET}")
-            val initResult = terraformService.init(emptyList())
-            if (initResult.isFailure()) {
-                println("${AnsiColors.RED}Terraform init failed for parent project${AnsiColors.RESET}")
-                initResult.message()?.let { println("${AnsiColors.RED}Details: $it${AnsiColors.RESET}") }
-                return initResult.exitCode()
-            }
-
-            val result = terraformService.plan(args)
-
-            // エラーが発生した場合、プロジェクト情報を表示
-            if (result.isFailure()) {
-                println("${AnsiColors.RED}Error in project:${AnsiColors.RESET} ${config.workingDirectory.absolutePath}")
-                result.message()?.let { println("${AnsiColors.RED}Details: $it${AnsiColors.RESET}") }
-            }
-
-            // 親プロジェクトが失敗した場合でもサブプロジェクトを実行するため、exitCodeは最後に返す
-        } else {
-            println("${AnsiColors.YELLOW}No Terraform configuration found for parent project, skipping${AnsiColors.RESET}")
+        // plan実行前に自動でinitを実行
+        println("${AnsiColors.BLUE}Initializing Terraform...${AnsiColors.RESET}")
+        val initResult = terraformService.init(emptyList())
+        if (initResult.isFailure()) {
+            println("${AnsiColors.RED}Terraform init failed for parent project${AnsiColors.RESET}")
+            initResult.message()?.let { println("${AnsiColors.RED}Details: $it${AnsiColors.RESET}") }
+            return initResult.exitCode()
         }
+
+        val result = terraformService.plan(args)
+
+        // エラーが発生した場合、プロジェクト情報を表示
+        if (result.isFailure()) {
+            println("${AnsiColors.RED}Error in project:${AnsiColors.RESET} ${config.workingDirectory.absolutePath}")
+            result.message()?.let { println("${AnsiColors.RED}Details: $it${AnsiColors.RESET}") }
+        }
+
+        // 親プロジェクトが失敗した場合でもサブプロジェクトを実行するため、exitCodeは最後に返す
 
         // サブプロジェクトでもplanを実行
         val subProjects = subProjectExecutor.getSubProjects()

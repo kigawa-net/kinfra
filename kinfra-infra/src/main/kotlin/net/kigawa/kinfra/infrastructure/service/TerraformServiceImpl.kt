@@ -18,8 +18,9 @@ class TerraformServiceImpl(
     private val processExecutor: ProcessExecutor,
     private val terraformRepository: TerraformRepository,
     private val configRepository: ConfigRepository,
-    private val bitwardenSecretManagerRepository: BitwardenSecretManagerRepository? = null,
-) : TerraformService {
+    private val bitwardenSecretManagerRepository: BitwardenSecretManagerRepository?,
+    override val terraformConfig: TerraformConfig,
+): TerraformService {
     /**
      * backendConfigをフラットなキーバリューペアに変換
      */
@@ -41,6 +42,7 @@ class TerraformServiceImpl(
                     val nestedMap = value as Map<String, Any>
                     result.putAll(flattenBackendConfig(nestedMap, fullKey))
                 }
+
                 else -> result[fullKey] = value.toString()
             }
         }
@@ -54,7 +56,7 @@ class TerraformServiceImpl(
     ): Res<Int, ActionException> {
         val config = terraformRepository.getTerraformConfig()
         if (config == null) {
-            return Res.Err<Int, ActionException>(ActionException(1, "Terraform configuration not found"))
+            return Res.Err(ActionException(1, "Terraform configuration not found"))
         }
 
         val args = mutableListOf("terraform", "init", "-input=false")
@@ -80,22 +82,18 @@ class TerraformServiceImpl(
         quiet: Boolean,
         planFile: String?,
     ): Res<Int, ActionException> {
-        val config = terraformRepository.getTerraformConfig()
-        if (config == null) {
-            return Res.Err<Int, ActionException>(ActionException(1, "Terraform configuration not found"))
-        }
 
         // Bitwardenシークレットから.tfvarsファイルを生成
         val generatedTfvarsFile =
             generateTfvarsFromBitwarden()?.let { content ->
-                saveTfvarsFile(config, content)
+                saveTfvarsFile(terraformConfig, content)
             }
 
         val varFileArgs = mutableListOf<String>()
 
         // 既存のvarFileがある場合
-        if (config.hasVarFile()) {
-            varFileArgs.add("-var-file=${config.varFile!!.absolutePath}")
+        if (terraformConfig.hasVarFile()) {
+            varFileArgs.add("-var-file=${terraformConfig.varFile!!.absolutePath}")
         }
 
         // 生成された.tfvarsファイルがある場合
@@ -115,8 +113,8 @@ class TerraformServiceImpl(
 
         return processExecutor.execute(
             args = args.toTypedArray(),
-            workingDir = config.workingDirectory,
-            environment = mapOf("SSH_CONFIG" to config.sshConfigPath),
+            workingDir = terraformConfig.workingDirectory,
+            environment = mapOf("SSH_CONFIG" to terraformConfig.sshConfigPath),
             quiet = quiet,
         )
     }
@@ -230,10 +228,6 @@ class TerraformServiceImpl(
             environment = mapOf("SSH_CONFIG" to config.sshConfigPath),
             quiet = quiet,
         )
-    }
-
-    override fun getTerraformConfig(): TerraformConfig? {
-        return terraformRepository.getTerraformConfig()
     }
 
     /**

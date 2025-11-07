@@ -8,6 +8,7 @@ import net.kigawa.kodel.api.err.Res
  * Terraformコマンドの実行を管理するサービス
  */
 interface TerraformService {
+    val terraformConfig: TerraformConfig
     fun init(
         additionalArgs: List<String>,
         quiet: Boolean = false,
@@ -42,5 +43,4 @@ interface TerraformService {
         quiet: Boolean = false,
     ): Res<Int, ActionException>
 
-    fun getTerraformConfig(): TerraformConfig?
 }
