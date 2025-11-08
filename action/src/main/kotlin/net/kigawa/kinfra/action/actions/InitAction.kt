@@ -17,11 +17,7 @@ class InitAction(
             ColorLogger.warning("Warning: Failed to pull from git repository, continuing anyway...")
         }
 
-        val config = terraformService.getTerraformConfig()
-        if (config == null) {
-            // 設定がない場合は静かにスキップ
-            return 0
-        }
+        val config = terraformService.terraformConfig
 
         ColorLogger.info("Working directory: ${config.workingDirectory.absolutePath}")
 

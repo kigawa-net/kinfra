@@ -1,8 +1,8 @@
 package net.kigawa.kinfra
 
 import kotlinx.coroutines.runBlocking
-import net.kigawa.kinfra.cli.CliDeps
-import net.kigawa.kinfra.cli.CliScope
+import net.kigawa.kinfra.cli.dep.CliDeps
+import net.kigawa.kinfra.cli.dep.CliScope
 import net.kigawa.kodel.api.dep.DepContext
 
 /**

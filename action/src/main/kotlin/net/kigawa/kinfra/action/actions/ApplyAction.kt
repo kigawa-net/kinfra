@@ -12,7 +12,7 @@ class ApplyAction(
 ) : Action {
     override fun execute(args: List<String>): Int {
         // Terraform設定が取得できない場合は静かにスキップ
-        val config = terraformService.getTerraformConfig()
+        val config = terraformService.terraformConfig
         if (config == null) {
             return 0
         }

@@ -1,4 +1,4 @@
-package net.kigawa.kinfra.cli
+package net.kigawa.kinfra.cli.dep
 
 import net.kigawa.kodel.api.dep.DepProviderFactory
 import net.kigawa.kodel.api.dep.context.DepScope
@@ -12,7 +12,7 @@ class CliScope(
         get() = DefaultDepProviders.Lazy
 
     companion object {
-        fun create(depCoroutineScope: NormalDepCoroutineScope = NormalDepCoroutineScope.create()): CliScope {
+        fun create(depCoroutineScope: NormalDepCoroutineScope = NormalDepCoroutineScope.Companion.create()): CliScope {
             return CliScope(depCoroutineScope)
         }
     }

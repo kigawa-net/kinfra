@@ -1,6 +1,6 @@
 package net.kigawa.kinfra.cli.dep
 
-import net.kigawa.kinfra.cli.CliScope
+import net.kigawa.kinfra.cli.dep.CliScope
 import net.kigawa.kinfra.infrastructure.dep.InfraScope
 import net.kigawa.kodel.api.dep.DepProviderFactory
 import net.kigawa.kodel.api.dep.context.DepCoroutineScope

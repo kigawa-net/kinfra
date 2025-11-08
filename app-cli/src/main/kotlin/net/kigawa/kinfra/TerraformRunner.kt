@@ -2,11 +2,14 @@ package net.kigawa.kinfra
 
 import net.kigawa.kinfra.di.DependencyContainer
 import net.kigawa.kinfra.model.ActionType
+import net.kigawa.kinfra.service.ActionRegistry
 import kotlin.system.exitProcess
 
-class TerraformRunner(private val container: DependencyContainer) {
+class TerraformRunner(
+    private val container: DependencyContainer,
+    val actionRegistry: ActionRegistry,
+) {
     private val logger = container.logger
-    private val actionRegistry = container.actionRegistry
     private val commandInterpreter = container.commandInterpreter
     private val systemRequirement = container.systemRequirement
     private val updateHandler = container.updateHandler
@@ -60,9 +63,11 @@ class TerraformRunner(private val container: DependencyContainer) {
 
         // Execute the action
         logger.info(
-            "Executing action: ${parsedCommand.actionName} with args: ${parsedCommand.actionArgs.joinToString(
-                " ",
-            )} in directory: $workingDir",
+            "Executing action: ${parsedCommand.actionName} with args: ${
+                parsedCommand.actionArgs.joinToString(
+                    " ",
+                )
+            } in directory: $workingDir",
         )
         val exitCode = action.execute(parsedCommand.actionArgs)
         logger.info("Action ${parsedCommand.actionName} finished with exit code: $exitCode")
