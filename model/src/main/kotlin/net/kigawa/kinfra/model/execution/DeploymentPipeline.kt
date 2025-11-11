@@ -3,12 +3,19 @@ package net.kigawa.kinfra.model.execution
 import net.kigawa.kinfra.model.BitwardenItem
 import net.kigawa.kinfra.model.bitwarden.BitwardenRepository
 import net.kigawa.kinfra.model.conf.R2BackendConfig
+import net.kigawa.kinfra.model.logging.Logger
 import net.kigawa.kinfra.model.service.TerraformService
 import net.kigawa.kinfra.model.util.AnsiColors
 import net.kigawa.kinfra.model.util.exitCode
 import net.kigawa.kinfra.model.util.isFailure
 import net.kigawa.kinfra.model.util.message
+import net.kigawa.kinfra.model.GitHelper
+import net.kigawa.kodel.api.err.Res
+import net.kigawa.kodel.api.err.ActionException
 import java.io.File
+
+private const val TERRAFORM_CONFIG_NOT_FOUND = "Terraform configuration not found"
+private const val AUTO_APPROVE_FLAG = "-auto-approve"
 
 /**
  * デプロイパイプラインの各ステップを担当するクラス
@@ -16,17 +23,15 @@ import java.io.File
 class DeploymentPipeline(
     private val terraformService: TerraformService,
     private val bitwardenRepository: BitwardenRepository,
+    private val logger: Logger,
+    private val gitHelper: GitHelper,
 ) {
-    fun initializeTerraform(additionalArgs: List<String>): Int {
-        println("${AnsiColors.BLUE}Calling terraformService.init${AnsiColors.RESET}")
-        val result = terraformService.init(additionalArgs = additionalArgs)
-        println("${AnsiColors.BLUE}terraformService.init returned: $result${AnsiColors.RESET}")
+    private fun handleTerraformResult(result: Res<Int, ActionException>, operation: String): Int {
         return if (result.isFailure()) {
-            // Terraform設定がない場合はスキップとして成功扱い
-            if (result.message()?.contains("Terraform configuration not found") == true) {
+            if (result.message()?.contains(TERRAFORM_CONFIG_NOT_FOUND) == true) {
                 0
             } else {
-                println("${AnsiColors.RED}Terraform init failed: ${result.message()} (exit code: ${result.exitCode()})${AnsiColors.RESET}")
+                logger.error("$operation failed: ${result.message()} (exit code: ${result.exitCode()})")
                 result.exitCode()
             }
         } else {
@@ -34,88 +39,62 @@ class DeploymentPipeline(
         }
     }
 
+    fun initializeTerraform(additionalArgs: List<String>): Int {
+        logger.debug("Calling terraformService.init")
+        val result = terraformService.init(additionalArgs = additionalArgs)
+        logger.debug("terraformService.init returned: $result")
+        return handleTerraformResult(result, "Terraform init")
+    }
+
     fun createExecutionPlan(additionalArgs: List<String>): Int {
-        println("${AnsiColors.BLUE}Calling terraformService.plan${AnsiColors.RESET}")
+        logger.debug("Calling terraformService.plan")
         val result = terraformService.plan(additionalArgs)
-        println("${AnsiColors.BLUE}terraformService.plan returned: $result${AnsiColors.RESET}")
-        return if (result.isFailure()) {
-            // Terraform設定がない場合はスキップとして成功扱い
-            if (result.message()?.contains("Terraform configuration not found") == true) {
-                0
-            } else {
-                println("${AnsiColors.RED}Terraform plan failed: ${result.message()} (exit code: ${result.exitCode()})${AnsiColors.RESET}")
-                result.exitCode()
-            }
-        } else {
-            0
-        }
+        logger.debug("terraformService.plan returned: $result")
+        return handleTerraformResult(result, "Terraform plan")
     }
 
     fun applyChanges(additionalArgs: List<String>): Int {
         val applyArgsWithAutoApprove =
-            if (additionalArgs.contains("-auto-approve")) {
+            if (additionalArgs.contains(AUTO_APPROVE_FLAG)) {
                 additionalArgs
             } else {
-                additionalArgs + "-auto-approve"
+                additionalArgs + AUTO_APPROVE_FLAG
             }
-        println("${AnsiColors.BLUE}Calling terraformService.apply with args: $applyArgsWithAutoApprove${AnsiColors.RESET}")
+        logger.debug("Calling terraformService.apply with args: $applyArgsWithAutoApprove")
         val result = terraformService.apply(additionalArgs = applyArgsWithAutoApprove)
-        println("${AnsiColors.BLUE}terraformService.apply returned: $result${AnsiColors.RESET}")
-        return if (result.isFailure()) {
-            // Terraform設定がない場合はスキップとして成功扱い
-            if (result.message()?.contains("Terraform configuration not found") == true) {
-                0
-            } else {
-                println("${AnsiColors.RED}Terraform apply failed: ${result.message()} (exit code: ${result.exitCode()})${AnsiColors.RESET}")
-                result.exitCode()
-            }
-        } else {
-            0
-        }
+        logger.debug("terraformService.apply returned: $result")
+        return handleTerraformResult(result, "Terraform apply")
     }
 
     fun pushToGit(): Int {
-        return try {
-            val process =
-                ProcessBuilder("git", "push")
-                    .redirectOutput(ProcessBuilder.Redirect.PIPE)
-                    .redirectError(ProcessBuilder.Redirect.PIPE)
-                    .start()
-
-            val exitCode = process.waitFor()
-            if (exitCode != 0) {
-                val error = process.errorStream.bufferedReader().readText()
-                println("${AnsiColors.YELLOW}Git push failed: $error${AnsiColors.RESET}")
-            } else {
-                println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Successfully pushed to remote repository")
-            }
-            exitCode
-        } catch (e: Exception) {
-            println("${AnsiColors.YELLOW}Git push error: ${e.message}${AnsiColors.RESET}")
+        return if (gitHelper.pushToRemote()) {
+            logger.info("Successfully pushed to remote repository")
+            0
+        } else {
+            logger.warn("Git push failed")
             1
         }
     }
-}
 
-/**
- * バックエンドセットアップを担当するクラス
- */
-private class BackendSetup(private val bitwardenRepository: BitwardenRepository) {
-    fun setup(): Int {
-        println("${AnsiColors.YELLOW}Backend configuration not found or contains placeholders${AnsiColors.RESET}")
-        println("${AnsiColors.BLUE}Fetching credentials from Bitwarden...${AnsiColors.RESET}")
+    /**
+     * バックエンドセットアップを担当するクラス
+     */
+    private inner class BackendSetup {
+        fun setup(): Int {
+        logger.warn("Backend configuration not found or contains placeholders")
+        logger.info("Fetching credentials from Bitwarden...")
 
         // Check if bw is installed
         if (!bitwardenRepository.isInstalled()) {
-            println("${AnsiColors.RED}Error:${AnsiColors.RESET} Bitwarden CLI (bw) is not installed.")
-            println("${AnsiColors.BLUE}Install with:${AnsiColors.RESET} npm install -g @bitwarden/cli")
+            logger.error("Bitwarden CLI (bw) is not installed.")
+            logger.info("Install with: npm install -g @bitwarden/cli")
             return 1
         }
 
         // Check if logged in
         if (!bitwardenRepository.isLoggedIn()) {
-            println("${AnsiColors.RED}Error:${AnsiColors.RESET} Not logged in to Bitwarden.")
-            println("${AnsiColors.BLUE}Please run:${AnsiColors.RESET} bw login")
+            logger.error("Not logged in to Bitwarden.")
+            logger.info("Please run: bw login")
             return 1
         }
 
@@ -132,72 +111,67 @@ private class BackendSetup(private val bitwardenRepository: BitwardenRepository)
         }
 
         return createBackendFile(item)
-    }
+        }
 
-    private fun getSession(): String? {
+        private fun getSession(): String? {
         return bitwardenRepository.getSessionFromFile()
             ?: bitwardenRepository.getSessionFromEnv()
     }
 
-    private fun showSessionError() {
-        println("${AnsiColors.RED}Error:${AnsiColors.RESET} No Bitwarden session found.")
-        println()
-        println("${AnsiColors.BLUE}Please unlock Bitwarden:${AnsiColors.RESET}")
-        println("  ./gradlew run --args=\"login\"")
-        println()
-        println("${AnsiColors.BLUE}Or set BW_SESSION manually:${AnsiColors.RESET}")
-        println("  export BW_SESSION=\$(bw unlock --raw)")
-        println()
-        println("${AnsiColors.BLUE}Then run deploy command again:${AnsiColors.RESET}")
-        println("  ./gradlew run --args=\"deploy\"")
-    }
-
-    private fun getItem(session: String) = bitwardenRepository.getItem("Cloudflare R2 Terraform Backend", session)
-
-    private fun showItemNotFoundError() {
-        println("${AnsiColors.RED}Error:${AnsiColors.RESET} Item 'Cloudflare R2 Terraform Backend' not found in Bitwarden.")
-        println()
-        println("${AnsiColors.YELLOW}Options:${AnsiColors.RESET}")
-        println("1. Create item manually in Bitwarden with following fields:")
-        println("   - Name: Cloudflare R2 Terraform Backend")
-        println("   - Fields: access_key, secret_key, account_id, bucket_name")
-        println()
-        println("3. Or use SDK-based deploy command (recommended if using BW_PROJECT):")
-        println("   ${AnsiColors.BLUE}export BWS_ACCESS_TOKEN=<your-token>${AnsiColors.RESET}")
-        println("   ${AnsiColors.BLUE}./gradlew run --args=\"deploy-sdk\"${AnsiColors.RESET}")
-    }
-
-    private fun createBackendFile(item: BitwardenItem): Int {
-        val accessKey = item.getFieldValue("access_key")
-        val secretKey = item.getFieldValue("secret_key")
-        val accountId = item.getFieldValue("account_id")
-        val bucketName = item.getFieldValue("bucket_name") ?: "kigawa-infra-state"
-
-        // Validate credentials
-        if (accessKey == null || secretKey == null || accountId == null) {
-            println("${AnsiColors.RED}Error:${AnsiColors.RESET} Missing required fields in Bitwarden item.")
-            return 1
+        private fun showSessionError() {
+            logger.error("No Bitwarden session found.")
+            logger.info("Please unlock Bitwarden:")
+            logger.info("  ./gradlew run --args=\"login\"")
+            logger.info("Or set BW_SESSION manually:")
+            logger.info("  export BW_SESSION=\$(bw unlock --raw)")
+            logger.info("Then run deploy command again:")
+            logger.info("  ./gradlew run --args=\"deploy\"")
         }
 
-        // Create backend config
-        val config =
-            R2BackendConfig(
-                bucket = bucketName,
-                key = "terraform.tfstate",
-                endpoint = "https://$accountId.r2.cloudflarestorage.com",
-                accessKey = accessKey,
-                secretKey = secretKey,
-            )
+        private fun getItem(session: String) = bitwardenRepository.getItem("Cloudflare R2 Terraform Backend", session)
 
-        // Save to file
-        val backendFile = File("backend.tfvars")
-        backendFile.parentFile?.mkdirs()
-        backendFile.writeText(config.toTfvarsContent())
-        backendFile.setReadable(true, true)
-        backendFile.setWritable(true, true)
+            private fun showItemNotFoundError() {
+            logger.error("Item 'Cloudflare R2 Terraform Backend' not found in Bitwarden.")
+            logger.warn("Options:")
+            logger.info("1. Create item manually in Bitwarden with following fields:")
+            logger.info("   - Name: Cloudflare R2 Terraform Backend")
+            logger.info("   - Fields: access_key, secret_key, account_id, bucket_name")
+            logger.info("3. Or use SDK-based deploy command (recommended if using BW_PROJECT):")
+            logger.info("  export BWS_ACCESS_TOKEN=<your-token>")
+            logger.info("  ./gradlew run --args=\"deploy-sdk\"")
+        }
 
-        println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Backend configuration created successfully")
-        println()
-        return 0
+            private fun createBackendFile(item: BitwardenItem): Int {
+            val accessKey = item.getFieldValue("access_key")
+            val secretKey = item.getFieldValue("secret_key")
+            val accountId = item.getFieldValue("account_id")
+            val bucketName = item.getFieldValue("bucket_name") ?: "kigawa-infra-state"
+
+            // Validate credentials
+            if (accessKey == null || secretKey == null || accountId == null) {
+                logger.error("Missing required fields in Bitwarden item.")
+                return 1
+            }
+
+            // Create backend config
+            val config =
+                R2BackendConfig(
+                    bucket = bucketName,
+                    key = "terraform.tfstate",
+                    endpoint = "https://$accountId.r2.cloudflarestorage.com",
+                    accessKey = accessKey,
+                    secretKey = secretKey,
+                )
+
+            // Save to file
+            val backendFile = File("backend.tfvars")
+            backendFile.parentFile?.mkdirs()
+            backendFile.writeText(config.toTfvarsContent())
+            backendFile.setReadable(true, true)
+            backendFile.setWritable(true, true)
+
+            logger.info("Backend configuration created successfully")
+            return 0
+        }
     }
 }

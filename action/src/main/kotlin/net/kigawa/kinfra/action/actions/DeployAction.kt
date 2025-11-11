@@ -1,6 +1,7 @@
 package net.kigawa.kinfra.action.actions
 
 import net.kigawa.kinfra.model.Action
+import net.kigawa.kinfra.model.GitHelper
 import net.kigawa.kinfra.model.LoginRepo
 import net.kigawa.kinfra.model.bitwarden.BitwardenRepository
 import net.kigawa.kinfra.model.config.ConfigRepository
@@ -18,23 +19,20 @@ class DeployAction(
     configRepository: ConfigRepository,
     loginRepo: LoginRepo,
     private val logger: Logger,
+    private val gitHelper: GitHelper,
 ) : Action {
     private val executor = ActionExecutor(logger)
-    private val pipeline = DeploymentPipeline(terraformService, bitwardenRepository)
+    private val pipeline = DeploymentPipeline(terraformService, bitwardenRepository, logger, gitHelper)
     private val subProjectExecutor = SubProjectExecutor(configRepository, loginRepo)
 
     override fun execute(args: List<String>): Int {
         val additionalArgs = args.filter { it != "--auto-selected" }
 
-        println("${AnsiColors.BLUE}Starting full deployment pipeline${AnsiColors.RESET}")
-        println("${AnsiColors.BLUE}Current working directory: ${System.getProperty("user.dir")}${AnsiColors.RESET}")
-        println()
+        logger.info("Starting full deployment pipeline")
+        logger.info("Current working directory: ${System.getProperty("user.dir")}")
 
         // Execute parent project first
-        println("${AnsiColors.CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${AnsiColors.RESET}")
-        println("${AnsiColors.CYAN}Executing parent project${AnsiColors.RESET}")
-        println("${AnsiColors.CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${AnsiColors.RESET}")
-        println()
+        logger.info("Executing parent project")
 
         val steps =
             listOf(
@@ -52,19 +50,17 @@ class DeployAction(
         val result = executor.executeSteps(steps)
 
         if (result != 0) {
-            println("${AnsiColors.RED}Parent project deployment failed with exit code: $result${AnsiColors.RESET}")
-            println("${AnsiColors.YELLOW}Check the logs above for detailed error information${AnsiColors.RESET}")
+            logger.error("Parent project deployment failed with exit code: $result")
+            logger.warn("Check the logs above for detailed error information")
             return result
         }
 
-        println()
-        println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Parent project completed successfully")
+        logger.info("Parent project completed successfully")
 
         // Execute sub-projects
         val subProjects = subProjectExecutor.getSubProjects()
         if (subProjects.isNotEmpty()) {
-            println()
-            println("${AnsiColors.BLUE}Found ${subProjects.size} sub-project(s)${AnsiColors.RESET}")
+            logger.info("Found ${subProjects.size} sub-project(s)")
 
             val subResult =
                 subProjectExecutor.executeInSubProjects(subProjects) { _, _ ->
@@ -72,7 +68,7 @@ class DeployAction(
                 }
 
             if (subResult != 0) {
-                println("${AnsiColors.RED}Sub-project deployment failed${AnsiColors.RESET}")
+                logger.error("Sub-project deployment failed")
                 return subResult
             }
         }
@@ -86,7 +82,7 @@ class DeployAction(
     private fun executeSubProjectDeployment(additionalArgs: List<String>): Int {
         // Create new instances for sub-project execution
         // Note: TerraformService will use the current working directory
-        val subPipeline = DeploymentPipeline(terraformService, bitwardenRepository)
+        val subPipeline = DeploymentPipeline(terraformService, bitwardenRepository, logger, gitHelper)
         val subExecutor = ActionExecutor(logger)
 
         val steps =
@@ -100,15 +96,13 @@ class DeployAction(
     }
 
     private fun handleSuccessfulDeployment() {
-        println()
-        println("${AnsiColors.GREEN}✅ Deployment completed successfully!${AnsiColors.RESET}")
+        logger.info("Deployment completed successfully!")
 
         // Auto git push after successful deployment
-        println()
-        println("${AnsiColors.BLUE}Pushing to remote repository...${AnsiColors.RESET}")
+        logger.info("Pushing to remote repository...")
         val pushResult = pipeline.pushToGit()
         if (pushResult != 0) {
-            println("${AnsiColors.YELLOW}⚠${AnsiColors.RESET} Failed to push to remote repository (non-fatal)")
+            logger.warn("Failed to push to remote repository (non-fatal)")
         }
     }
 
