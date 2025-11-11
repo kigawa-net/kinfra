@@ -44,10 +44,26 @@ application {
 
 tasks.shadowJar {
     archiveBaseName.set("kinfra-cli")
-    archiveClassifier.set("")
-    archiveVersion.set(project.version.toString())
+    archiveClassifier.unset()
+    archiveVersion.unset()
     manifest {
         attributes["Main-Class"] = "net.kigawa.kinfra.AppKt"
         attributes["Implementation-Version"] = project.version.toString()
     }
+}
+
+tasks.distTar {
+    dependsOn(tasks.shadowJar)
+}
+
+tasks.distZip {
+    dependsOn(tasks.shadowJar)
+}
+
+tasks.startScripts {
+    dependsOn(tasks.shadowJar)
+}
+
+tasks.startShadowScripts {
+    dependsOn(tasks.jar)
 }

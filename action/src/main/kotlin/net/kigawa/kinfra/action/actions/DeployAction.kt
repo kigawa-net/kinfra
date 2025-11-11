@@ -17,10 +17,9 @@ class DeployAction(
     configRepository: ConfigRepository,
     loginRepo: LoginRepo,
     private val logger: Logger,
-    private val gitHelper: GitHelper,
 ) : Action {
     private val executor = ActionExecutor(logger)
-    private val pipeline = DeploymentPipeline(terraformService, bitwardenRepository, logger, gitHelper)
+    private val pipeline = DeploymentPipeline(terraformService)
     private val subProjectExecutor = SubProjectExecutor(configRepository, loginRepo)
 
     override fun execute(args: List<String>): Int {
@@ -80,7 +79,7 @@ class DeployAction(
     private fun executeSubProjectDeployment(additionalArgs: List<String>): Int {
         // Create new instances for sub-project execution
         // Note: TerraformService will use the current working directory
-        val subPipeline = DeploymentPipeline(terraformService, bitwardenRepository, logger, gitHelper)
+        val subPipeline = DeploymentPipeline(terraformService)
         val subExecutor = ActionExecutor(logger)
 
         val steps =
@@ -95,13 +94,6 @@ class DeployAction(
 
     private fun handleSuccessfulDeployment() {
         logger.info("Deployment completed successfully!")
-
-        // Auto git push after successful deployment
-        logger.info("Pushing to remote repository...")
-        val pushResult = pipeline.pushToGit()
-        if (pushResult != 0) {
-            logger.warn("Failed to push to remote repository (non-fatal)")
-        }
     }
 
     override fun getDescription(): String {

@@ -145,7 +145,6 @@ class DependencyContainer {
                     configRepository,
                     loginRepo,
                     logger,
-                    gitHelper,
                 ),
             )
             put(Pair(ActionType.PUSH.actionName, null), PushAction(gitHelper))
