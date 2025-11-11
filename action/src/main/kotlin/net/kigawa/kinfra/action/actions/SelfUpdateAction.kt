@@ -4,16 +4,14 @@ import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.GitHelper
 import net.kigawa.kinfra.model.LoginRepo
 import net.kigawa.kinfra.model.execution.UpdateProcessor
-import net.kigawa.kinfra.model.logging.Logger
 import net.kigawa.kinfra.model.update.AutoUpdater
 import net.kigawa.kinfra.model.update.VersionChecker
 
 class SelfUpdateAction(
-    private val versionChecker: VersionChecker,
-    private val autoUpdater: AutoUpdater,
-    private val gitHelper: GitHelper,
+    versionChecker: VersionChecker,
+    autoUpdater: AutoUpdater,
+    gitHelper: GitHelper,
     val loginRepo: LoginRepo,
-    private val logger: Logger,
 ) : Action {
     private val updateProcessor =
         UpdateProcessor(
@@ -21,7 +19,6 @@ class SelfUpdateAction(
             autoUpdater,
             gitHelper,
             loginRepo,
-            logger,
         )
 
     override fun execute(args: List<String>): Int {

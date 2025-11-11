@@ -2,7 +2,6 @@ package net.kigawa.kinfra.action.actions
 
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.LoginRepo
-import net.kigawa.kinfra.model.bitwarden.BitwardenRepository
 import net.kigawa.kinfra.model.config.ConfigRepository
 import net.kigawa.kinfra.model.execution.ActionExecutor
 import net.kigawa.kinfra.model.execution.DeploymentPipeline
@@ -14,13 +13,12 @@ import net.kigawa.kinfra.model.util.AnsiColors
 
 class DeployAction(
     private val terraformService: TerraformService,
-    private val bitwardenRepository: BitwardenRepository,
     configRepository: ConfigRepository,
     loginRepo: LoginRepo,
     private val logger: Logger,
 ) : Action {
     private val executor = ActionExecutor(logger)
-    private val pipeline = DeploymentPipeline(terraformService, bitwardenRepository)
+    private val pipeline = DeploymentPipeline(terraformService)
     private val subProjectExecutor = SubProjectExecutor(configRepository, loginRepo)
 
     override fun execute(args: List<String>): Int {
@@ -86,7 +84,7 @@ class DeployAction(
     private fun executeSubProjectDeployment(additionalArgs: List<String>): Int {
         // Create new instances for sub-project execution
         // Note: TerraformService will use the current working directory
-        val subPipeline = DeploymentPipeline(terraformService, bitwardenRepository)
+        val subPipeline = DeploymentPipeline(terraformService)
         val subExecutor = ActionExecutor(logger)
 
         val steps =
