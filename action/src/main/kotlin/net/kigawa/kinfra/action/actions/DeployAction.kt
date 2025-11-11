@@ -3,7 +3,6 @@ package net.kigawa.kinfra.action.actions
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.GitHelper
 import net.kigawa.kinfra.model.LoginRepo
-import net.kigawa.kinfra.model.bitwarden.BitwardenRepository
 import net.kigawa.kinfra.model.config.ConfigRepository
 import net.kigawa.kinfra.model.execution.ActionExecutor
 import net.kigawa.kinfra.model.execution.DeploymentPipeline
@@ -15,7 +14,6 @@ import net.kigawa.kinfra.model.util.AnsiColors
 
 class DeployAction(
     private val terraformService: TerraformService,
-    private val bitwardenRepository: BitwardenRepository,
     configRepository: ConfigRepository,
     loginRepo: LoginRepo,
     private val logger: Logger,

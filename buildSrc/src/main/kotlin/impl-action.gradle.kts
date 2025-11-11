@@ -3,7 +3,7 @@ plugins{
 }
 
 dependencies {
-    implementation(project(":model"))
+    implementation(project(":kinfra-api"))
     testImplementation(kotlin("test"))
     testImplementation(project(":kodel:core"))
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
