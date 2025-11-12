@@ -2,7 +2,7 @@ package net.kigawa.kinfra.api.resource
 
 import net.kigawa.kinfra.api.HashValue
 import net.kigawa.kinfra.api.Hasher
-import net.kigawa.kinfra.api.deploy.KinfraContext
+import net.kigawa.kinfra.api.KinfraContext
 import kotlin.io.path.Path
 import kotlin.io.path.pathString
 
@@ -17,6 +17,6 @@ class FilePathResource(
     }
 
     override fun hash(hasher: Hasher, ctx: KinfraContext): HashValue {
-        return hasher.hash(path.pathString)
+        return hasher.hash(path.pathString,)
     }
 }
