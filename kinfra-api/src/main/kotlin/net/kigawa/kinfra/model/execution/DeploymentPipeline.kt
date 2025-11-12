@@ -68,27 +68,4 @@ class DeploymentPipeline(
             0
         }
     }
-
-    fun pushToGit(): Int {
-        return try {
-            val process =
-                ProcessBuilder("git", "push")
-                    .redirectOutput(ProcessBuilder.Redirect.PIPE)
-                    .redirectError(ProcessBuilder.Redirect.PIPE)
-                    .start()
-
-            val exitCode = process.waitFor()
-            if (exitCode != 0) {
-                val error = process.errorStream.bufferedReader().readText()
-                println("${AnsiColors.YELLOW}Git push failed: $error${AnsiColors.RESET}")
-            } else {
-                println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Successfully pushed to remote repository")
-            }
-            exitCode
-        } catch (e: Exception) {
-            println("${AnsiColors.YELLOW}Git push error: ${e.message}${AnsiColors.RESET}")
-            1
-        }
-    }
 }
-
