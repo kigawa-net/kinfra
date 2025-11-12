@@ -1,7 +1,7 @@
 package net.kigawa.iac.model
 
-import net.kigawa.kinfra.api.resource.KinfraResourceGroup
+import net.kigawa.kinfra.api.resource.KinfraDeployGroup
 
-class KigawaNet: KinfraResourceGroup() {
+class KigawaNet: KinfraDeployGroup() {
 
 }

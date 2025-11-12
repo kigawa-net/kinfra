@@ -1,8 +1,8 @@
 package net.kigawa.kinfra.api.resource
 
-import net.kigawa.kinfra.api.Hashable
-import net.kigawa.kinfra.api.deploy.DeployContext
+import net.kigawa.kinfra.api.HashValue
+import net.kigawa.kinfra.api.Hasher
 
-interface KinfraResource: Hashable {
-    suspend fun execute(ctx: DeployContext)
+interface KinfraResource {
+    fun hash(hasher: Hasher): HashValue
 }
