@@ -8,16 +8,22 @@ abstract class KinfraDeployGroup: KinfraDeploy {
     var resources = listOf<KinfraDeploy>()
         private set
 
-    fun <T: KinfraDeploy> addResource(resource: T): Deployed<T> {
+    fun <T: KinfraDeploy> deployResource(resource: T): Deployed<T> {
         resources += resource
         return Deployed(resource)
     }
 
+    fun <T: KinfraDeploy> T.deploy(): Deployed<T> = deployResource(this@deploy)
+
+
     override fun hash(hasher: Hasher, ctx: KinfraContext): HashValue {
-        return hasher.hash("", *resources.map { it.hash(hasher, ctx) }.toTypedArray())
+        return hasher.hash(
+            "",
+            resources.map { it.hash(hasher, ctx.childContext()) }
+        )
     }
 
     override suspend fun execute(ctx: KinfraContext) {
-        resources.forEach { ctx.deployer.deploy(it) }
+        resources.forEach { ctx.deployer.deploy(it, ctx.childContext()) }
     }
 }

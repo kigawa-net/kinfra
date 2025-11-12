@@ -17,6 +17,6 @@ class FilePathResource(
     }
 
     override fun hash(hasher: Hasher, ctx: KinfraContext): HashValue {
-        return hasher.hash(path.pathString)
+        return hasher.hash(path.pathString,)
     }
 }

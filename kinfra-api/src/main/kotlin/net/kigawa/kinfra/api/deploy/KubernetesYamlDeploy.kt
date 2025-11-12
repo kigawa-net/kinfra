@@ -14,7 +14,7 @@ class KubernetesYamlDeploy(
     }
 
     override suspend fun execute(ctx: KinfraContext) {
-        val res = ctx.cmdExecutor.execute(StrCmd("kubectl", "apply", "-f", "-"))
+        val res = ctx.cmdExecutor.execute(StrCmd(listOf("kubectl", "apply", "-f", "-")))
         res.writer {
             it.write(yamlResource.raw)
         }

@@ -7,9 +7,7 @@ import net.kigawa.kinfra.api.KinfraContext
 interface Deployer {
     val deployRecorder: DeployRecorder
     val hasher: Hasher
-    fun createContext(): KinfraContext
-    suspend fun deploy(kinfraDeploy: KinfraDeploy) {
-        val ctx = createContext()
+    suspend fun deploy(kinfraDeploy: KinfraDeploy, ctx: KinfraContext) {
         val hash = kinfraDeploy.hash(hasher, ctx)
         deployRecorder.record(hash) {
             kinfraDeploy.execute(ctx)

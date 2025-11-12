@@ -1,4 +1,5 @@
 package net.kigawa.kinfra.api.cmd
 
-class StrCmd(vararg cmd: String): Cmd {
+class StrCmd(cmd: List<String>): Cmd {
+    override val raw: List<String> = cmd
 }

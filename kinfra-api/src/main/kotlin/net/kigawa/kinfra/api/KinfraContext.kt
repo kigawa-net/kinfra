@@ -6,4 +6,5 @@ import net.kigawa.kinfra.api.deploy.Deployer
 interface KinfraContext {
     val deployer: Deployer
     val cmdExecutor: CmdExecutor
+    fun childContext(): KinfraContext
 }
