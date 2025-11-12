@@ -1,7 +1,8 @@
 package net.kigawa.kinfra.api.deploy
 
+import net.kigawa.kinfra.api.DeployRecorder
 import net.kigawa.kinfra.api.Hasher
-import net.kigawa.kinfra.api.resource.KinfraDeploy
+import net.kigawa.kinfra.api.KinfraContext
 
 interface Deployer {
     val deployRecorder: DeployRecorder

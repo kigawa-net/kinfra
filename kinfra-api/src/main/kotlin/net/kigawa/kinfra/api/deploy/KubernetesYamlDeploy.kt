@@ -1,9 +1,10 @@
-package net.kigawa.kinfra.api.resource
+package net.kigawa.kinfra.api.deploy
 
 import net.kigawa.kinfra.api.HashValue
 import net.kigawa.kinfra.api.Hasher
+import net.kigawa.kinfra.api.KinfraContext
 import net.kigawa.kinfra.api.cmd.StrCmd
-import net.kigawa.kinfra.api.deploy.KinfraContext
+import net.kigawa.kinfra.api.resource.YamlResource
 
 class KubernetesYamlDeploy(
     val yamlResource: YamlResource,
