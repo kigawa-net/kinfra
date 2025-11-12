@@ -2,6 +2,7 @@ package net.kigawa.kinfra.api.resource
 
 import net.kigawa.kinfra.api.HashValue
 import net.kigawa.kinfra.api.Hasher
+import net.kigawa.kinfra.api.deploy.KinfraContext
 import kotlin.io.path.Path
 import kotlin.io.path.pathString
 
@@ -15,7 +16,7 @@ class FilePathResource(
         require(!strPath.endsWith("/")) { "path must not end with /" }
     }
 
-    override fun hash(hasher: Hasher): HashValue {
+    override fun hash(hasher: Hasher, ctx: KinfraContext): HashValue {
         return hasher.hash(path.pathString)
     }
 }
