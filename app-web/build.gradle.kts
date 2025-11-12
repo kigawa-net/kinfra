@@ -8,7 +8,7 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":model"))
+    implementation(project(":kinfra-api"))
     implementation(project(":action"))
     implementation(project(":kinfra-infra"))
 

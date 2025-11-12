@@ -93,3 +93,4 @@ terraform/hosts.auto.tfvars
 .serena/memories/
 .serena/*.db
 /.kotlin/
+/kinfra-cli/logs/

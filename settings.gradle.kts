@@ -11,9 +11,11 @@ plugins {
 }
 
 rootProject.name = "kinfra"
-include("app-cli")
+include("iac:model")
+include("iac:cli")
+include("kinfra-cli")
 include("app-web")
-include("model")
+include("kinfra-api")
 include("action")
 include("kinfra-infra")
 include("kodel:api")
