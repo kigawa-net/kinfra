@@ -21,7 +21,7 @@ class SshDeploy(
         deploys.forEach { ctx.deployer.deploy(it, createCtx(ctx)) }
     }
 
-    override fun hash(
+    override suspend fun hash(
         hasher: Hasher, ctx: KinfraContext,
     ): HashValue {
         return hasher.hash(

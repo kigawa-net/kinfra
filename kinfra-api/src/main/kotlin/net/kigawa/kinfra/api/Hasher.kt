@@ -1,5 +1,9 @@
 package net.kigawa.kinfra.api
 
+import net.kigawa.kinfra.api.io.Reader
+
 interface Hasher {
-    fun hash(string: String, hash: List<HashValue> = listOf()): HashValue
+    suspend fun hash(
+        string: String? = null, hash: List<HashValue> = listOf(), reader: Reader<String>? = null,
+    ): HashValue
 }

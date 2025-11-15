@@ -9,7 +9,7 @@ import net.kigawa.kinfra.api.resource.YamlResource
 class KubernetesYamlDeploy(
     val yamlResource: YamlResource,
 ): KinfraDeploy {
-    override fun hash(hasher: Hasher, ctx: KinfraContext): HashValue {
+    override suspend fun hash(hasher: Hasher, ctx: KinfraContext): HashValue {
         return yamlResource.hash(hasher, ctx)
     }
 

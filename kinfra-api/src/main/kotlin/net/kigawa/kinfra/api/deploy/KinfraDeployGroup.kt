@@ -16,7 +16,7 @@ abstract class KinfraDeployGroup: KinfraDeploy {
     fun <T: KinfraDeploy> T.deploy(): Deployed<T> = deployResource(this@deploy)
 
 
-    override fun hash(hasher: Hasher, ctx: KinfraContext): HashValue {
+    override suspend fun hash(hasher: Hasher, ctx: KinfraContext): HashValue {
         return hasher.hash(
             "",
             resources.map { it.hash(hasher, ctx.childContext()) }

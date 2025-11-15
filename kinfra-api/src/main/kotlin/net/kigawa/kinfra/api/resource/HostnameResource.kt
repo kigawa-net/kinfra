@@ -14,7 +14,7 @@ class HostnameResource(
         require(!strHostname.contains("\\")) {"hostname must not contain \\"}
 
     }
-    override fun hash(
+    override suspend fun hash(
         hasher: Hasher, ctx: KinfraContext,
     ): HashValue {
         return hasher.hash(strHostname)

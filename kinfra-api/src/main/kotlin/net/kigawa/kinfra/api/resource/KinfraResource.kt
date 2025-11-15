@@ -5,5 +5,5 @@ import net.kigawa.kinfra.api.Hasher
 import net.kigawa.kinfra.api.KinfraContext
 
 interface KinfraResource {
-    fun hash(hasher: Hasher, ctx: KinfraContext): HashValue
+    suspend fun hash(hasher: Hasher, ctx: KinfraContext): HashValue
 }

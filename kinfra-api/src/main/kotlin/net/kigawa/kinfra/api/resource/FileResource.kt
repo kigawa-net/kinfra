@@ -4,16 +4,16 @@ import net.kigawa.kinfra.api.HashValue
 import net.kigawa.kinfra.api.Hasher
 import net.kigawa.kinfra.api.KinfraContext
 
-class UsernameResource(
-    val strUsername: String,
+class FileResource(
+    val filePathResource: FilePathResource,
 ): KinfraResource {
-    init {
-        require(strUsername.isNotBlank()) { "username is blank" }
-    }
-
     override suspend fun hash(
         hasher: Hasher, ctx: KinfraContext,
     ): HashValue {
-        return hasher.hash(strUsername)
+        return ctx.fileSystem.openReader(filePathResource.path) {
+            lineReader {
+                hasher.hash(reader = this)
+            }
+        }
     }
 }
