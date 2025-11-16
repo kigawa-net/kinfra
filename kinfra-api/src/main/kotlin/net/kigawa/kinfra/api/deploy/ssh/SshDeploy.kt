@@ -4,17 +4,19 @@ import net.kigawa.kinfra.api.HashValue
 import net.kigawa.kinfra.api.Hasher
 import net.kigawa.kinfra.api.KinfraContext
 import net.kigawa.kinfra.api.deploy.KinfraDeploy
+import net.kigawa.kinfra.api.resource.FileResource
 import net.kigawa.kinfra.api.resource.HostnameResource
 import net.kigawa.kinfra.api.resource.UsernameResource
 
 class SshDeploy(
     val username: UsernameResource,
     val host: HostnameResource,
+    val privateKey: FileResource,
     val deploys: List<KinfraDeploy>,
 ): KinfraDeploy {
     fun createCtx(ctx: KinfraContext): SshContext = SshContext(
         ctx, ctx.cmdExecutor,
-        username, host
+        username, host, privateKey,
     )
 
     override suspend fun execute(ctx: KinfraContext) {

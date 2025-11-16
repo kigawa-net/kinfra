@@ -17,10 +17,10 @@ class SshContext(
 ): KinfraContext {
     override val deployer: Deployer
         get() = parent.deployer
-    override val cmdExecutor: CmdExecutor
+    override val cmdExecutor: SshCmdExecutor
         get() = SshCmdExecutor(localCmdExecutor, username, hostname, privateKey)
     override val fileSystem: FileSystem
-        get() = TODO("Not yet implemented")
+        get() = SshFileSystem(cmdExecutor)
 
     override fun childContext(): KinfraContext {
         return SshContext(this, localCmdExecutor, username, hostname, privateKey)

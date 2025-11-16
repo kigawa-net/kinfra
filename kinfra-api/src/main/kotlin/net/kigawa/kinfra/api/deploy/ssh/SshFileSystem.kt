@@ -6,13 +6,13 @@ import net.kigawa.kinfra.api.io.FileSystem
 import net.kigawa.kinfra.api.io.FileSystemPath
 import net.kigawa.kinfra.api.io.Writer
 
-class SShFileSystem(
+class SshFileSystem(
     val sshCmdExecutor: SshCmdExecutor,
 ): FileSystem {
     override suspend fun <T> openReader(
         path: FileSystemPath, block: suspend FileReader.() -> T,
     ): T {
-        sshCmdExecutor.execute(StrCmd(listOf("cat"))).let {
+        sshCmdExecutor.execute(StrCmd(listOf("cat", path.strPath))).let {
             return it.reader { SshFileReader(this).block() }
         }
     }
@@ -20,6 +20,8 @@ class SShFileSystem(
     override suspend fun <T> openWriter(
         path: FileSystemPath, block: suspend Writer.() -> T,
     ): T {
-        TODO("Not yet implemented")
+        sshCmdExecutor.execute(StrCmd(listOf("tee", path.strPath))).let {
+            return it.writer { block() }
+        }
     }
 }
