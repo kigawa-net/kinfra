@@ -16,4 +16,14 @@ class FileResource(
             }
         }
     }
+
+    suspend fun content(ctx: KinfraContext): String {
+        return ctx.fileSystem.openReader(filePathResource.path) {
+            lineReader {
+
+                this.toList()
+            }
+        }
+
+    }
 }

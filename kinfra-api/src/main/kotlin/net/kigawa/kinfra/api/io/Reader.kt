@@ -10,4 +10,8 @@ interface Reader<T> {
             block(read())
         }
     }
+
+suspend    fun toList(): String{
+        
+    }
 }
