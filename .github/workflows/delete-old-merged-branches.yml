@@ -1,0 +1,38 @@
+name: Delete Old Merged Branches
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'  # 毎週日曜日午前0時に実行
+  workflow_dispatch:  # 手動実行可能
+
+jobs:
+  delete-branches:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # ブランチ削除に必要な権限
+      pull-requests: read  # PR情報の読み取り
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup GitHub CLI
+        run: |
+          gh --version
+
+      - name: Get merged branches older than 30 days
+        run: |
+          # マージ済みPRのブランチを取得し、30日以上前のものをフィルタリング
+          gh pr list --state merged --json headRefName,mergedAt --jq '
+            .[] | select(.mergedAt < (now - 2592000)) | .headRefName
+          ' | sort | uniq > merged_branches.txt
+          echo "Branches to delete:"
+          cat merged_branches.txt
+
+      - name: Delete branches
+        run: |
+          while read branch; do
+            if [ -n "$branch" ] && [ "$branch" != "main" ] && [ "$branch" != "master" ]; then
+              echo "Deleting branch: $branch"
+              gh branch delete "$branch" --force || echo "Failed to delete $branch (may not exist or protected)"
+            fi
+          done < merged_branches.txt
