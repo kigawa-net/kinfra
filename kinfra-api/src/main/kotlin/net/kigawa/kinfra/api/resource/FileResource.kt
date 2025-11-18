@@ -6,9 +6,10 @@ import net.kigawa.kinfra.api.KinfraContext
 
 class FileResource(
     val filePathResource: FilePathResource,
+    val ctx: KinfraContext,
 ): KinfraResource {
     override suspend fun hash(
-        hasher: Hasher, ctx: KinfraContext,
+        hasher: Hasher,
     ): HashValue {
         return ctx.fileSystem.openReader(filePathResource.path) {
             lineReader {
@@ -17,11 +18,10 @@ class FileResource(
         }
     }
 
-    suspend fun content(ctx: KinfraContext): String {
+    suspend fun content(): String {
         return ctx.fileSystem.openReader(filePathResource.path) {
             lineReader {
-
-                this.toList()
+                this.toList().joinToString("\n")
             }
         }
 

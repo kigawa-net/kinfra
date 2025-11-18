@@ -1,8 +1,8 @@
 package net.kigawa.kinfra.api.deploy.ssh
 
-import net.kigawa.kinfra.api.cmd.Cmd
-import net.kigawa.kinfra.api.cmd.CmdExecutor
-import net.kigawa.kinfra.api.cmd.CmdRes
+import net.kigawa.kinfra.api.process.CmdExecutor
+import net.kigawa.kinfra.api.process.ProcessConfig
+import net.kigawa.kinfra.api.process.ProcessRes
 import net.kigawa.kinfra.api.resource.FileResource
 import net.kigawa.kinfra.api.resource.HostnameResource
 import net.kigawa.kinfra.api.resource.UsernameResource
@@ -13,7 +13,14 @@ class SshCmdExecutor(
     val hostname: HostnameResource,
     val privateKey: FileResource,
 ): CmdExecutor {
-    override fun execute(cmd: Cmd): CmdRes {
-        return localCmdExecutor.execute(SshCmd(username, hostname, cmd, privateKey))
+
+    override fun <SI, SO, SE> execute(
+        processConfig: ProcessConfig<SI, SO, SE>,
+    ): ProcessRes<SI, SO, SE> {
+        return localCmdExecutor.execute(
+            processConfig.copy(
+                cmd = SshCmd(username, hostname, processConfig.cmd, privateKey)
+            )
+        )
     }
 }

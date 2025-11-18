@@ -2,7 +2,6 @@ package net.kigawa.kinfra.api.resource
 
 import net.kigawa.kinfra.api.HashValue
 import net.kigawa.kinfra.api.Hasher
-import net.kigawa.kinfra.api.KinfraContext
 
 class HostnameResource(
     val strHostname: String,
@@ -15,8 +14,8 @@ class HostnameResource(
 
     }
     override suspend fun hash(
-        hasher: Hasher, ctx: KinfraContext,
+        hasher: Hasher,
     ): HashValue {
-        return hasher.hash(strHostname)
+        return hasher.hash(listOf(strHostname))
     }
 }

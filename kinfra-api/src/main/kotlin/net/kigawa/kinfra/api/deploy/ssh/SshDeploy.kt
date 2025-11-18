@@ -16,7 +16,7 @@ class SshDeploy(
 ): KinfraDeploy {
     fun createCtx(ctx: KinfraContext): SshContext = SshContext(
         ctx, ctx.cmdExecutor,
-        username, host, privateKey,
+        username, host, privateKey, ctx.logger
     )
 
     override suspend fun execute(ctx: KinfraContext) {
@@ -24,14 +24,13 @@ class SshDeploy(
     }
 
     override suspend fun hash(
-        hasher: Hasher, ctx: KinfraContext,
+        hasher: Hasher,
     ): HashValue {
         return hasher.hash(
-            "",
-            listOf(
-                host.hash(hasher, ctx.childContext()),
-                username.hash(hasher, ctx.childContext())
-            ) + deploys.map { it.hash(hasher, createCtx(ctx)) }
+            resource = listOf(
+                host,
+                username
+            ) + deploys
         )
     }
 }

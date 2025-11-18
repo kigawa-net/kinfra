@@ -11,7 +11,9 @@ interface Reader<T> {
         }
     }
 
-suspend    fun toList(): String{
-        
+    suspend fun toList(): List<T> {
+        val list = mutableListOf<T>()
+        forEach { list.add(it) }
+        return list
     }
 }

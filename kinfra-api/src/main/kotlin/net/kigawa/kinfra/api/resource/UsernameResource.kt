@@ -2,7 +2,6 @@ package net.kigawa.kinfra.api.resource
 
 import net.kigawa.kinfra.api.HashValue
 import net.kigawa.kinfra.api.Hasher
-import net.kigawa.kinfra.api.KinfraContext
 
 class UsernameResource(
     val strUsername: String,
@@ -12,8 +11,8 @@ class UsernameResource(
     }
 
     override suspend fun hash(
-        hasher: Hasher, ctx: KinfraContext,
+        hasher: Hasher,
     ): HashValue {
-        return hasher.hash(strUsername)
+        return hasher.hash(listOf(strUsername))
     }
 }
