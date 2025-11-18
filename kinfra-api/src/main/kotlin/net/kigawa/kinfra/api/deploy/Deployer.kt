@@ -8,7 +8,7 @@ interface Deployer {
     val deployRecorder: DeployRecorder
     val hasher: Hasher
     suspend fun deploy(kinfraDeploy: KinfraDeploy, ctx: KinfraContext) {
-        val hash = kinfraDeploy.hash(hasher, ctx)
+        val hash = kinfraDeploy.hash(hasher)
         deployRecorder.record(hash) {
             kinfraDeploy.execute(ctx)
         }

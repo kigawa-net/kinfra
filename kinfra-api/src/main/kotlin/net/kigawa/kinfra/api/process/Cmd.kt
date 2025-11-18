@@ -1,4 +1,4 @@
-package net.kigawa.kinfra.api.cmd
+package net.kigawa.kinfra.api.process
 
 interface Cmd {
     fun strCmd(): String {

@@ -2,7 +2,6 @@ package net.kigawa.kinfra.api.resource
 
 import net.kigawa.kinfra.api.HashValue
 import net.kigawa.kinfra.api.Hasher
-import net.kigawa.kinfra.api.KinfraContext
 
 class HostnameResource(
     val strHostname: String,
@@ -14,9 +13,9 @@ class HostnameResource(
         require(!strHostname.contains("\\")) {"hostname must not contain \\"}
 
     }
-    override fun hash(
-        hasher: Hasher, ctx: KinfraContext,
+    override suspend fun hash(
+        hasher: Hasher,
     ): HashValue {
-        return hasher.hash(strHostname)
+        return hasher.hash(listOf(strHostname))
     }
 }

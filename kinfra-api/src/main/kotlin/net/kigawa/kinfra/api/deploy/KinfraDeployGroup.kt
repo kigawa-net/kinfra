@@ -4,7 +4,9 @@ import net.kigawa.kinfra.api.HashValue
 import net.kigawa.kinfra.api.Hasher
 import net.kigawa.kinfra.api.KinfraContext
 
-abstract class KinfraDeployGroup: KinfraDeploy {
+abstract class KinfraDeployGroup(
+    val ctx: KinfraContext
+): KinfraDeploy {
     var resources = listOf<KinfraDeploy>()
         private set
 
@@ -16,10 +18,9 @@ abstract class KinfraDeployGroup: KinfraDeploy {
     fun <T: KinfraDeploy> T.deploy(): Deployed<T> = deployResource(this@deploy)
 
 
-    override fun hash(hasher: Hasher, ctx: KinfraContext): HashValue {
+    override suspend fun hash(hasher: Hasher): HashValue {
         return hasher.hash(
-            "",
-            resources.map { it.hash(hasher, ctx.childContext()) }
+            hash = resources.map { it.hash(hasher) }
         )
     }
 
