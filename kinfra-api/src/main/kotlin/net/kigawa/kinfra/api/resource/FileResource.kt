@@ -4,7 +4,7 @@ import net.kigawa.kinfra.api.HashValue
 import net.kigawa.kinfra.api.Hasher
 import net.kigawa.kinfra.api.KinfraContext
 
-class FileResource(
+open class FileResource(
     val filePathResource: FilePathResource,
     val ctx: KinfraContext,
 ): KinfraResource {
