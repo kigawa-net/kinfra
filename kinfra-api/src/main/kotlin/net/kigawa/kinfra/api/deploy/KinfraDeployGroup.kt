@@ -5,7 +5,7 @@ import net.kigawa.kinfra.api.Hasher
 import net.kigawa.kinfra.api.ctx.KinfraContext
 
 abstract class KinfraDeployGroup(
-    val ctx: KinfraContext
+    val ctx: KinfraContext,
 ): KinfraDeploy {
     var resources = listOf<KinfraDeploy>()
         private set
@@ -25,6 +25,8 @@ abstract class KinfraDeployGroup(
     }
 
     override suspend fun execute(ctx: KinfraContext) {
-        resources.forEach { ctx.deployer.deploy(it, ctx.childContext()) }
+        resources.forEach { resource ->
+            ctx.deployer.deploy(resource, ctx.childContext(resource.name))
+        }
     }
 }

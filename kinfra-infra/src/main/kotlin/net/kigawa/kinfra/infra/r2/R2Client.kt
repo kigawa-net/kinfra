@@ -67,4 +67,8 @@ class R2Client(
         )
         return resp.readAllBytes()
     }
+
+    fun close() {
+        s3Client.close()
+    }
 }

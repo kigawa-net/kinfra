@@ -13,10 +13,11 @@ class SshDeploy(
     val host: HostnameResource,
     val privateKey: FileResource,
     val deploys: List<KinfraDeploy>,
+    override val name: String,
 ): KinfraDeploy {
     fun createCtx(ctx: KinfraContext): SshContext = SshContext(
         ctx, ctx.cmdExecutor,
-        username, host, privateKey, ctx.logger
+        username, host, privateKey, ctx.logger, ctx.keys + name
     )
 
     override suspend fun execute(ctx: KinfraContext) {

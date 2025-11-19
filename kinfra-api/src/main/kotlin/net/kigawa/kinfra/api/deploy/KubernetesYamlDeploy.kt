@@ -9,6 +9,7 @@ import net.kigawa.kinfra.api.resource.YamlResource
 import net.kigawa.kinfra.model.logging.Logger
 
 class KubernetesYamlDeploy(
+    override val name: String,
     val yamlResource: YamlResource,
     val logger: Logger
 ): KinfraDeploy {
