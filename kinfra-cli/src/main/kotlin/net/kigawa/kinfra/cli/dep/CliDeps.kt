@@ -2,8 +2,8 @@ package net.kigawa.kinfra.cli.dep
 
 import net.kigawa.kinfra.TerraformRunner
 import net.kigawa.kinfra.di.DependencyContainer
-import net.kigawa.kinfra.infrastructure.dep.InfraDeps
-import net.kigawa.kinfra.infrastructure.service.TerraformServiceImpl
+import net.kigawa.kinfra.infra.dep.InfraDeps
+import net.kigawa.kinfra.infra.service.TerraformServiceImpl
 import net.kigawa.kinfra.service.ActionRegistry
 import net.kigawa.kodel.api.dep.DepContext
 import net.kigawa.kodel.api.dep.DepsBase

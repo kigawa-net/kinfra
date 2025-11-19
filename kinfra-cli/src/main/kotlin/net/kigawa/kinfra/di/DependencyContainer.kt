@@ -3,22 +3,21 @@ package net.kigawa.kinfra.di
 import net.kigawa.kinfra.action.actions.*
 import net.kigawa.kinfra.actions.LoginAction
 import net.kigawa.kinfra.git.GitHelperImpl
-import net.kigawa.kinfra.infrastructure.action.actions.NextAction
-import net.kigawa.kinfra.infrastructure.action.actions.SubmoduleAction
-import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenRepositoryImpl
-import net.kigawa.kinfra.infrastructure.bitwarden.BitwardenSecretManagerRepositoryImpl
-import net.kigawa.kinfra.infrastructure.config.ConfigRepositoryImpl
-import net.kigawa.kinfra.infrastructure.config.EnvFileLoaderImpl
-import net.kigawa.kinfra.infrastructure.config.GlobalConfigCompleterImpl
-import net.kigawa.kinfra.infrastructure.config.LoginRepoImpl
-import net.kigawa.kinfra.infrastructure.file.FileRepositoryImpl
-import net.kigawa.kinfra.infrastructure.file.SystemHomeDirGetter
-import net.kigawa.kinfra.infrastructure.logging.FileLogger
-import net.kigawa.kinfra.infrastructure.logging.LogLevel
-import net.kigawa.kinfra.infrastructure.process.ProcessExecutorImpl
-import net.kigawa.kinfra.infrastructure.terraform.TerraformRepositoryImpl
-import net.kigawa.kinfra.infrastructure.update.AutoUpdaterImpl
-import net.kigawa.kinfra.infrastructure.update.VersionCheckerImpl
+import net.kigawa.kinfra.infra.action.actions.NextAction
+import net.kigawa.kinfra.infra.action.actions.SubmoduleAction
+import net.kigawa.kinfra.infra.bitwarden.BitwardenRepositoryImpl
+import net.kigawa.kinfra.infra.bitwarden.BitwardenSecretManagerRepositoryImpl
+import net.kigawa.kinfra.infra.config.ConfigRepositoryImpl
+import net.kigawa.kinfra.infra.config.EnvFileLoaderImpl
+import net.kigawa.kinfra.infra.config.GlobalConfigCompleterImpl
+import net.kigawa.kinfra.infra.config.LoginRepoImpl
+import net.kigawa.kinfra.infra.file.FileRepositoryImpl
+import net.kigawa.kinfra.infra.file.SystemHomeDirGetter
+import net.kigawa.kinfra.infra.logging.FileLogger
+import net.kigawa.kinfra.infra.process.ProcessExecutorImpl
+import net.kigawa.kinfra.infra.terraform.TerraformRepositoryImpl
+import net.kigawa.kinfra.infra.update.AutoUpdaterImpl
+import net.kigawa.kinfra.infra.update.VersionCheckerImpl
 import net.kigawa.kinfra.model.*
 import net.kigawa.kinfra.model.bitwarden.BitwardenRepository
 import net.kigawa.kinfra.model.bitwarden.BitwardenSecretManagerRepository
@@ -29,6 +28,7 @@ import net.kigawa.kinfra.model.conf.global.GlobalConfig
 import net.kigawa.kinfra.model.config.ConfigRepository
 import net.kigawa.kinfra.model.config.EnvFileLoader
 import net.kigawa.kinfra.model.execution.SubProjectExecutor
+import net.kigawa.kinfra.model.logging.LogLevel
 import net.kigawa.kinfra.model.logging.Logger
 import net.kigawa.kinfra.model.service.TerraformService
 import net.kigawa.kinfra.model.update.AutoUpdater
@@ -68,7 +68,9 @@ class DependencyContainer {
     }
 
     val versionChecker: VersionChecker by lazy { VersionCheckerImpl(logger) }
-    val autoUpdater: AutoUpdater by lazy { AutoUpdaterImpl(logger, filePaths) }
+    val autoUpdater: AutoUpdater by lazy {
+        AutoUpdaterImpl(logger, filePaths)
+    }
     val gitHelper: GitHelper by lazy { GitHelperImpl(configRepository) }
     val loginRepo: LoginRepo by lazy { LoginRepoImpl(filePaths, globalConfig) }
 

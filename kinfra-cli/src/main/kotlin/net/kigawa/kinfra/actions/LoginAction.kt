@@ -1,8 +1,6 @@
 package net.kigawa.kinfra.actions
 
-import net.kigawa.kinfra.infrastructure.config.GlobalConfigImpl
-import net.kigawa.kinfra.infrastructure.config.GlobalConfigScheme
-import net.kigawa.kinfra.infrastructure.config.LoginConfigScheme
+import net.kigawa.kinfra.infra.config.*
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.GitHelper
 import net.kigawa.kinfra.model.LoginRepo
@@ -18,7 +16,7 @@ class LoginAction(
     private val gitHelper: GitHelper,
     private val filePaths: FilePaths,
     val loginRepo: LoginRepo,
-) : Action {
+): Action {
     override fun execute(args: List<String>): Int {
         // GitHubリポジトリ引数が指定されている場合はクローンまたはpull
         if (args.isNotEmpty()) {
@@ -163,7 +161,9 @@ class LoginAction(
             println()
             println("${AnsiColors.BLUE}The token will be automatically loaded on next run.${AnsiColors.RESET}")
             println("${AnsiColors.BLUE}You can also set it manually:${AnsiColors.RESET}")
-            println("  export BWS_ACCESS_TOKEN=\$(cat ${filePaths.bwsTokenFile?.toString() ?: filePaths.bwsTokenFileName})")
+            println(
+                "  export BWS_ACCESS_TOKEN=\$(cat ${filePaths.bwsTokenFile?.toString() ?: filePaths.bwsTokenFileName})"
+            )
 
             return 0
         } catch (e: Exception) {
@@ -204,8 +204,8 @@ class LoginAction(
             println("${AnsiColors.BLUE}Creating default kinfra.yaml...${AnsiColors.RESET}")
 
             val defaultConfig =
-                net.kigawa.kinfra.infrastructure.config.KinfraConfigScheme(
-                    rootProjectField = net.kigawa.kinfra.infrastructure.config.ProjectInfoScheme(),
+                KinfraConfigScheme(
+                    rootProjectField = ProjectInfoScheme(),
                 )
 
             try {
