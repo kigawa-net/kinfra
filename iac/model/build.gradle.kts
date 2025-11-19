@@ -1,4 +1,4 @@
 plugins {}
 dependencies {
-    api(project(":kinfra-api"))
+    implementation(project(":kinfra-api"))
 }

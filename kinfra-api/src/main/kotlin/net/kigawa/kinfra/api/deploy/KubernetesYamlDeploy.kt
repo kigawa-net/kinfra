@@ -2,7 +2,7 @@ package net.kigawa.kinfra.api.deploy
 
 import net.kigawa.kinfra.api.HashValue
 import net.kigawa.kinfra.api.Hasher
-import net.kigawa.kinfra.api.KinfraContext
+import net.kigawa.kinfra.api.ctx.KinfraContext
 import net.kigawa.kinfra.api.process.ProcessConfig
 import net.kigawa.kinfra.api.process.StrCmd
 import net.kigawa.kinfra.api.resource.YamlResource

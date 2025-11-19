@@ -1,6 +1,6 @@
 package net.kigawa.kinfra.api.deploy.ssh
 
-import net.kigawa.kinfra.api.KinfraContext
+import net.kigawa.kinfra.api.ctx.KinfraContext
 import net.kigawa.kinfra.api.deploy.Deployer
 import net.kigawa.kinfra.api.io.FileSystem
 import net.kigawa.kinfra.api.process.CmdExecutor
@@ -16,6 +16,7 @@ class SshContext(
     val hostname: HostnameResource,
     val privateKey: FileResource,
     override val logger: Logger,
+    override val keys: List<String>,
 ): KinfraContext {
     override val deployer: Deployer
         get() = parent.deployer
@@ -24,7 +25,7 @@ class SshContext(
     override val fileSystem: FileSystem
         get() = SshFileSystem(cmdExecutor, logger)
 
-    override fun childContext(): KinfraContext {
-        return SshContext(this, localCmdExecutor, username, hostname, privateKey, logger)
+    override fun childContext(key: String): KinfraContext {
+        return SshContext(this, localCmdExecutor, username, hostname, privateKey, logger, keys + key)
     }
 }

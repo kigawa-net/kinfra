@@ -1,6 +1,6 @@
 package net.kigawa.iac.model
 
-import net.kigawa.kinfra.api.KinfraContext
+import net.kigawa.kinfra.api.ctx.KinfraContext
 import net.kigawa.kinfra.api.deploy.KinfraDeployGroup
 import net.kigawa.kinfra.api.deploy.ssh.SshDeploy
 import net.kigawa.kinfra.api.resource.FilePathResource
