@@ -1,8 +1,8 @@
 package net.kigawa.kinfra.api.deploy.ssh
 
-import net.kigawa.kinfra.api.io.FileReader
 import net.kigawa.kinfra.api.io.FileSystem
 import net.kigawa.kinfra.api.io.FileSystemPath
+import net.kigawa.kinfra.api.io.Reader
 import net.kigawa.kinfra.api.io.Writer
 import net.kigawa.kinfra.api.process.ProcessConfig
 import net.kigawa.kinfra.api.process.StrCmd
@@ -21,12 +21,12 @@ class SshFileSystem(
     }
 
     override suspend fun <T> openReader(
-        path: FileSystemPath, block: suspend FileReader.() -> T,
+        path: FileSystemPath, block: suspend Reader<String>.() -> T,
     ): T {
         return sshCmdExecutor.execute(
             ProcessConfig
                 .create(StrCmd(listOf("cat", path.strPath)))
-                .stdout { SshFileReader(this).block() }
+                .stdout { block() }
                 .stderr { forEach { logger.error(it) } }
         ).outputRes
     }

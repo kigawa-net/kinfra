@@ -11,9 +11,7 @@ open class FileResource(
 
     suspend fun content(): String {
         return ctx.fileSystem.openReader(filePathResource.path) {
-            lineReader {
-                this.toList().joinToString("\n")
-            }
+            this.toList().joinToString("\n")
         }
 
     }
@@ -21,10 +19,8 @@ open class FileResource(
     override suspend fun hashSrc() = HashSrc.resource(filePathResource)
         .block { hasher ->
             ctx.fileSystem.openReader(filePathResource.path) {
-                lineReader {
-                    forEach {
-                        hasher.hash(it)
-                    }
+                forEach {
+                    hasher.hash(it)
                 }
             }
         }
