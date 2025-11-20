@@ -10,7 +10,6 @@ object Main {
             IacCliDeps(
                 DepContext(IacCliDepsScope.create())
             ).main()
-
         }
     }
 }
