@@ -1,8 +1,9 @@
 package net.kigawa.kinfra.api.deploy
 
-import net.kigawa.kinfra.api.HashValue
-import net.kigawa.kinfra.api.Hasher
+import net.kigawa.kinfra.api.hash.HashValue
+import net.kigawa.kinfra.api.hash.Hasher
 import net.kigawa.kinfra.api.ctx.KinfraContext
+import net.kigawa.kinfra.api.hash.HashSrc
 
 abstract class KinfraDeployGroup(
     val ctx: KinfraContext,
@@ -18,10 +19,8 @@ abstract class KinfraDeployGroup(
     fun <T: KinfraDeploy> T.deploy(): Deployed<T> = deployResource(this@deploy)
 
 
-    override suspend fun hash(hasher: Hasher): HashValue {
-        return hasher.hash(
-            hash = resources.map { it.hash(hasher) }
-        )
+    override suspend fun hashSrc(): HashSrc {
+        return HashSrc.resource(resources)
     }
 
     override suspend fun execute(ctx: KinfraContext) {

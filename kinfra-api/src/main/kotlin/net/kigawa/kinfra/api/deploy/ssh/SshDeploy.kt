@@ -1,9 +1,8 @@
 package net.kigawa.kinfra.api.deploy.ssh
 
-import net.kigawa.kinfra.api.HashValue
-import net.kigawa.kinfra.api.Hasher
 import net.kigawa.kinfra.api.ctx.KinfraContext
 import net.kigawa.kinfra.api.deploy.KinfraDeploy
+import net.kigawa.kinfra.api.hash.HashSrc
 import net.kigawa.kinfra.api.resource.FileResource
 import net.kigawa.kinfra.api.resource.HostnameResource
 import net.kigawa.kinfra.api.resource.UsernameResource
@@ -24,14 +23,7 @@ class SshDeploy(
         deploys.forEach { ctx.deployer.deploy(it, createCtx(ctx)) }
     }
 
-    override suspend fun hash(
-        hasher: Hasher,
-    ): HashValue {
-        return hasher.hash(
-            resource = listOf(
-                host,
-                username
-            ) + deploys
-        )
+    override suspend fun hashSrc(): HashSrc {
+        return HashSrc.resource(host, username).resource(deploys)
     }
 }

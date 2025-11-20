@@ -2,7 +2,7 @@ package net.kigawa.kinfra.infra.r2
 
 import com.google.gson.Gson
 import net.kigawa.kinfra.api.DeployRecorder
-import net.kigawa.kinfra.api.HashValue
+import net.kigawa.kinfra.api.hash.HashValue
 import net.kigawa.kinfra.api.ctx.KinfraContext
 import java.time.Instant
 

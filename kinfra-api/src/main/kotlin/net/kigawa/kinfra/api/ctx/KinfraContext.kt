@@ -1,9 +1,10 @@
 package net.kigawa.kinfra.api.ctx
 
 import net.kigawa.kinfra.api.DeployRecorder
-import net.kigawa.kinfra.api.Hasher
+import net.kigawa.kinfra.api.UserInterface
 import net.kigawa.kinfra.api.deploy.Deployer
 import net.kigawa.kinfra.api.deploy.NormalDeployer
+import net.kigawa.kinfra.api.hash.Hasher
 import net.kigawa.kinfra.api.io.FileSystem
 import net.kigawa.kinfra.api.process.CmdExecutor
 import net.kigawa.kinfra.model.logging.Logger
@@ -29,5 +30,6 @@ interface KinfraContext {
     val cmdExecutor: CmdExecutor
     val fileSystem: FileSystem
     val logger: Logger
+    val userInterface: UserInterface
     fun childContext(key: String): KinfraContext
 }

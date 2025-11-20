@@ -21,19 +21,4 @@ class SshFileReader(val reader: Reader<String>): FileReader {
     override suspend fun hasNext(): Boolean {
         return last.isNotEmpty() || reader.hasNext()
     }
-
-    override suspend fun <U, R> map(
-        translate: suspend (Char) -> U, block: suspend Reader<U>.() -> R,
-    ): R {
-        return reader.flatMap({ it.map { char -> translate(char) } }, block)
-    }
-
-    override suspend fun <U, R> flatMap(
-        translate: suspend (Char) -> List<U>,
-        block: suspend (Reader<U>) -> R,
-    ): R {
-        return reader.flatMap({ it.flatMap { char -> translate(char) } }, block)
-    }
-
-
 }

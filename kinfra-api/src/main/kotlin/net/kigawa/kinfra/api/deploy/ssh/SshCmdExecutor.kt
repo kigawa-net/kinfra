@@ -14,7 +14,7 @@ class SshCmdExecutor(
     val privateKey: FileResource,
 ): CmdExecutor {
 
-    override fun <SI, SO, SE> execute(
+    override suspend fun <SI, SO, SE> execute(
         processConfig: ProcessConfig<SI, SO, SE>,
     ): ProcessRes<SI, SO, SE> {
         return localCmdExecutor.execute(

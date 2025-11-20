@@ -5,15 +5,15 @@ import com.google.gson.JsonObject
 import net.kigawa.kinfra.api.process.CmdExecutor
 import net.kigawa.kinfra.api.process.ProcessConfig
 import net.kigawa.kinfra.api.process.StrCmd
-import net.kigawa.kinfra.api.resource.FileResource
 import net.kigawa.kinfra.api.secret.SecretFileResource
+import net.kigawa.kinfra.api.secret.SecretResource
 import net.kigawa.kinfra.api.secret.SecretService
 import net.kigawa.kinfra.model.BitwardenSecret
 import net.kigawa.kinfra.model.logging.Logger
 
 class BitwardenService(
     val cmdExecutor: CmdExecutor,
-    val accessToken: FileResource,
+    val accessToken: SecretResource,
     val logger: Logger,
 ): SecretService {
     private val gson = Gson()
@@ -21,7 +21,7 @@ class BitwardenService(
         val res = ProcessConfig.create(
             StrCmd(
                 listOf(
-                    "bws", "secret", "get", id, "--access-token", accessToken.content(), "--output", "json"
+                    "bws", "secret", "get", id, "--access-token", accessToken.value, "--output", "json"
                 )
             )
         ).stderr { forEach { logger.info(it) } }

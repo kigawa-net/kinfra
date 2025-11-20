@@ -1,7 +1,7 @@
 package net.kigawa.kinfra.api.deploy
 
 import net.kigawa.kinfra.api.DeployRecorder
-import net.kigawa.kinfra.api.Hasher
+import net.kigawa.kinfra.api.hash.Hasher
 import net.kigawa.kinfra.api.ctx.KinfraContext
 
 interface Deployer {

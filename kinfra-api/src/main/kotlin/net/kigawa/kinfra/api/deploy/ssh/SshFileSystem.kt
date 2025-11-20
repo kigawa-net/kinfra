@@ -12,6 +12,14 @@ class SshFileSystem(
     val sshCmdExecutor: SshCmdExecutor,
     val logger: Logger,
 ): FileSystem {
+    override suspend fun exists(path: FileSystemPath): Boolean {
+        return sshCmdExecutor.execute(
+            ProcessConfig
+                .create(StrCmd(listOf("test", "-e", path.strPath)))
+                .stdout { forEach { logger.info(it) } }
+        ).exitCode == 0
+    }
+
     override suspend fun <T> openReader(
         path: FileSystemPath, block: suspend FileReader.() -> T,
     ): T {

@@ -21,20 +21,20 @@ class CliDeps(depContext: DepContext<CliScope>): DepsBase<CliScope>(depContext) 
     val container = dep { DependencyContainer() }
 
     // Presentation layer
-    val terraformConfig = dep { container.get().terraformRepository.getTerraformConfig() }
+    val terraformConfig = dep { container.i().terraformRepository.getTerraformConfig() }
     val terraformService = dep {
         TerraformServiceImpl(
-            container.get().processExecutor, container.get().terraformRepository,
-            container.get().configRepository,
-            container.get().bitwardenSecretManagerRepository,
-            terraformConfig.get() ?: throw IllegalStateException("Bitwarden secret manager not initialized"),
+            container.i().processExecutor, container.i().terraformRepository,
+            container.i().configRepository,
+            container.i().bitwardenSecretManagerRepository,
+            terraformConfig.i() ?: throw IllegalStateException("Bitwarden secret manager not initialized"),
         )
     }
 
     // Service layer
-    val actionRegistry = dep { ActionRegistry(container.get(), terraformService.get()) }
-    val terraformRunner = dep { TerraformRunner(container.get(), actionRegistry.get()) }
+    val actionRegistry = dep { ActionRegistry(container.i(), terraformService.i()) }
+    val terraformRunner = dep { TerraformRunner(container.i(), actionRegistry.i()) }
     suspend fun main(args: Array<String>) = useDep {
-        terraformRunner.get().run(args)
+        terraformRunner.i().run(args)
     }
 }

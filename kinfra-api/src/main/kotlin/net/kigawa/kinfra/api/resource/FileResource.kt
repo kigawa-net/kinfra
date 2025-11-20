@@ -1,22 +1,13 @@
 package net.kigawa.kinfra.api.resource
 
-import net.kigawa.kinfra.api.HashValue
-import net.kigawa.kinfra.api.Hasher
 import net.kigawa.kinfra.api.ctx.KinfraContext
+import net.kigawa.kinfra.api.hash.HashSrc
 
 open class FileResource(
     val filePathResource: FilePathResource,
     val ctx: KinfraContext,
 ): KinfraResource {
-    override suspend fun hash(
-        hasher: Hasher,
-    ): HashValue {
-        return ctx.fileSystem.openReader(filePathResource.path) {
-            lineReader {
-                hasher.hash(reader = this)
-            }
-        }
-    }
+
 
     suspend fun content(): String {
         return ctx.fileSystem.openReader(filePathResource.path) {
@@ -26,4 +17,15 @@ open class FileResource(
         }
 
     }
+
+    override suspend fun hashSrc() = HashSrc.resource(filePathResource)
+        .block { hasher ->
+            ctx.fileSystem.openReader(filePathResource.path) {
+                lineReader {
+                    forEach {
+                        hasher.hash(it)
+                    }
+                }
+            }
+        }
 }

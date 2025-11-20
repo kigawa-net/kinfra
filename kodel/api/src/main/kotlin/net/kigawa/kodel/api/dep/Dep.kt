@@ -26,7 +26,7 @@ class Dep<T, S : DepScope<S>>(
      * @param childContext 子依存コンテキスト（context receiver）
      * @return 依存のインスタンス
      */
-    suspend context(childContext: DepContext<S>) fun get(): T {
+    suspend context(childContext: DepContext<S>) fun i(): T {
         depContext.closeHook { childContext.close() }
         childContext.appendParentDepScope(depContext.depScope)
         return provider.get(childContext, childContext)
