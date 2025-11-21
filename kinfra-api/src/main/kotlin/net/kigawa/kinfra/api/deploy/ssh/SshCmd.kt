@@ -4,12 +4,13 @@ import net.kigawa.kinfra.api.process.Cmd
 import net.kigawa.kinfra.api.resource.FileResource
 import net.kigawa.kinfra.api.resource.HostnameResource
 import net.kigawa.kinfra.api.resource.UsernameResource
+import net.kigawa.kinfra.api.secret.SecretFileResource
 
 class SshCmd(
     val username: UsernameResource,
     val hostName: HostnameResource,
     val remoteCmd: Cmd,
-    val privateKey: FileResource,
+    val privateKey: SecretFileResource,
 ): Cmd {
 
     override val raw: List<String>

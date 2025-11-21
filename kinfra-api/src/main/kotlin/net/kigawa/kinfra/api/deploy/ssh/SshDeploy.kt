@@ -6,11 +6,12 @@ import net.kigawa.kinfra.api.hash.HashSrc
 import net.kigawa.kinfra.api.resource.FileResource
 import net.kigawa.kinfra.api.resource.HostnameResource
 import net.kigawa.kinfra.api.resource.UsernameResource
+import net.kigawa.kinfra.api.secret.SecretFileResource
 
 class SshDeploy(
     val username: UsernameResource,
     val host: HostnameResource,
-    val privateKey: FileResource,
+    val privateKey: SecretFileResource,
     val deploys: List<KinfraDeploy>,
     override val name: String,
 ): KinfraDeploy {

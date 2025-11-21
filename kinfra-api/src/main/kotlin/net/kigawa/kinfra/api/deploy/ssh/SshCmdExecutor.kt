@@ -6,12 +6,13 @@ import net.kigawa.kinfra.api.process.ProcessRes
 import net.kigawa.kinfra.api.resource.FileResource
 import net.kigawa.kinfra.api.resource.HostnameResource
 import net.kigawa.kinfra.api.resource.UsernameResource
+import net.kigawa.kinfra.api.secret.SecretFileResource
 
 class SshCmdExecutor(
     val localCmdExecutor: CmdExecutor,
     val username: UsernameResource,
     val hostname: HostnameResource,
-    val privateKey: FileResource,
+    val privateKey: SecretFileResource,
 ): CmdExecutor {
 
     override suspend fun <SI, SO, SE> execute(

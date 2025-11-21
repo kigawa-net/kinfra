@@ -7,6 +7,7 @@ import net.kigawa.kinfra.api.process.CmdExecutor
 import net.kigawa.kinfra.api.resource.FileResource
 import net.kigawa.kinfra.api.resource.HostnameResource
 import net.kigawa.kinfra.api.resource.UsernameResource
+import net.kigawa.kinfra.api.secret.SecretFileResource
 import net.kigawa.kinfra.model.logging.Logger
 
 class SshContext(
@@ -14,7 +15,7 @@ class SshContext(
     val localCmdExecutor: CmdExecutor,
     val username: UsernameResource,
     val hostname: HostnameResource,
-    val privateKey: FileResource,
+    val privateKey: SecretFileResource,
     override val logger: Logger,
     override val keys: List<String>,
 ): KinfraContext {

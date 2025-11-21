@@ -2,9 +2,12 @@ package net.kigawa.kinfra.infra.secret
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import net.kigawa.kinfra.api.ctx.KinfraContext
 import net.kigawa.kinfra.api.process.CmdExecutor
 import net.kigawa.kinfra.api.process.ProcessConfig
 import net.kigawa.kinfra.api.process.StrCmd
+import net.kigawa.kinfra.api.resource.FilePathResource
+import net.kigawa.kinfra.api.resource.NewFileResource
 import net.kigawa.kinfra.api.secret.SecretFileResource
 import net.kigawa.kinfra.api.secret.SecretResource
 import net.kigawa.kinfra.api.secret.SecretService
@@ -15,6 +18,8 @@ class BitwardenService(
     val cmdExecutor: CmdExecutor,
     val accessToken: SecretResource,
     val logger: Logger,
+    val ctx: KinfraContext,
+    val secretDir
 ): SecretService {
     private val gson = Gson()
     override suspend fun getSecret(id: String): BitwardenSecret {
@@ -45,7 +50,11 @@ class BitwardenService(
     }
 
     override suspend fun secretFile(id: String): SecretFileResource = getSecret(id).let {
-        SecretFileResourceImpl(it)
+        SecretFileResourceImpl(it,,ctx,NewFileResource(
+            secret.value,
+            FilePathResource(secretDir.path.join(secret.key)),
+            ctx
+        ).createFile())
     }
 
 }
