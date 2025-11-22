@@ -3,7 +3,7 @@ package net.kigawa.kinfra.api.ctx
 import net.kigawa.kinfra.api.DeployRecorder
 import net.kigawa.kinfra.api.UserInterface
 import net.kigawa.kinfra.api.deploy.Deployer
-import net.kigawa.kinfra.api.deploy.NormalDeployer
+
 import net.kigawa.kinfra.api.fs.FileSystem
 import net.kigawa.kinfra.api.hash.Hasher
 import net.kigawa.kinfra.api.process.CmdExecutor
@@ -14,10 +14,9 @@ interface KinfraContext {
         fun create(
             deployRecorder: DeployRecorder, hasher: Hasher,
             cmdExecutor: CmdExecutor, fileSystem: FileSystem, logger: Logger, userInterface: UserInterface,
+            deployer: Deployer,
         ) = NormalContext(
-            NormalDeployer(
-                deployRecorder, hasher
-            ),
+            deployer,
             cmdExecutor,
             fileSystem,
             logger,
