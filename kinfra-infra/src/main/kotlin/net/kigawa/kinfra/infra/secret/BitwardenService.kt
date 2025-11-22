@@ -6,7 +6,7 @@ import net.kigawa.kinfra.api.ctx.KinfraContext
 import net.kigawa.kinfra.api.process.CmdExecutor
 import net.kigawa.kinfra.api.process.ProcessConfig
 import net.kigawa.kinfra.api.process.StrCmd
-import net.kigawa.kinfra.api.resource.FilePathResource
+import net.kigawa.kinfra.api.fs.FilePathResource
 import net.kigawa.kinfra.api.resource.NewFileResource
 import net.kigawa.kinfra.api.secret.SecretFileResource
 import net.kigawa.kinfra.api.secret.SecretResource

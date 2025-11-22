@@ -1,7 +1,7 @@
 package net.kigawa.kinfra.api.deploy.ssh
 
-import net.kigawa.kinfra.api.io.FileSystem
-import net.kigawa.kinfra.api.io.FileSystemPath
+import net.kigawa.kinfra.api.fs.FileSystem
+import net.kigawa.kinfra.api.fs.FileSystemPath
 import net.kigawa.kinfra.api.io.Reader
 import net.kigawa.kinfra.api.io.Writer
 import net.kigawa.kinfra.api.process.ProcessConfig

@@ -1,7 +1,7 @@
 package net.kigawa.kinfra.api.ctx
 
 import net.kigawa.kinfra.api.deploy.Deployer
-import net.kigawa.kinfra.api.io.FileSystem
+import net.kigawa.kinfra.api.fs.FileSystem
 import net.kigawa.kinfra.api.process.CmdExecutor
 import net.kigawa.kinfra.model.logging.Logger
 

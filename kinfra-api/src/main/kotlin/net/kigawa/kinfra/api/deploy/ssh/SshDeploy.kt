@@ -3,7 +3,6 @@ package net.kigawa.kinfra.api.deploy.ssh
 import net.kigawa.kinfra.api.ctx.KinfraContext
 import net.kigawa.kinfra.api.deploy.KinfraDeploy
 import net.kigawa.kinfra.api.hash.HashSrc
-import net.kigawa.kinfra.api.resource.FileResource
 import net.kigawa.kinfra.api.resource.HostnameResource
 import net.kigawa.kinfra.api.resource.UsernameResource
 import net.kigawa.kinfra.api.secret.SecretFileResource

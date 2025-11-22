@@ -1,6 +1,6 @@
 package net.kigawa.kinfra.api.process
 
-import net.kigawa.kinfra.api.io.FileSystemPath
+import net.kigawa.kinfra.api.fs.FileSystemPath
 import net.kigawa.kinfra.api.io.Reader
 import net.kigawa.kinfra.api.io.Writer
 

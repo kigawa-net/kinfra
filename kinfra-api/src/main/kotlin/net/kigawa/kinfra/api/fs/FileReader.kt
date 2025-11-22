@@ -1,4 +1,4 @@
-package net.kigawa.kinfra.api.io
+package net.kigawa.kinfra.api.fs
 
 interface FileReader: Reader<Char> {
 

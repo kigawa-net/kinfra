@@ -4,8 +4,6 @@ import net.kigawa.kinfra.api.ctx.KinfraContext
 import net.kigawa.kinfra.api.deploy.DeployGroupDepScope
 import net.kigawa.kinfra.api.deploy.KinfraDeployGroup
 import net.kigawa.kinfra.api.deploy.ssh.SshDeploy
-import net.kigawa.kinfra.api.resource.FilePathResource
-import net.kigawa.kinfra.api.resource.FileResource
 import net.kigawa.kinfra.api.resource.HostnameResource
 import net.kigawa.kinfra.api.resource.UsernameResource
 import net.kigawa.kinfra.api.secret.SecretService
