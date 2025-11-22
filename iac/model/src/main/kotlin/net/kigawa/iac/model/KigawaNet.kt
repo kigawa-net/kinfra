@@ -2,6 +2,7 @@ package net.kigawa.iac.model
 
 import net.kigawa.kinfra.api.ctx.KinfraContext
 import net.kigawa.kinfra.api.deploy.DeployGroupDepScope
+import net.kigawa.kinfra.api.deploy.KinfraDeploy
 import net.kigawa.kinfra.api.deploy.KinfraDeployGroup
 import net.kigawa.kinfra.api.deploy.ssh.SshDeploy
 import net.kigawa.kinfra.api.resource.HostnameResource
@@ -22,5 +23,9 @@ class KigawaNet<D: DepScope<D>>(
 
     val ssh = dep {
         SshDeploy(username, hostname, privateKey.i(), listOf(), "ssh")
+    }
+
+    override suspend fun deploy(): List<KinfraDeploy> {
+        return useDep { listOf(ssh.i()) }
     }
 }

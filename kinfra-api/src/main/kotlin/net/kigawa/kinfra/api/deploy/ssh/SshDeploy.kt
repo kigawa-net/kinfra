@@ -16,7 +16,7 @@ class SshDeploy(
 ): KinfraDeploy {
     fun createCtx(ctx: KinfraContext): SshContext = SshContext(
         ctx, ctx.cmdExecutor,
-        username, host, privateKey, ctx.logger, ctx.keys + name
+        username, host, privateKey, ctx.logger, ctx.keys + name, ctx.userInterface,
     )
 
     override suspend fun execute(ctx: KinfraContext) {

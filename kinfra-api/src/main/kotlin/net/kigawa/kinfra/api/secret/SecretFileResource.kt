@@ -4,5 +4,5 @@ import net.kigawa.kinfra.api.fs.FileResource
 import net.kigawa.kinfra.api.resource.KinfraResource
 
 interface SecretFileResource: KinfraResource {
-    suspend fun asFileResource(): FileResource
+    val fileResource: FileResource
 }

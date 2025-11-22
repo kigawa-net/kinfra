@@ -14,7 +14,7 @@ class SshCmd(
 
     override val raw: List<String>
         get() = listOf(
-            "ssh", "-i", privateKey.filePathResource.path.strPath, "-t",
+            "ssh", "-i", privateKey.fileResource.filePathResource.path.strPath, "-t",
             "${username.strUsername}@${hostName.strHostname}", remoteCmd.strCmd()
         )
 }

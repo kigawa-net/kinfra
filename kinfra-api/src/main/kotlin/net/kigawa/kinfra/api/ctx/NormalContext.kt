@@ -1,5 +1,6 @@
 package net.kigawa.kinfra.api.ctx
 
+import net.kigawa.kinfra.api.UserInterface
 import net.kigawa.kinfra.api.deploy.Deployer
 import net.kigawa.kinfra.api.fs.FileSystem
 import net.kigawa.kinfra.api.process.CmdExecutor
@@ -10,7 +11,7 @@ class NormalContext(
     override val cmdExecutor: CmdExecutor,
     override val fileSystem: FileSystem,
     override val logger: Logger,
-    override val keys: List<String>,
+    override val keys: List<String>, override val userInterface: UserInterface,
 ): KinfraContext {
     override fun childContext(key: String): KinfraContext {
         return NormalContext(
@@ -18,7 +19,7 @@ class NormalContext(
             cmdExecutor,
             fileSystem,
             logger,
-            keys + key,
+            keys + key, userInterface,
         )
     }
 }

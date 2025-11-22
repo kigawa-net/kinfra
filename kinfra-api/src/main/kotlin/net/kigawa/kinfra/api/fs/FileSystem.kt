@@ -1,5 +1,8 @@
 package net.kigawa.kinfra.api.fs
 
+import net.kigawa.kinfra.api.io.Reader
+import net.kigawa.kinfra.api.io.Writer
+
 interface FileSystem {
     suspend fun exists(path: FileSystemPath): Boolean
     suspend fun <T> openReader(path: FileSystemPath, block: suspend Reader<String>.() -> T): T
