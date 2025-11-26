@@ -1,6 +1,7 @@
 package net.kigawa.kodel.api.dep
 
 import net.kigawa.kodel.api.dep.context.DepScope
+import kotlin.reflect.KClass
 
 /**
  * 依存コンテキストを表すクラス。
@@ -11,7 +12,9 @@ import net.kigawa.kodel.api.dep.context.DepScope
  */
 class DepContext<S: DepScope<S>>(
     var depScope: S,
+    val depClass: KClass<*>,
 ) {
+    val parentContexts = mutableListOf<DepContext<S>>()
     var closeHooks = listOf<suspend () -> Unit>({ depScope.close() })
 
     /**
@@ -19,9 +22,21 @@ class DepContext<S: DepScope<S>>(
      *
      * @param depScope 追加する依存スコープ
      */
-    fun appendParentDepScope(depScope: S) {
-        this.depScope += depScope
+    fun appendParentDepContext(depContext: DepContext<S>) {
+        depContext.checkCircularReference(this)
+        parentContexts += depContext
+        this.depScope += depContext.depScope
         closeHook { depScope.close() }
+    }
+
+    @Throws(CircularDepException::class)
+    fun checkCircularReference(depContext: DepContext<S>) {
+        if (this == depContext) throw CircularDepException(listOf(depClass))
+        try {
+            parentContexts.forEach { it.checkCircularReference(depContext) }
+        } catch (e: CircularDepException) {
+            throw CircularDepException(e.depClasses + depClass)
+        }
     }
 
     /**
@@ -29,8 +44,8 @@ class DepContext<S: DepScope<S>>(
      *
      * @return 新しい依存コンテキスト
      */
-    fun newDepContext(): DepContext<S> {
-        return DepContext(depScope.newDepScope()).also { closeHook { it.close() } }
+    fun newDepContext(depClass: KClass<*>): DepContext<S> {
+        return DepContext(depScope.newDepScope(), depClass).also { closeHook { it.close() } }
     }
 
     /**
@@ -54,5 +69,9 @@ class DepContext<S: DepScope<S>>(
                 e.printStackTrace()
             }
         }
+    }
+
+    override fun toString(): String {
+        return "DepContext(depScope=$depScope, closeHooks=${closeHooks.size})"
     }
 }

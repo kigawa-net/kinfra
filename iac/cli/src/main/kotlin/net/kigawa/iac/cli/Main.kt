@@ -8,7 +8,7 @@ object Main {
     fun main(args: Array<String>) {
         runBlocking {
             IacCliDeps(
-                DepContext(IacCliDepsScope.create())
+                DepContext(IacCliDepsScope.create(), Main::class)
             ).main()
         }
     }

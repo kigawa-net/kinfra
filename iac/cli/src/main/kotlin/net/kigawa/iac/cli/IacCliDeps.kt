@@ -4,9 +4,6 @@ import net.kigawa.iac.model.KigawaNet
 import net.kigawa.kinfra.api.ctx.KinfraContext
 import net.kigawa.kinfra.api.ctx.NormalContext
 import net.kigawa.kinfra.api.deploy.DeployGroupDepScope
-import net.kigawa.kinfra.api.fs.DirPathResource
-import net.kigawa.kinfra.api.fs.DirResource
-import net.kigawa.kinfra.api.fs.FilePathResource
 import net.kigawa.kinfra.infra.CliUserInterface
 import net.kigawa.kinfra.infra.NormalDeployer
 import net.kigawa.kinfra.infra.Xxh3Hasher
@@ -21,44 +18,47 @@ import net.kigawa.kodel.api.dep.DepsBase
 import java.util.logging.Logger
 
 class IacCliDeps(depContext: DepContext<IacCliDepsScope>): DepsBase<IacCliDepsScope>(depContext) {
-    val logger = dep {
-        ConsoleLogger(Logger.getLogger(""))
-    }
+    val logger = ConsoleLogger(Logger.getLogger(""))
+
+    val localFileSystem = LocalFileSystem()
+
     val localCmdExecutor = dep {
-        LocalCmdExecutor()
+        LocalCmdExecutor(logger)
+    }
+    val kinfraDir = dep {
+        localFileSystem.homeDir().createSubDir(".kinfra")
     }
     val secretDir = dep {
-        DirResource(DirPathResource("~/.kinfra/secrets"))
+        kinfraDir.i().createSubDir("secrets")
     }
     val bitwardenSecretPath = dep {
-        FilePathResource("~/.kinfra/bitwarden.secret")
+        kinfraDir.i().childFilePath("bitwarden.secret")
     }
-    val Xxh3Hasher = dep {
+    val xxh3Hasher = dep {
         Xxh3Hasher()
     }
-    val localFileSystem = dep {
-        LocalFileSystem()
+    val userInterface = dep {
+        CliUserInterface()
     }
     val kinfraContext: Dep<NormalContext, IacCliDepsScope> = dep {
         KinfraContext.create(
             r2Deps.i().r2Recorder.i(),
-            Xxh3Hasher.i(),
+            xxh3Hasher.i(),
             localCmdExecutor.i(),
-            localFileSystem.i(),
-            logger.i(),
-            CliUserInterface(),
+            localFileSystem,
+            logger,
+            userInterface.i(),
             NormalDeployer(r2Deps.i().r2Recorder.i())
         )
     }
     val bitwardenSecretFile = dep {
-        FileSecret(bitwardenSecretPath.i(), kinfraContext.i())
+        FileSecret(bitwardenSecretPath.i(), localFileSystem, userInterface.i())
     }
     val bitwarden = dep {
         BitwardenService(
             localCmdExecutor.i(),
             bitwardenSecretFile.i().readOrType("bitwarden secret key"),
-            logger.i(),
-            kinfraContext.i(),
+            logger,
             secretDir.i()
         )
     }
@@ -75,7 +75,9 @@ class IacCliDeps(depContext: DepContext<IacCliDepsScope>): DepsBase<IacCliDepsSc
     }
 
     suspend fun main() = useDep {
+        println("main")
         kinfraContext.i().let {
+            println("deploy")
             it.deployer.deploy(kigawaNet.i(), it)
         }
     }

@@ -12,7 +12,7 @@ import net.kigawa.kodel.api.dep.DepContext
  * @param args コマンドライン引数
  */
 fun main(args: Array<String>) {
-    val context = DepContext(CliScope.create())
+    val context = DepContext(CliScope.create(), CliScope::class)
     try {
         runBlocking {
             CliDeps(context).main(args)

@@ -26,4 +26,8 @@ class DeployGroupDepScope<T: DepScope<T>>(
 
     override fun close() {
     }
+
+    override fun toString(): String {
+        return "DeployGroupDepScope(parent=$parent, ctx=$ctx)"
+    }
 }

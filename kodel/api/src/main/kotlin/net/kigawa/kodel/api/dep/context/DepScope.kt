@@ -34,4 +34,5 @@ interface DepScope<S: DepScope<S>> {
      * スコープをクローズする。
      */
     fun close()
+    override fun toString(): String
 }

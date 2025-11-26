@@ -14,4 +14,7 @@ class FilePathResource(
     }
 
     override suspend fun hashSrc() = HashSrc.str(path.strPath)
+    fun parent(): DirPathResource {
+        return DirPathResource(path.strPath.substringBeforeLast("/"))
+    }
 }

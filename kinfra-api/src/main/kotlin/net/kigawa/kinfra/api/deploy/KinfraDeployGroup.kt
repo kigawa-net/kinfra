@@ -9,7 +9,7 @@ import net.kigawa.kodel.api.dep.context.DepScope
 abstract class KinfraDeployGroup<D: DepScope<D>>(
     depContext: DepContext<DeployGroupDepScope<D>>,
 ): DepsBase<DeployGroupDepScope<D>>(depContext), KinfraDeploy {
-
+    val kinfraCtx get() = depContext.depScope.ctx
     abstract suspend fun deploy(): List<KinfraDeploy>
     override suspend fun hashSrc(): HashSrc {
         return HashSrc.resource(deploy())

@@ -1,5 +1,7 @@
 package net.kigawa.kinfra.api.deploy.ssh
 
+import net.kigawa.kinfra.api.fs.DirPathResource
+import net.kigawa.kinfra.api.fs.ExitingDirResource
 import net.kigawa.kinfra.api.fs.FileSystem
 import net.kigawa.kinfra.api.fs.FileSystemPath
 import net.kigawa.kinfra.api.io.Reader
@@ -12,11 +14,32 @@ class SshFileSystem(
     val sshCmdExecutor: SshCmdExecutor,
     val logger: Logger,
 ): FileSystem {
-    override suspend fun exists(path: FileSystemPath): Boolean {
+    override suspend fun homeDir(): ExitingDirResource {
+        return ExitingDirResource(
+            DirPathResource(
+                sshCmdExecutor.execute(
+                    ProcessConfig
+                        .create(StrCmd(listOf("pwd")))
+                        .stdout { read() ?: "" }
+                        .stderr { forEach { logger.error(it) } }
+                ).outputRes), this)
+    }
+
+    override suspend fun existsFile(path: FileSystemPath): Boolean {
         return sshCmdExecutor.execute(
             ProcessConfig
-                .create(StrCmd(listOf("test", "-e", path.strPath)))
+                .create(StrCmd(listOf("test", "-f", path.strPath)))
                 .stdout { forEach { logger.info(it) } }
+                .stderr { forEach { logger.error(it) } }
+        ).exitCode == 0
+    }
+
+    override suspend fun existsDir(path: FileSystemPath): Boolean {
+        return sshCmdExecutor.execute(
+            ProcessConfig
+                .create(StrCmd(listOf("test", "-f", path.strPath)))
+                .stdout { forEach { logger.info(it) } }
+                .stderr { forEach { logger.error(it) } }
         ).exitCode == 0
     }
 
@@ -41,4 +64,13 @@ class SshFileSystem(
                 .stderr { forEach { logger.error(it) } }
         ).inputRes
     }
+
+    override suspend fun createDir(dirPathResource: DirPathResource) {
+        sshCmdExecutor.execute(
+            ProcessConfig
+                .create(StrCmd(listOf("mkdir", "-p", dirPathResource.path.strPath)))
+                .stderr { forEach { logger.error(it) } }
+        )
+    }
+
 }

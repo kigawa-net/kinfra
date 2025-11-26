@@ -23,4 +23,8 @@ class ActionScopeImpl<S : InfraScope<S>>(
     override fun close() {
         infraScope.close()
     }
+
+    override fun toString(): String {
+        return "ActionScopeImpl(infraScope=$infraScope)"
+    }
 }

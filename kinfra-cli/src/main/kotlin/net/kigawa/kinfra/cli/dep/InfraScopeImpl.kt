@@ -23,4 +23,8 @@ class InfraScopeImpl(
     override fun close() {
         cliScope.close()
     }
+
+    override fun toString(): String {
+        return "InfraScopeImpl(cliScope=$cliScope)"
+    }
 }

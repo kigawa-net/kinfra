@@ -19,21 +19,24 @@ class BitwardenService(
     val cmdExecutor: CmdExecutor,
     val accessToken: SecretResource,
     val logger: Logger,
-    val ctx: KinfraContext,
     val secretDir: DirResource,
 ): SecretService {
     private val gson = Gson()
     override suspend fun getSecret(id: String): BitwardenSecret {
-        val res = ProcessConfig.create(
-            StrCmd(
-                listOf(
-                    "bws", "secret", "get", id, "--access-token", accessToken.value, "--output", "json"
+        val res = cmdExecutor.execute(
+            ProcessConfig
+                .create(
+                    StrCmd(
+                        listOf(
+                            "bws", "secret", "get", id, "--access-token", accessToken.value, "--output", "json"
+                        )
+                    )
                 )
-            )
-        ).stderr { forEach { logger.info(it) } }
-            .stdout { toList().joinToString(separator = "\n") }
-            .let { cmdExecutor.execute(it) }
+                .stderr { forEach { logger.error(it) } }
+                .stdout { toList().joinToString(separator = "\n") }
+        )
         if (res.exitCode != 0) {
+            res.outputRes.split("\n").forEach { logger.error(it) }
             throw Exception("Failed to get secret from Bitwarden")
         }
 
@@ -50,11 +53,11 @@ class BitwardenService(
         )
     }
 
-    override suspend fun secretFile(id: String): SecretFileResource = getSecret(id).let {
+    override suspend fun secretFile(id: String, ctx: KinfraContext): SecretFileResource = getSecret(id).let {
         SecretFileResourceImpl(
             it, secretDir, NewFileResource(
                 it.value,
-                FilePathResource(secretDir.dirPathResource.path.join(id)),
+                FilePathResource(secretDir.dirPath().path.join(id)),
                 ctx
             ).createFile()
         )

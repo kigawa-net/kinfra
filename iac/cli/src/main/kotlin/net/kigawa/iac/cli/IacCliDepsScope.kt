@@ -28,4 +28,8 @@ class IacCliDepsScope(
     override fun close() {
         depCoroutineScope.close()
     }
+
+    override fun toString(): String {
+        return "IacCliDepsScope(depCoroutineScope=$depCoroutineScope)"
+    }
 }

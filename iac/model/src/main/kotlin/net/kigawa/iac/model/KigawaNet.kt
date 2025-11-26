@@ -17,7 +17,9 @@ class KigawaNet<D: DepScope<D>>(
 ): KinfraDeployGroup<D>(depContext) {
     val username = UsernameResource("kigawa")
     val hostname = HostnameResource("192.168.1.50")
-    val privateKey = dep { secretService.secretFile("ssh") }
+    val privateKey = dep {
+        secretService.secretFile("ssh", kinfraCtx)
+    }
 
     val ssh = dep {
         SshDeploy(username, hostname, privateKey.i(), listOf(), "ssh")
