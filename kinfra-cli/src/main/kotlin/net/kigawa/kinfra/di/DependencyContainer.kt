@@ -28,8 +28,8 @@ import net.kigawa.kinfra.model.conf.global.GlobalConfig
 import net.kigawa.kinfra.model.config.ConfigRepository
 import net.kigawa.kinfra.model.config.EnvFileLoader
 import net.kigawa.kinfra.model.execution.SubProjectExecutor
-import net.kigawa.kinfra.model.logging.LogLevel
-import net.kigawa.kinfra.model.logging.Logger
+import net.kigawa.kodel.api.log.LogLevel
+import net.kigawa.kodel.api.log.Logger
 import net.kigawa.kinfra.model.service.TerraformService
 import net.kigawa.kinfra.model.update.AutoUpdater
 import net.kigawa.kinfra.model.update.VersionChecker

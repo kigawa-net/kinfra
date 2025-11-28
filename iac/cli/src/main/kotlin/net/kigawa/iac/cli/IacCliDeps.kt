@@ -75,9 +75,7 @@ class IacCliDeps(depContext: DepContext<IacCliDepsScope>): DepsBase<IacCliDepsSc
     }
 
     suspend fun main() = useDep {
-        println("main")
         kinfraContext.i().let {
-            println("deploy")
             it.deployer.deploy(kigawaNet.i(), it)
         }
     }

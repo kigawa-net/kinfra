@@ -1,6 +1,5 @@
 package net.kigawa.kinfra.infra.action.actions
 
-import net.kigawa.kinfra.infra.logging.Logger
 import net.kigawa.kinfra.infra.process.ProcessExecutor
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.LoginRepo
@@ -12,7 +11,7 @@ import kotlin.io.path.Path
 class NextAction(
     private val processExecutor: ProcessExecutor,
     private val loginRepo: LoginRepo,
-    private val logger: Logger,
+    private val logger: net.kigawa.kodel.api.log.Logger,
 ): Action {
     override fun execute(args: List<String>): Int {
         if (args.isNotEmpty()) {

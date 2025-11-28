@@ -8,7 +8,7 @@ import net.kigawa.kinfra.api.process.CmdExecutor
 import net.kigawa.kinfra.api.resource.HostnameResource
 import net.kigawa.kinfra.api.resource.UsernameResource
 import net.kigawa.kinfra.api.secret.SecretFileResource
-import net.kigawa.kinfra.model.logging.Logger
+import net.kigawa.kodel.api.log.Logger
 
 class SshContext(
     val parent: KinfraContext,

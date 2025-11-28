@@ -5,7 +5,7 @@ import net.kigawa.kinfra.api.hash.HashSrc
 import net.kigawa.kinfra.api.process.ProcessConfig
 import net.kigawa.kinfra.api.process.StrCmd
 import net.kigawa.kinfra.api.resource.YamlResource
-import net.kigawa.kinfra.model.logging.Logger
+import net.kigawa.kodel.api.log.Logger
 
 class KubernetesYamlDeploy(
     override val name: String,

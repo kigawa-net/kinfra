@@ -13,7 +13,7 @@ import net.kigawa.kinfra.api.secret.SecretFileResource
 import net.kigawa.kinfra.api.secret.SecretResource
 import net.kigawa.kinfra.api.secret.SecretService
 import net.kigawa.kinfra.model.BitwardenSecret
-import net.kigawa.kinfra.model.logging.Logger
+import net.kigawa.kodel.api.log.Logger
 
 class BitwardenService(
     val cmdExecutor: CmdExecutor,
@@ -37,6 +37,7 @@ class BitwardenService(
         )
         if (res.exitCode != 0) {
             res.outputRes.split("\n").forEach { logger.error(it) }
+            logger.error("Failed to get secret from Bitwarden ${res.exitCode}")
             throw Exception("Failed to get secret from Bitwarden")
         }
 

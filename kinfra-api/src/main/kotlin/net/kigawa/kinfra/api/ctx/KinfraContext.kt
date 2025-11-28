@@ -7,7 +7,7 @@ import net.kigawa.kinfra.api.deploy.Deployer
 import net.kigawa.kinfra.api.fs.FileSystem
 import net.kigawa.kinfra.api.hash.Hasher
 import net.kigawa.kinfra.api.process.CmdExecutor
-import net.kigawa.kinfra.model.logging.Logger
+import net.kigawa.kodel.api.log.Logger
 
 interface KinfraContext {
     companion object {

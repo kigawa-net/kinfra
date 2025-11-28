@@ -3,7 +3,7 @@ package net.kigawa.kinfra.action.actions
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.LoginRepo
 import net.kigawa.kinfra.model.execution.ConfigEditor
-import net.kigawa.kinfra.model.logging.Logger
+import net.kigawa.kodel.api.log.Logger
 import net.kigawa.kinfra.model.util.AnsiColors
 
 class ConfigEditAction(

@@ -3,7 +3,7 @@ package net.kigawa.kinfra.service
 import net.kigawa.kinfra.model.LoginRepo
 import net.kigawa.kinfra.model.conf.KinfraConfig
 import net.kigawa.kinfra.model.config.ConfigRepository
-import net.kigawa.kinfra.model.logging.Logger
+import net.kigawa.kodel.api.log.Logger
 import net.kigawa.kinfra.model.update.AutoUpdater
 import net.kigawa.kinfra.model.update.VersionChecker
 import net.kigawa.kinfra.model.util.AnsiColors

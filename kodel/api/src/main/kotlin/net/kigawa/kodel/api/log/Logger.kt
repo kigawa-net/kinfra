@@ -1,14 +1,4 @@
-package net.kigawa.kinfra.model.logging
-
-/**
- * ログレベル
- */
-enum class LogLevel {
-    DEBUG,
-    INFO,
-    WARN,
-    ERROR,
-}
+package net.kigawa.kodel.api.log
 
 /**
  * ロガーインターフェース

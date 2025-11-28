@@ -1,5 +1,7 @@
 package net.kigawa.kinfra.infra.logging
 
+import net.kigawa.kodel.api.log.LogLevel
+import net.kigawa.kodel.api.log.Logger
 import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -9,8 +11,8 @@ import java.time.format.DateTimeFormatter
  */
 class FileLogger(
     private val logDirectory: String = "logs",
-    private val logLevel: LogLevel = LogLevel.INFO,
-) : Logger {
+    private val logLevel: net.kigawa.kodel.api.log.LogLevel = net.kigawa.kodel.api.log.LogLevel.INFO,
+): Logger {
     private val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     private val timestampFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
 
@@ -31,7 +33,7 @@ class FileLogger(
      * ログメッセージを書き込む
      */
     private fun log(
-        level: LogLevel,
+        level: net.kigawa.kodel.api.log.LogLevel,
         message: String,
         throwable: Throwable? = null,
     ) {

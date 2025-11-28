@@ -1,6 +1,6 @@
 package net.kigawa.kinfra.infra.logging
 
-import net.kigawa.kinfra.model.logging.Logger
+import net.kigawa.kodel.api.log.Logger
 
 class ConsoleLogger(
     val jvmLogger: java.util.logging.Logger,

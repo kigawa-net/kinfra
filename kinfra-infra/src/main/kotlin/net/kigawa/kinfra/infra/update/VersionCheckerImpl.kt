@@ -2,7 +2,7 @@ package net.kigawa.kinfra.infra.update
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import net.kigawa.kinfra.model.logging.Logger
+import net.kigawa.kodel.api.log.Logger
 import net.kigawa.kinfra.model.update.VersionChecker
 import net.kigawa.kinfra.model.update.VersionInfo
 import java.net.HttpURLConnection

@@ -1,7 +1,7 @@
 package net.kigawa.kinfra.infra.update
 
 import net.kigawa.kinfra.model.conf.FilePaths
-import net.kigawa.kinfra.model.logging.Logger
+import net.kigawa.kodel.api.log.Logger
 import net.kigawa.kinfra.model.update.AutoUpdater
 import net.kigawa.kinfra.model.update.VersionInfo
 import java.io.File

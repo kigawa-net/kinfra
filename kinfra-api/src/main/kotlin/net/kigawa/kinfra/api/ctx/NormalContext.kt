@@ -4,7 +4,7 @@ import net.kigawa.kinfra.api.UserInterface
 import net.kigawa.kinfra.api.deploy.Deployer
 import net.kigawa.kinfra.api.fs.FileSystem
 import net.kigawa.kinfra.api.process.CmdExecutor
-import net.kigawa.kinfra.model.logging.Logger
+import net.kigawa.kodel.api.log.Logger
 
 class NormalContext(
     override val deployer: Deployer,

@@ -2,7 +2,6 @@ package net.kigawa.kinfra.infra.config
 
 import com.charleskorn.kaml.Yaml
 import com.charleskorn.kaml.YamlConfiguration
-import net.kigawa.kinfra.infra.logging.Logger
 import net.kigawa.kinfra.model.conf.FilePaths
 import net.kigawa.kinfra.model.conf.GlobalConfigCompleter
 import net.kigawa.kinfra.model.conf.KinfraConfig
@@ -17,7 +16,7 @@ import java.nio.file.Path
  */
 class ConfigRepositoryImpl(
     private val filePaths: FilePaths,
-    private val logger: Logger,
+    private val logger: net.kigawa.kodel.api.log.Logger,
     private val globalConfigCompleter: GlobalConfigCompleter,
 ): ConfigRepository {
     private val yaml =

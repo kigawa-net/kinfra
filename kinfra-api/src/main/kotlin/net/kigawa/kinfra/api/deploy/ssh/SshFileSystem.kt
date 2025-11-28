@@ -8,7 +8,7 @@ import net.kigawa.kinfra.api.io.Reader
 import net.kigawa.kinfra.api.io.Writer
 import net.kigawa.kinfra.api.process.ProcessConfig
 import net.kigawa.kinfra.api.process.StrCmd
-import net.kigawa.kinfra.model.logging.Logger
+import net.kigawa.kodel.api.log.Logger
 
 class SshFileSystem(
     val sshCmdExecutor: SshCmdExecutor,

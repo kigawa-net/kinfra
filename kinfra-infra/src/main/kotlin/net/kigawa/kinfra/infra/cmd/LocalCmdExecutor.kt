@@ -1,11 +1,12 @@
 package net.kigawa.kinfra.infra.cmd
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import net.kigawa.kinfra.api.process.CmdExecutor
 import net.kigawa.kinfra.api.process.ProcessConfig
 import net.kigawa.kinfra.api.process.ProcessRes
-import net.kigawa.kinfra.model.logging.Logger
+import net.kigawa.kodel.api.log.Logger
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
@@ -34,26 +35,26 @@ class LocalCmdExecutor(
         // プロセスの起動
         val process = processBuilder.start()
         return coroutineScope {
-            // 標準入力への書き込み
-            val inRes = async {
-                processConfig.stdin.let { stdin ->
-                    OutputStreamWriter(process.outputStream).use { writer ->
-                        WrapperWriter(writer).stdin()
-                    }
-                }
-            }
 
             // 標準出力の読み取り
-            val outRes = async {
+            val outRes = async(Dispatchers.IO) {
                 BufferedReader(InputStreamReader(process.inputStream)).use { reader ->
                     processConfig.stdout(WrapperReader(reader))
                 }
             }
 
             // 標準エラー出力の読み取り
-            val errRes = async {
+            val errRes = async(Dispatchers.IO) {
                 BufferedReader(InputStreamReader(process.errorStream)).use { reader ->
                     processConfig.stderr(WrapperReader(reader))
+                }
+            }
+            // 標準入力への書き込み
+            val inRes = async(Dispatchers.IO) {
+                processConfig.stdin.let { stdin ->
+                    OutputStreamWriter(process.outputStream).use { writer ->
+                        WrapperWriter(writer).stdin()
+                    }
                 }
             }
             // プロセスの終了を待機
