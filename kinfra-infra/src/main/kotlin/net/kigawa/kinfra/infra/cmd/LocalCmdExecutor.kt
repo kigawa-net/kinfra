@@ -6,17 +6,18 @@ import kotlinx.coroutines.coroutineScope
 import net.kigawa.kinfra.api.process.CmdExecutor
 import net.kigawa.kinfra.api.process.ProcessConfig
 import net.kigawa.kinfra.api.process.ProcessRes
-import net.kigawa.kodel.api.log.Logger
+import net.kigawa.kodel.api.log.Kogger
+import net.kigawa.kodel.api.log.traceignore.debug
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 
 class LocalCmdExecutor(
-    val logger: Logger,
+    val kogger: Kogger,
 ): CmdExecutor {
     override suspend fun <SI, SO, SE> execute(processConfig: ProcessConfig<SI, SO, SE>): ProcessRes<SI, SO, SE> {
-        logger.debug("execute: ${processConfig.cmd.raw}")
+        kogger.debug("execute: ${processConfig.cmd.raw}")
         val processBuilder = ProcessBuilder(processConfig.cmd.raw)
 
         // 作業ディレクトリの設定

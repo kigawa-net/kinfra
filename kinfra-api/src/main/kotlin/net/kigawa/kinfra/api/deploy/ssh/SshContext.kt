@@ -8,7 +8,7 @@ import net.kigawa.kinfra.api.process.CmdExecutor
 import net.kigawa.kinfra.api.resource.HostnameResource
 import net.kigawa.kinfra.api.resource.UsernameResource
 import net.kigawa.kinfra.api.secret.SecretFileResource
-import net.kigawa.kodel.api.log.Logger
+import net.kigawa.kodel.api.log.Kogger
 
 class SshContext(
     val parent: KinfraContext,
@@ -16,7 +16,7 @@ class SshContext(
     val username: UsernameResource,
     val hostname: HostnameResource,
     val privateKey: SecretFileResource,
-    override val logger: Logger,
+    override val kogger: Kogger,
     override val keys: List<String>, override val userInterface: UserInterface,
 ): KinfraContext {
     override val deployer: Deployer
@@ -24,11 +24,11 @@ class SshContext(
     override val cmdExecutor: SshCmdExecutor
         get() = SshCmdExecutor(localCmdExecutor, username, hostname, privateKey)
     override val fileSystem: FileSystem
-        get() = SshFileSystem(cmdExecutor, logger)
+        get() = SshFileSystem(cmdExecutor, kogger)
 
     override fun childContext(key: String): KinfraContext {
         return SshContext(
-            this, localCmdExecutor, username, hostname, privateKey, logger, keys + key,
+            this, localCmdExecutor, username, hostname, privateKey, kogger, keys + key,
             userInterface
         )
     }

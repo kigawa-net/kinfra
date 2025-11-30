@@ -2,14 +2,16 @@ package net.kigawa.kinfra.infra.update
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import net.kigawa.kodel.api.log.Logger
+import net.kigawa.kodel.api.log.Kogger
 import net.kigawa.kinfra.model.update.VersionChecker
 import net.kigawa.kinfra.model.update.VersionInfo
+import net.kigawa.kodel.api.log.traceignore.debug
+import net.kigawa.kodel.api.log.traceignore.warn
 import java.net.HttpURLConnection
 import java.net.URL
 
 class VersionCheckerImpl(
-    private val logger: Logger,
+    private val kogger: Kogger,
 ) : VersionChecker {
     private val gson = Gson()
 
@@ -18,7 +20,7 @@ class VersionCheckerImpl(
         githubRepo: String,
     ): VersionInfo {
         return try {
-            logger.debug("Checking for updates from GitHub repository: $githubRepo")
+            kogger.debug("Checking for updates from GitHub repository: $githubRepo")
 
             val apiUrl = "https://api.github.com/repos/$githubRepo/releases/latest"
             val connection = URL(apiUrl).openConnection() as HttpURLConnection
@@ -41,7 +43,7 @@ class VersionCheckerImpl(
                         ""
                     }
 
-                logger.debug("Current version: $currentVersion, Latest version: $latestVersion, Update available: $updateAvailable")
+                kogger.debug("Current version: $currentVersion, Latest version: $latestVersion, Update available: $updateAvailable")
 
                 VersionInfo(
                     currentVersion = currentVersion,
@@ -50,11 +52,11 @@ class VersionCheckerImpl(
                     downloadUrl = downloadUrl,
                 )
             } else {
-                logger.warn("Failed to check for updates: HTTP ${connection.responseCode}")
+                kogger.warn("Failed to check for updates: HTTP ${connection.responseCode}")
                 VersionInfo(currentVersion, currentVersion, false)
             }
         } catch (e: Exception) {
-            logger.warn("Error checking for updates: ${e.message}")
+            kogger.warn("Error checking for updates: ${e.message}")
             VersionInfo(currentVersion, currentVersion, false)
         }
     }
@@ -92,7 +94,7 @@ class VersionCheckerImpl(
 
             return 0
         } catch (e: Exception) {
-            logger.warn("Error comparing versions: ${e.message}")
+            kogger.warn("Error comparing versions: ${e.message}")
             return 0
         }
     }

@@ -4,11 +4,12 @@ import net.kigawa.kinfra.infra.process.ProcessExecutor
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.util.AnsiColors
 import net.kigawa.kodel.api.err.Res
+import net.kigawa.kodel.api.log.traceignore.error
 import java.io.File
 
 class SubmoduleAction(
     private val processExecutor: ProcessExecutor,
-    private val logger: net.kigawa.kodel.api.log.Logger,
+    private val kogger: net.kigawa.kodel.api.log.Kogger,
 ): Action {
     override fun execute(args: List<String>): Int {
         if (args.isNotEmpty()) {
@@ -18,7 +19,7 @@ class SubmoduleAction(
 
         try {
             val workingDir = File(System.getProperty("user.dir"))
-            logger.info("Initializing and updating submodules in: $workingDir")
+            kogger.info("Initializing and updating submodules in: $workingDir")
 
             // Update submodules
             val result = processExecutor.execute(
@@ -36,7 +37,7 @@ class SubmoduleAction(
                 }
             }
         } catch (e: Exception) {
-            logger.error("Error executing submodule command", e)
+            kogger.error("Error executing submodule command", e)
             println("${AnsiColors.RED}Error: ${e.message}${AnsiColors.RESET}")
             return 1
         }

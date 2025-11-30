@@ -1,9 +1,12 @@
 package net.kigawa.kinfra.infra.update
 
 import net.kigawa.kinfra.model.conf.FilePaths
-import net.kigawa.kodel.api.log.Logger
+import net.kigawa.kodel.api.log.Kogger
 import net.kigawa.kinfra.model.update.AutoUpdater
 import net.kigawa.kinfra.model.update.VersionInfo
+import net.kigawa.kodel.api.log.traceignore.debug
+import net.kigawa.kodel.api.log.traceignore.error
+import net.kigawa.kodel.api.log.traceignore.warn
 import java.io.File
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
@@ -12,7 +15,7 @@ import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 
 class AutoUpdaterImpl(
-    private val logger: Logger,
+    private val kogger: Kogger,
     val filePaths: FilePaths,
 ) : AutoUpdater {
     private val appDir: File
@@ -24,12 +27,12 @@ class AutoUpdaterImpl(
 
     override fun performUpdate(versionInfo: VersionInfo): Boolean {
         if (!versionInfo.updateAvailable) {
-            logger.debug("No update available")
+            kogger.debug("No update available")
             return false
         }
 
         return try {
-            logger.info("Downloading update from: ${versionInfo.downloadUrl}")
+            kogger.info("Downloading update from: ${versionInfo.downloadUrl}")
 
             val tempFile = File.createTempFile("kinfra-update", ".jar")
             tempFile.deleteOnExit()
@@ -47,7 +50,7 @@ class AutoUpdaterImpl(
                     }
                 }
 
-                logger.debug("Download completed, replacing current JAR")
+                kogger.debug("Download completed, replacing current JAR")
 
                 // Backup current JAR
                 val backupFile = File(appDir, "kinfra.jar.backup")
@@ -58,17 +61,17 @@ class AutoUpdaterImpl(
                 // Replace with new JAR
                 Files.move(tempFile.toPath(), jarPath.toPath(), StandardCopyOption.REPLACE_EXISTING)
 
-                logger.info("Update completed successfully! Updated to version ${versionInfo.latestVersion}")
+                kogger.info("Update completed successfully! Updated to version ${versionInfo.latestVersion}")
                 println("\n✓ Kinfra has been updated to version ${versionInfo.latestVersion}")
                 println("  Please restart kinfra to use the new version\n")
 
                 true
             } else {
-                logger.warn("Failed to download update: HTTP ${connection.responseCode}")
+                kogger.warn("Failed to download update: HTTP ${connection.responseCode}")
                 false
             }
         } catch (e: Exception) {
-            logger.error("Error during update: ${e.message}")
+            kogger.error("Error during update: ${e.message}")
             false
         }
     }
@@ -81,7 +84,7 @@ class AutoUpdaterImpl(
                 0L
             }
         } catch (e: Exception) {
-            logger.warn("Error reading last check time: ${e.message}")
+            kogger.warn("Error reading last check time: ${e.message}")
             0L
         }
     }
@@ -91,7 +94,7 @@ class AutoUpdaterImpl(
             appDir.mkdirs()
             lastCheckFile.writeText(System.currentTimeMillis().toString())
         } catch (e: Exception) {
-            logger.warn("Error updating last check time: ${e.message}")
+            kogger.warn("Error updating last check time: ${e.message}")
         }
     }
 }

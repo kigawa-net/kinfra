@@ -8,11 +8,12 @@ import net.kigawa.kinfra.api.io.Reader
 import net.kigawa.kinfra.api.io.Writer
 import net.kigawa.kinfra.api.process.ProcessConfig
 import net.kigawa.kinfra.api.process.StrCmd
-import net.kigawa.kodel.api.log.Logger
+import net.kigawa.kodel.api.log.Kogger
+import net.kigawa.kodel.api.log.traceignore.error
 
 class SshFileSystem(
     val sshCmdExecutor: SshCmdExecutor,
-    val logger: Logger,
+    val kogger: Kogger,
 ): FileSystem {
     override suspend fun homeDir(): ExitingDirResource {
         return ExitingDirResource(
@@ -21,7 +22,7 @@ class SshFileSystem(
                     ProcessConfig
                         .create(StrCmd(listOf("pwd")))
                         .stdout { read() ?: "" }
-                        .stderr { forEach { logger.error(it) } }
+                        .stderr { forEach { kogger.error(it) } }
                 ).outputRes), this)
     }
 
@@ -29,8 +30,8 @@ class SshFileSystem(
         return sshCmdExecutor.execute(
             ProcessConfig
                 .create(StrCmd(listOf("test", "-f", path.strPath)))
-                .stdout { forEach { logger.info(it) } }
-                .stderr { forEach { logger.error(it) } }
+                .stdout { forEach { kogger.info(it) } }
+                .stderr { forEach { kogger.error(it) } }
         ).exitCode == 0
     }
 
@@ -38,8 +39,8 @@ class SshFileSystem(
         return sshCmdExecutor.execute(
             ProcessConfig
                 .create(StrCmd(listOf("test", "-f", path.strPath)))
-                .stdout { forEach { logger.info(it) } }
-                .stderr { forEach { logger.error(it) } }
+                .stdout { forEach { kogger.info(it) } }
+                .stderr { forEach { kogger.error(it) } }
         ).exitCode == 0
     }
 
@@ -50,7 +51,7 @@ class SshFileSystem(
             ProcessConfig
                 .create(StrCmd(listOf("cat", path.strPath)))
                 .stdout { block() }
-                .stderr { forEach { logger.error(it) } }
+                .stderr { forEach { kogger.error(it) } }
         ).outputRes
     }
 
@@ -61,7 +62,7 @@ class SshFileSystem(
             ProcessConfig
                 .create(StrCmd(listOf("tee", path.strPath)))
                 .stdin { block() }
-                .stderr { forEach { logger.error(it) } }
+                .stderr { forEach { kogger.error(it) } }
         ).inputRes
     }
 
@@ -69,7 +70,7 @@ class SshFileSystem(
         sshCmdExecutor.execute(
             ProcessConfig
                 .create(StrCmd(listOf("mkdir", "-p", dirPathResource.path.strPath)))
-                .stderr { forEach { logger.error(it) } }
+                .stderr { forEach { kogger.error(it) } }
         )
     }
 

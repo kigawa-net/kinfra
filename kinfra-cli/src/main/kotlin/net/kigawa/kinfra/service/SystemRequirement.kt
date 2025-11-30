@@ -1,9 +1,10 @@
 package net.kigawa.kinfra.service
 
-import net.kigawa.kodel.api.log.Logger
+import net.kigawa.kodel.api.log.Kogger
 import net.kigawa.kinfra.model.util.AnsiColors
+import net.kigawa.kodel.api.log.traceignore.error
 
-class SystemRequirement(private val logger: Logger) {
+class SystemRequirement(private val kogger: Kogger) {
     fun isTerraformInstalled(): Boolean {
         return try {
             val process =
@@ -19,7 +20,7 @@ class SystemRequirement(private val logger: Logger) {
 
     fun validateTerraformInstallation(): Boolean {
         if (!isTerraformInstalled()) {
-            logger.error("Terraform is not installed")
+            kogger.error("Terraform is not installed")
             println("${AnsiColors.RED}Error:${AnsiColors.RESET} Terraform is not installed or not found in PATH.")
             println("${AnsiColors.BLUE}Please install Terraform:${AnsiColors.RESET}")
             println("  Ubuntu/Debian: sudo apt-get install terraform")

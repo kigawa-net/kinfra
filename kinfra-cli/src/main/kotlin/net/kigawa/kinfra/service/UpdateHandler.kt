@@ -3,16 +3,18 @@ package net.kigawa.kinfra.service
 import net.kigawa.kinfra.model.LoginRepo
 import net.kigawa.kinfra.model.conf.KinfraConfig
 import net.kigawa.kinfra.model.config.ConfigRepository
-import net.kigawa.kodel.api.log.Logger
+import net.kigawa.kodel.api.log.Kogger
 import net.kigawa.kinfra.model.update.AutoUpdater
 import net.kigawa.kinfra.model.update.VersionChecker
 import net.kigawa.kinfra.model.util.AnsiColors
 import net.kigawa.kinfra.model.util.VersionUtil
+import net.kigawa.kodel.api.log.traceignore.debug
+import net.kigawa.kodel.api.log.traceignore.warn
 
 class UpdateHandler(
     private val versionChecker: VersionChecker,
     private val autoUpdater: AutoUpdater,
-    private val logger: Logger,
+    private val kogger: Kogger,
     private val configRepository: ConfigRepository,
     private val loginRepo: LoginRepo,
 ) {
@@ -26,7 +28,7 @@ class UpdateHandler(
 
             // Skip update check if auto-update is disabled
             if (config?.update?.autoUpdate == false) {
-                logger.debug("Auto-update is disabled in config")
+                kogger.debug("Auto-update is disabled in config")
                 return
             }
 
@@ -35,14 +37,14 @@ class UpdateHandler(
 
             // Check if we should check for updates based on interval
             if (!versionChecker.shouldCheckForUpdate(lastCheckTime, updateSettings.checkInterval)) {
-                logger.debug("Skipping update check - not enough time has passed since last check")
+                kogger.debug("Skipping update check - not enough time has passed since last check")
                 return
             }
 
             // Get current version from build-time generated properties
             val currentVersion = VersionUtil.getVersion()
 
-            logger.debug("Checking for updates - current version: $currentVersion")
+            kogger.debug("Checking for updates - current version: $currentVersion")
 
             val versionInfo = versionChecker.checkForUpdates(currentVersion, updateSettings.githubRepo)
             autoUpdater.updateLastCheckTime()
@@ -62,7 +64,7 @@ class UpdateHandler(
                 }
             }
         } catch (e: Exception) {
-            logger.warn("Error during update check: ${e.message}")
+            kogger.warn("Error during update check: ${e.message}")
             // Silently fail - don't interrupt user workflow
         }
     }

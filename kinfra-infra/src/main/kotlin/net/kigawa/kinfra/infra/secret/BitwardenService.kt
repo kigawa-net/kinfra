@@ -13,12 +13,13 @@ import net.kigawa.kinfra.api.secret.SecretFileResource
 import net.kigawa.kinfra.api.secret.SecretResource
 import net.kigawa.kinfra.api.secret.SecretService
 import net.kigawa.kinfra.model.BitwardenSecret
-import net.kigawa.kodel.api.log.Logger
+import net.kigawa.kodel.api.log.Kogger
+import net.kigawa.kodel.api.log.traceignore.error
 
 class BitwardenService(
     val cmdExecutor: CmdExecutor,
     val accessToken: SecretResource,
-    val logger: Logger,
+    val kogger: Kogger,
     val secretDir: DirResource,
 ): SecretService {
     private val gson = Gson()
@@ -32,12 +33,12 @@ class BitwardenService(
                         )
                     )
                 )
-                .stderr { forEach { logger.error(it) } }
+                .stderr { forEach { kogger.error(it) } }
                 .stdout { toList().joinToString(separator = "\n") }
         )
         if (res.exitCode != 0) {
-            res.outputRes.split("\n").forEach { logger.error(it) }
-            logger.error("Failed to get secret from Bitwarden ${res.exitCode}")
+            res.outputRes.split("\n").forEach { kogger.error(it) }
+            kogger.error("Failed to get secret from Bitwarden ${res.exitCode}")
             throw Exception("Failed to get secret from Bitwarden")
         }
 

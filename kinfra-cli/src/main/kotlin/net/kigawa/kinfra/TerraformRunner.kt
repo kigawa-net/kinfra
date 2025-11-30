@@ -3,13 +3,14 @@ package net.kigawa.kinfra
 import net.kigawa.kinfra.di.DependencyContainer
 import net.kigawa.kinfra.model.ActionType
 import net.kigawa.kinfra.service.ActionRegistry
+import net.kigawa.kodel.api.log.traceignore.debug
 import kotlin.system.exitProcess
 
 class TerraformRunner(
     private val container: DependencyContainer,
     val actionRegistry: ActionRegistry,
 ) {
-    private val logger = container.logger
+    private val logger = container.kogger
     private val commandInterpreter = container.commandInterpreter
     private val systemRequirement = container.systemRequirement
     private val updateHandler = container.updateHandler
@@ -75,7 +76,7 @@ class TerraformRunner(
         updateHandler.checkForUpdates()
 
         if (exitCode != 0) {
-            logger.error("Action ${parsedCommand.actionName} failed with exit code: $exitCode")
+            logger.severe("Action ${parsedCommand.actionName} failed with exit code: $exitCode")
             exitProcess(exitCode)
         }
     }

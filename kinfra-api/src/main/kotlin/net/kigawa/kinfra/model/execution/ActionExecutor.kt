@@ -1,12 +1,13 @@
 package net.kigawa.kinfra.model.execution
 
-import net.kigawa.kodel.api.log.Logger
+import net.kigawa.kodel.api.log.Kogger
 import net.kigawa.kinfra.model.util.AnsiColors
+import net.kigawa.kodel.api.log.traceignore.error
 
 /**
  * 共通のアクション実行パターンを提供するクラス
  */
-class ActionExecutor(private val logger: Logger) {
+class ActionExecutor(private val kogger: Kogger) {
     /**
      * ステップ実行の共通パターン
      */
@@ -17,7 +18,7 @@ class ActionExecutor(private val logger: Logger) {
             val result = step.execute()
             if (result != 0) {
                 println("${AnsiColors.RED}✗${AnsiColors.RESET} Step '${step.description}' failed with exit code: $result")
-                logger.error("Step '${step.description}' failed with exit code: $result")
+                kogger.error("Step '${step.description}' failed with exit code: $result")
                 return result
             } else {
                 println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Step '${step.description}' completed successfully")
@@ -41,7 +42,7 @@ class ActionExecutor(private val logger: Logger) {
         return try {
             action()
         } catch (e: Exception) {
-            logger.error("$operation failed: ${e.message}")
+            kogger.error("$operation failed: ${e.message}")
             println("${AnsiColors.RED}Error:${AnsiColors.RESET} $operation failed: ${e.message}")
             1
         }

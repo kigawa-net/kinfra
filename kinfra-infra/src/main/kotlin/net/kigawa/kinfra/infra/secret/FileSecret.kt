@@ -34,5 +34,4 @@ class FileSecret(
 
 
     override suspend fun hashSrc() = HashSrc.resource(filePathResource, readOrNull())
-
 }

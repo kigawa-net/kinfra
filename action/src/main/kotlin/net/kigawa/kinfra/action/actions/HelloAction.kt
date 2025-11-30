@@ -2,7 +2,7 @@ package net.kigawa.kinfra.action.actions
 
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.GitHelper
-import net.kigawa.kodel.api.log.Logger
+import net.kigawa.kodel.api.log.Kogger
 import net.kigawa.kinfra.model.service.TerraformService
 import net.kigawa.kinfra.model.util.AnsiColors
 import net.kigawa.kinfra.model.util.isSuccess
@@ -10,7 +10,7 @@ import net.kigawa.kinfra.model.util.message
 
 class HelloAction(
     private val terraformService: TerraformService,
-    private val logger: Logger,
+    private val kogger: Kogger,
     private val gitHelper: GitHelper,
 ) : Action {
     override fun execute(args: List<String>): Int {
@@ -80,7 +80,7 @@ class HelloAction(
     }
 
     private fun terraformInit() {
-        logger.info("Running terraform init")
+        kogger.info("Running terraform init")
         println("${AnsiColors.BLUE}${AnsiColors.BOLD}Running Terraform Init${AnsiColors.RESET}")
         println()
 
@@ -108,7 +108,7 @@ class HelloAction(
     }
 
     private fun terraformPlan() {
-        logger.info("Running terraform plan")
+        kogger.info("Running terraform plan")
         println("${AnsiColors.BLUE}${AnsiColors.BOLD}Running Terraform Plan${AnsiColors.RESET}")
         println()
 
@@ -136,7 +136,7 @@ class HelloAction(
     }
 
     private fun terraformInitAndPlan() {
-        logger.info("Running terraform init + plan")
+        kogger.info("Running terraform init + plan")
         println("${AnsiColors.BLUE}${AnsiColors.BOLD}Running Terraform Init + Plan${AnsiColors.RESET}")
         println()
 
@@ -178,7 +178,7 @@ class HelloAction(
     }
 
     private fun terraformApply() {
-        logger.info("Running terraform apply")
+        kogger.info("Running terraform apply")
         println("${AnsiColors.BLUE}${AnsiColors.BOLD}Running Terraform Apply${AnsiColors.RESET}")
         println("${AnsiColors.YELLOW}Warning: This will make changes to your infrastructure!${AnsiColors.RESET}")
         println()
@@ -207,7 +207,7 @@ class HelloAction(
     }
 
     private fun gitStatus() {
-        logger.info("Checking git status")
+        kogger.info("Checking git status")
         println("${AnsiColors.BLUE}${AnsiColors.BOLD}Git Status${AnsiColors.RESET}")
         println()
 
@@ -230,7 +230,7 @@ class HelloAction(
     }
 
     private fun gitPush() {
-        logger.info("Pushing to git repository")
+        kogger.info("Pushing to git repository")
         gitHelper.pushToRemote()
     }
 }

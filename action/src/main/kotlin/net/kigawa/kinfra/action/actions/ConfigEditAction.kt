@@ -3,19 +3,22 @@ package net.kigawa.kinfra.action.actions
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.LoginRepo
 import net.kigawa.kinfra.model.execution.ConfigEditor
-import net.kigawa.kodel.api.log.Logger
 import net.kigawa.kinfra.model.util.AnsiColors
+import net.kigawa.kodel.api.log.Kogger
+import net.kigawa.kodel.api.log.traceignore.debug
+import net.kigawa.kodel.api.log.getLogger
 
 class ConfigEditAction(
     private val loginRepo: LoginRepo,
-    val logger: Logger,
+    val kogger: Kogger,
 ) : Action {
+    val logger = getLogger()
     private val configEditor = ConfigEditor(loginRepo)
 
     override fun execute(args: List<String>): Int {
         // Check for add-subproject subcommand
         if (args.isNotEmpty() && args[0] == "add-subproject") {
-            logger.debug("add-subproject subcommand found: $args")
+            kogger.debug("add-subproject subcommand found: $args")
             return configEditor.addSubProject(args.drop(1).toTypedArray())
         }
 

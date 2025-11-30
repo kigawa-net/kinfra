@@ -2,14 +2,14 @@ package net.kigawa.kinfra.action.actions
 
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.LoginRepo
-import net.kigawa.kodel.api.log.Logger
+import net.kigawa.kodel.api.log.Kogger
 import net.kigawa.kinfra.model.sub.SubProject
 import net.kigawa.kinfra.model.util.AnsiColors
 import java.io.File
 
 class SubEditAction(
     private val loginRepo: LoginRepo,
-    private val logger: Logger,
+    private val kogger: Kogger,
 ) : Action {
     override fun execute(args: List<String>): Int {
         if (args.isEmpty()) {

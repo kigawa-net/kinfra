@@ -7,27 +7,29 @@ import net.kigawa.kinfra.model.execution.ActionExecutor
 import net.kigawa.kinfra.model.execution.DeploymentPipeline
 import net.kigawa.kinfra.model.execution.ExecutionStep
 import net.kigawa.kinfra.model.execution.SubProjectExecutor
-import net.kigawa.kodel.api.log.Logger
+import net.kigawa.kodel.api.log.Kogger
 import net.kigawa.kinfra.model.service.TerraformService
+import net.kigawa.kodel.api.log.traceignore.error
+import net.kigawa.kodel.api.log.traceignore.warn
 
 class DeployAction(
     private val terraformService: TerraformService,
     configRepository: ConfigRepository,
     loginRepo: LoginRepo,
-    private val logger: Logger,
+    private val kogger: Kogger,
 ) : Action {
-    private val executor = ActionExecutor(logger)
+    private val executor = ActionExecutor(kogger)
     private val pipeline = DeploymentPipeline(terraformService)
     private val subProjectExecutor = SubProjectExecutor(configRepository, loginRepo)
 
     override fun execute(args: List<String>): Int {
         val additionalArgs = args.filter { it != "--auto-selected" }
 
-        logger.info("Starting full deployment pipeline")
-        logger.info("Current working directory: ${System.getProperty("user.dir")}")
+        kogger.info("Starting full deployment pipeline")
+        kogger.info("Current working directory: ${System.getProperty("user.dir")}")
 
         // Execute parent project first
-        logger.info("Executing parent project")
+        kogger.info("Executing parent project")
 
         val steps =
             listOf(
@@ -45,17 +47,17 @@ class DeployAction(
         val result = executor.executeSteps(steps)
 
         if (result != 0) {
-            logger.error("Parent project deployment failed with exit code: $result")
-            logger.warn("Check the logs above for detailed error information")
+            kogger.error("Parent project deployment failed with exit code: $result")
+            kogger.warn("Check the logs above for detailed error information")
             return result
         }
 
-        logger.info("Parent project completed successfully")
+        kogger.info("Parent project completed successfully")
 
         // Execute sub-projects
         val subProjects = subProjectExecutor.getSubProjects()
         if (subProjects.isNotEmpty()) {
-            logger.info("Found ${subProjects.size} sub-project(s)")
+            kogger.info("Found ${subProjects.size} sub-project(s)")
 
             val subResult =
                 subProjectExecutor.executeInSubProjects(subProjects) { _, _ ->
@@ -63,7 +65,7 @@ class DeployAction(
                 }
 
             if (subResult != 0) {
-                logger.error("Sub-project deployment failed")
+                kogger.error("Sub-project deployment failed")
                 return subResult
             }
         }
@@ -78,7 +80,7 @@ class DeployAction(
         // Create new instances for sub-project execution
         // Note: TerraformService will use the current working directory
         val subPipeline = DeploymentPipeline(terraformService)
-        val subExecutor = ActionExecutor(logger)
+        val subExecutor = ActionExecutor(kogger)
 
         val steps =
             listOf(
@@ -91,7 +93,7 @@ class DeployAction(
     }
 
     private fun handleSuccessfulDeployment() {
-        logger.info("Deployment completed successfully!")
+        kogger.info("Deployment completed successfully!")
     }
 
     override fun getDescription(): String {

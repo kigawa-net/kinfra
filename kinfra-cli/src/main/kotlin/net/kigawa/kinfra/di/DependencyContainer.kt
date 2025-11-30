@@ -13,7 +13,6 @@ import net.kigawa.kinfra.infra.config.GlobalConfigCompleterImpl
 import net.kigawa.kinfra.infra.config.LoginRepoImpl
 import net.kigawa.kinfra.infra.file.FileRepositoryImpl
 import net.kigawa.kinfra.infra.file.SystemHomeDirGetter
-import net.kigawa.kinfra.infra.logging.FileLogger
 import net.kigawa.kinfra.infra.process.ProcessExecutorImpl
 import net.kigawa.kinfra.infra.terraform.TerraformRepositoryImpl
 import net.kigawa.kinfra.infra.update.AutoUpdaterImpl
@@ -29,20 +28,22 @@ import net.kigawa.kinfra.model.config.ConfigRepository
 import net.kigawa.kinfra.model.config.EnvFileLoader
 import net.kigawa.kinfra.model.execution.SubProjectExecutor
 import net.kigawa.kodel.api.log.LogLevel
-import net.kigawa.kodel.api.log.Logger
+import net.kigawa.kodel.api.log.Kogger
 import net.kigawa.kinfra.model.service.TerraformService
 import net.kigawa.kinfra.model.update.AutoUpdater
 import net.kigawa.kinfra.model.update.VersionChecker
 import net.kigawa.kinfra.service.CommandInterpreter
 import net.kigawa.kinfra.service.SystemRequirement
 import net.kigawa.kinfra.service.UpdateHandler
+import net.kigawa.kodel.api.log.LoggerFactory
+import net.kigawa.kodel.api.log.getLogger
 
 class DependencyContainer {
     // Infrastructure layer
     val homeDirGetter: HomeDirGetter by lazy { SystemHomeDirGetter() }
     val filePaths: FilePaths by lazy { FilePaths(homeDirGetter) }
 
-    val logger: Logger by lazy {
+    val kogger: Kogger by lazy {
         val logDir = System.getenv("KINFRA_LOG_DIR") ?: "logs"
         val logLevelStr = System.getenv("KINFRA_LOG_LEVEL") ?: "INFO"
         val logLevel =
@@ -51,14 +52,14 @@ class DependencyContainer {
             } catch (_: IllegalArgumentException) {
                 LogLevel.INFO
             }
-        FileLogger(logDir, logLevel)
+        getLogger()
     }
 
     val envFileLoader: EnvFileLoader by lazy { EnvFileLoaderImpl() }
     val fileRepository by lazy { FileRepositoryImpl() }
     val processExecutor by lazy { ProcessExecutorImpl() }
     val globalConfigCompleter: GlobalConfigCompleter by lazy { GlobalConfigCompleterImpl(filePaths) }
-    val configRepository: ConfigRepository by lazy { ConfigRepositoryImpl(filePaths, logger, globalConfigCompleter) }
+    val configRepository: ConfigRepository by lazy { ConfigRepositoryImpl(filePaths, kogger, globalConfigCompleter) }
     val terraformRepository by lazy { TerraformRepositoryImpl(fileRepository, loginRepo) }
 
     val bitwardenRepository: BitwardenRepository by lazy { BitwardenRepositoryImpl(processExecutor, filePaths) }
@@ -67,9 +68,9 @@ class DependencyContainer {
         configRepository.loadGlobalConfig()
     }
 
-    val versionChecker: VersionChecker by lazy { VersionCheckerImpl(logger) }
+    val versionChecker: VersionChecker by lazy { VersionCheckerImpl(kogger) }
     val autoUpdater: AutoUpdater by lazy {
-        AutoUpdaterImpl(logger, filePaths)
+        AutoUpdaterImpl(kogger, filePaths)
     }
     val gitHelper: GitHelper by lazy { GitHelperImpl(configRepository) }
     val loginRepo: LoginRepo by lazy { LoginRepoImpl(filePaths, globalConfig) }
@@ -107,11 +108,11 @@ class DependencyContainer {
         }
     }
 
-    val commandInterpreter: CommandInterpreter by lazy { CommandInterpreter(logger) }
-    val systemRequirement: SystemRequirement by lazy { SystemRequirement(logger) }
+    val commandInterpreter: CommandInterpreter by lazy { CommandInterpreter(kogger) }
+    val systemRequirement: SystemRequirement by lazy { SystemRequirement(kogger) }
     val updateHandler: UpdateHandler by lazy {
         UpdateHandler(
-            versionChecker, autoUpdater, logger, configRepository, loginRepo
+            versionChecker, autoUpdater, kogger, configRepository, loginRepo
         )
     }
 
@@ -135,7 +136,7 @@ class DependencyContainer {
                     loginRepo,
                 ),
             )
-            put(Pair(ActionType.HELLO.actionName, null), HelloAction(terraformService, logger, gitHelper))
+            put(Pair(ActionType.HELLO.actionName, null), HelloAction(terraformService, kogger, gitHelper))
             put(Pair(ActionType.INIT.actionName, null), InitAction(terraformService, gitHelper))
             put(Pair(ActionType.PLAN.actionName, null), PlanAction(terraformService, gitHelper, subProjectExecutor))
             put(Pair(ActionType.APPLY.actionName, null), ApplyAction(terraformService))
@@ -146,12 +147,12 @@ class DependencyContainer {
                     terraformService,
                     configRepository,
                     loginRepo,
-                    logger,
+                    kogger,
                 ),
             )
             put(Pair(ActionType.PUSH.actionName, null), PushAction(gitHelper))
             put(Pair(ActionType.CONFIG.actionName, null), ConfigAction(loginRepo))
-            put(Pair(ActionType.CONFIG_EDIT.actionName, null), ConfigEditAction(loginRepo, logger))
+            put(Pair(ActionType.CONFIG_EDIT.actionName, null), ConfigEditAction(loginRepo, kogger))
             put(
                 Pair(ActionType.SELF_UPDATE.actionName, null),
                 SelfUpdateAction(
@@ -166,8 +167,8 @@ class DependencyContainer {
                 CurrentGenerateVariableAction(configRepository)
             )
             put(Pair(ActionType.CURRENT.actionName, SubActionType.PLAN), CurrentPlanAction(configRepository))
-            put(Pair(ActionType.NEXT.actionName, null), NextAction(processExecutor, loginRepo, logger))
-            put(Pair(ActionType.SUBMODULE.actionName, null), SubmoduleAction(processExecutor, logger))
+            put(Pair(ActionType.NEXT.actionName, null), NextAction(processExecutor, loginRepo, kogger))
+            put(Pair(ActionType.SUBMODULE.actionName, null), SubmoduleAction(processExecutor, kogger))
 
             // Subcommands
             put(Pair(ActionType.SUB.actionName, SubActionType.LIST), SubListAction(loginRepo))
@@ -184,7 +185,7 @@ class DependencyContainer {
                 Pair(ActionType.SUB.actionName, SubActionType.EDIT),
                 SubEditAction(
                     loginRepo,
-                    logger,
+                    kogger,
                 ),
             )
             put(Pair(ActionType.SUB.actionName, SubActionType.REMOVE), SubRemoveAction(loginRepo))
@@ -204,7 +205,7 @@ class DependencyContainer {
                         terraformService,
                         configRepository,
                         loginRepo,
-                        logger,
+                        kogger,
                     ),
                 )
             }

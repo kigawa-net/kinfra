@@ -5,13 +5,15 @@ import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.LoginRepo
 import net.kigawa.kinfra.model.util.AnsiColors
 import net.kigawa.kodel.api.err.Res
+import net.kigawa.kodel.api.log.traceignore.error
+import net.kigawa.kodel.api.log.traceignore.warn
 import java.io.File
 import kotlin.io.path.Path
 
 class NextAction(
     private val processExecutor: ProcessExecutor,
     private val loginRepo: LoginRepo,
-    private val logger: net.kigawa.kodel.api.log.Logger,
+    private val kogger: net.kigawa.kodel.api.log.Kogger,
 ): Action {
     override fun execute(args: List<String>): Int {
         if (args.isNotEmpty()) {
@@ -22,7 +24,7 @@ class NextAction(
         try {
             // Get the logged-in repository path
             val repoPath = loginRepo.repoPath.toFile()
-            logger.info("Pulling latest changes for repository at: $repoPath")
+            kogger.info("Pulling latest changes for repository at: $repoPath")
 
             // Check if there are local changes
             val statusResult = processExecutor.executeWithOutput(arrayOf("git", "status", "--porcelain"), repoPath)
@@ -30,7 +32,7 @@ class NextAction(
 
             var stashed = false
             if (hasLocalChanges) {
-                logger.info("Local changes detected, stashing them")
+                kogger.info("Local changes detected, stashing them")
                 println("${AnsiColors.YELLOW}⚠ Local changes detected, temporarily stashing...${AnsiColors.RESET}")
 
                 // Stash local changes
@@ -51,8 +53,7 @@ class NextAction(
             }
 
             // Pull the latest changes
-            val pullResult = processExecutor.execute(arrayOf("git", "pull", "--no-rebase"), repoPath)
-            when (pullResult) {
+            when (val pullResult = processExecutor.execute(arrayOf("git", "pull", "--no-rebase"), repoPath)) {
                 is Res.Err -> {
                     println("${AnsiColors.RED}Error: Failed to pull repository${AnsiColors.RESET}")
                     // If we stashed, try to restore
@@ -87,7 +88,7 @@ class NextAction(
 
             // Restore stashed changes if any
             if (stashed) {
-                logger.info("Restoring stashed changes")
+                kogger.info("Restoring stashed changes")
                 val popResult = processExecutor.execute(arrayOf("git", "stash", "pop"), repoPath)
                 when (popResult) {
                     is Res.Err -> {
@@ -113,7 +114,7 @@ class NextAction(
             println("${AnsiColors.GREEN}✓ Successfully pulled latest changes${AnsiColors.RESET}")
 
             // Update submodules
-            logger.info("Updating submodules")
+            kogger.info("Updating submodules")
             val submoduleResult = processExecutor.execute(
                 arrayOf("git", "submodule", "update", "--init", "--recursive"), repoPath
             )
@@ -138,7 +139,7 @@ class NextAction(
 
             return 0
         } catch (e: Exception) {
-            logger.error("Error executing next command", e)
+            kogger.error("Error executing next command", e)
             println("${AnsiColors.RED}Error: ${e.message}${AnsiColors.RESET}")
             return 1
         }
@@ -150,14 +151,14 @@ class NextAction(
 
     private fun enableUpdatedSubProjects(repoPath: File): Int {
         try {
-            logger.info("Detecting changed sub-projects")
+            kogger.info("Detecting changed sub-projects")
 
             // Get submodule status to find changed submodules
             val submoduleStatusResult = processExecutor.executeWithOutput(
                 arrayOf("git", "submodule", "status"), repoPath
             )
             if (submoduleStatusResult.exitCode != 0) {
-                logger.warn("Failed to get submodule status: ${submoduleStatusResult.error}")
+                kogger.warn("Failed to get submodule status: ${submoduleStatusResult.error}")
                 return 0 // Not a fatal error, continue
             }
 
@@ -165,14 +166,14 @@ class NextAction(
             val changedSubmodulePaths = parseChangedSubmodules(submoduleStatusResult.output.lines())
 
             if (changedSubmodulePaths.isEmpty()) {
-                logger.info("No changed sub-projects detected")
+                kogger.info("No changed sub-projects detected")
                 return 0
             }
 
             // Load parent config
             val parentConfig = loginRepo.loadKinfraBaseConfig()
             if (parentConfig == null) {
-                logger.warn("No parent configuration found, skipping sub-project enablement")
+                kogger.warn("No parent configuration found, skipping sub-project enablement")
                 return 0
             }
 
@@ -193,7 +194,7 @@ class NextAction(
             }
 
             if (changedSubProjects.isEmpty()) {
-                logger.info("No configured sub-projects have changes")
+                kogger.info("No configured sub-projects have changes")
                 return 0
             }
 
@@ -212,7 +213,7 @@ class NextAction(
 
             return 0
         } catch (e: Exception) {
-            logger.error("Error enabling changed sub-projects", e)
+            kogger.error("Error enabling changed sub-projects", e)
             println("${AnsiColors.RED}Error: Failed to enable changed sub-projects: ${e.message}${AnsiColors.RESET}")
             return 1
         }
@@ -242,7 +243,7 @@ class NextAction(
                     }
                 }
             } catch (e: Exception) {
-                logger.warn("Failed to parse submodule line: $line - ${e.message}")
+                kogger.warn("Failed to parse submodule line: $line - ${e.message}")
             }
         }
 

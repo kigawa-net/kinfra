@@ -9,16 +9,15 @@ import net.kigawa.kinfra.infra.NormalDeployer
 import net.kigawa.kinfra.infra.Xxh3Hasher
 import net.kigawa.kinfra.infra.cmd.LocalCmdExecutor
 import net.kigawa.kinfra.infra.file.LocalFileSystem
-import net.kigawa.kinfra.infra.logging.ConsoleLogger
 import net.kigawa.kinfra.infra.secret.BitwardenService
 import net.kigawa.kinfra.infra.secret.FileSecret
 import net.kigawa.kodel.api.dep.Dep
 import net.kigawa.kodel.api.dep.DepContext
 import net.kigawa.kodel.api.dep.DepsBase
-import java.util.logging.Logger
+import net.kigawa.kodel.api.log.getLogger
 
 class IacCliDeps(depContext: DepContext<IacCliDepsScope>): DepsBase<IacCliDepsScope>(depContext) {
-    val logger = ConsoleLogger(Logger.getLogger(""))
+    val logger = getLogger()
 
     val localFileSystem = LocalFileSystem()
 
@@ -54,7 +53,7 @@ class IacCliDeps(depContext: DepContext<IacCliDepsScope>): DepsBase<IacCliDepsSc
     val bitwardenSecretFile = dep {
         FileSecret(bitwardenSecretPath.i(), localFileSystem, userInterface.i())
     }
-    val bitwarden = dep {
+    val bitwarden: Dep<BitwardenService, IacCliDepsScope> = dep {
         BitwardenService(
             localCmdExecutor.i(),
             bitwardenSecretFile.i().readOrType("bitwarden secret key"),
@@ -70,7 +69,7 @@ class IacCliDeps(depContext: DepContext<IacCliDepsScope>): DepsBase<IacCliDepsSc
     }
     val kigawaNet = dep {
         KigawaNet(
-            "kigawa-bet", bitwarden.i(),
+            "kigawa-net", bitwarden.i(),
             childContext { DeployGroupDepScope(it, kinfraContext.i()) })
     }
 

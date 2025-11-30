@@ -8,6 +8,7 @@ import net.kigawa.kinfra.model.conf.KinfraConfig
 import net.kigawa.kinfra.model.conf.KinfraParentConfig
 import net.kigawa.kinfra.model.conf.global.GlobalConfig
 import net.kigawa.kinfra.model.config.ConfigRepository
+import net.kigawa.kodel.api.log.traceignore.debug
 import java.io.File
 import java.nio.file.Path
 
@@ -16,7 +17,7 @@ import java.nio.file.Path
  */
 class ConfigRepositoryImpl(
     private val filePaths: FilePaths,
-    private val logger: net.kigawa.kodel.api.log.Logger,
+    private val kogger: net.kigawa.kodel.api.log.Kogger,
     private val globalConfigCompleter: GlobalConfigCompleter,
 ): ConfigRepository {
     private val yaml =
@@ -57,12 +58,12 @@ class ConfigRepositoryImpl(
                 // 設定が変更された場合は保存
                 if (completedConfig is GlobalConfigImpl && completedConfig.globalConfigScheme != scheme) {
                     saveGlobalConfig(completedConfig)
-                    logger.info("設定ファイルを更新しました")
+                    kogger.info("設定ファイルを更新しました")
                 }
 
                 completedConfig
             } catch (e: Exception) {
-                logger.debug("設定ファイルの読み込みに失敗: ${e.message}")
+                kogger.debug("設定ファイルの読み込みに失敗: ${e.message}")
                 val reposPath =
                     filePaths.baseConfigDir?.resolve(filePaths.reposDir)
                         ?: throw IllegalStateException("Config directory not available")

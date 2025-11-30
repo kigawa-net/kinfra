@@ -5,12 +5,13 @@ import net.kigawa.kinfra.api.hash.HashSrc
 import net.kigawa.kinfra.api.process.ProcessConfig
 import net.kigawa.kinfra.api.process.StrCmd
 import net.kigawa.kinfra.api.resource.YamlResource
-import net.kigawa.kodel.api.log.Logger
+import net.kigawa.kodel.api.log.Kogger
+import net.kigawa.kodel.api.log.traceignore.error
 
 class KubernetesYamlDeploy(
     override val name: String,
     val yamlResource: YamlResource,
-    val logger: Logger,
+    val kogger: Kogger,
 ): KinfraDeploy {
 
 
@@ -18,7 +19,7 @@ class KubernetesYamlDeploy(
         ctx.cmdExecutor.execute(
             ProcessConfig.create(StrCmd(listOf("kubectl", "apply", "-f", "-")))
                 .stdin { write(yamlResource.raw) }
-                .stderr { forEach { logger.error(it) } }
+                .stderr { forEach { kogger.error(it) } }
         )
     }
 
