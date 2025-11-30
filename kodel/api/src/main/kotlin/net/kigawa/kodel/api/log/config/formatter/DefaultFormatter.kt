@@ -1,22 +1,17 @@
-package net.kigawa.kodel.api.log
+package net.kigawa.kodel.api.log.config.formatter
 
+import net.kigawa.kodel.api.log.LogRow
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.util.logging.Formatter
-import java.util.logging.LogRecord
 
-class DefaultLoggerFormatter: Formatter() {
-    companion object {
-        const val MAX_PACKAGE_SECTION_LENGTH = 40
-    }
+object DefaultFormatter: LoggerFormatter {
+    const val MAX_PACKAGE_SECTION_LENGTH = 40
 
-    override fun format(p0: LogRecord?): String? {
-        return p0?.run {
-            val lvStr = LogLevel.fromJvm(level)
-                .let { it?.name ?: level.name }
-                .padEnd(8)
+    override fun format(row: LogRow): String {
+        return row.run {
+            val lvStr = level.name.padEnd(8)
             val className = formatClassName(sourceClassName)
             val method = sourceMethodName
                 .take(15)
@@ -28,6 +23,8 @@ class DefaultLoggerFormatter: Formatter() {
             "${lvStr}[${className}#${method}]$datetime: ${message}\n"
         }
     }
+
+
 
     private fun formatClassName(className: String): String {
         val packageSections = className

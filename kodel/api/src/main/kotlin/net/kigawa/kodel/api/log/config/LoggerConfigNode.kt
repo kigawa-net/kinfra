@@ -1,4 +1,4 @@
-package net.kigawa.kodel.api.log
+package net.kigawa.kodel.api.log.config
 
 class LoggerConfigNode(
     val parent: LoggerConfigNode?,

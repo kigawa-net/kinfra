@@ -8,9 +8,6 @@ object Main {
     @JvmStatic
     fun main(args: Array<String>) {
         LoggerFactory.configure {
-            handler {
-
-            }
         }
         runBlocking {
             IacCliDeps(

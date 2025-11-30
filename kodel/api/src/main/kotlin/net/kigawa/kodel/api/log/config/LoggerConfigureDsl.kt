@@ -1,6 +1,8 @@
-package net.kigawa.kodel.api.log
+package net.kigawa.kodel.api.log.config
 
-class LoggerConfigureDsl {
+import net.kigawa.kodel.api.log.LogLevel
+
+open class LoggerConfigureDsl {
     val loggerConfig = LoggerConfig()
     val children = mutableMapOf<String, LoggerConfigureDsl>()
 
@@ -15,8 +17,13 @@ class LoggerConfigureDsl {
     }
 
     fun child(section: String, block: LoggerConfigureDsl.() -> Unit) {
-        LoggerConfigureDsl().apply(block).let {
-            children.put(section, it)
-        }
+        val sections = section.split(".").toMutableList()
+        val first = sections.removeFirst()
+
+        children.getOrPut(first, ::LoggerConfigureDsl)
+            .apply {
+                if (sections.isEmpty()) block()
+                else child(sections.joinToString("."), block)
+            }
     }
 }

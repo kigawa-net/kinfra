@@ -1,4 +1,7 @@
-package net.kigawa.kodel.api.log
+package net.kigawa.kodel.api.log.config
+
+import net.kigawa.kodel.api.log.LogLevel
+import net.kigawa.kodel.api.log.LogRow
 
 class LoggerHandlerDsl {
     val handlerConfig = HandlerConfig()

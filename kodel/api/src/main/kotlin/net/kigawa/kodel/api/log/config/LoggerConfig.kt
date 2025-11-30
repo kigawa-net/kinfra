@@ -1,4 +1,6 @@
-package net.kigawa.kodel.api.log
+package net.kigawa.kodel.api.log.config
+
+import net.kigawa.kodel.api.log.LogLevel
 
 data class LoggerConfig(
     var level: LogLevel? = null,
