@@ -1,20 +1,20 @@
 package net.kigawa.kodel.api.log.config
 
 import net.kigawa.kodel.api.log.LogLevel
+import net.kigawa.kodel.api.log.handler.LoggerHandler
 
 open class LoggerConfigureDsl {
-    val loggerConfig = LoggerConfig()
     val children = mutableMapOf<String, LoggerConfigureDsl>()
 
-    fun level(level: LogLevel?) {
-        loggerConfig.level = level
-    }
+    var level : LogLevel? = null
+    val handlers = mutableListOf<HandlerConfig>()
 
-    fun handler(handler: LoggerHandlerDsl.() -> Unit) {
-        LoggerHandlerDsl().apply(handler).handlerConfig.let {
-            loggerConfig.addHandler(it)
+    fun handler(handler: (config: HandlerConfig) -> LoggerHandler, function: LoggerHandlerDsl.() -> Unit) {
+        LoggerHandlerDsl().apply(function).asHandlerConfig(handler).let {
+            handlers.add(it)
         }
     }
+    fun asLoggerConfig() = LoggerConfig(level, handlers)
 
     fun child(section: String, block: LoggerConfigureDsl.() -> Unit) {
         val sections = section.split(".").toMutableList()

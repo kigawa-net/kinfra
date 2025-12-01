@@ -1,24 +1,13 @@
 package net.kigawa.kodel.api.log
 
-import net.kigawa.kodel.api.log.config.LoggerConfig
-import net.kigawa.kodel.api.log.config.LoggerConfigNode
-import net.kigawa.kodel.api.log.config.formatter.JvmLoggerFormatter
-import net.kigawa.kodel.api.log.config.root.RootLoggerConfig
+import net.kigawa.kodel.api.log.config.LoggerNode
 import net.kigawa.kodel.api.log.config.root.RootLoggerConfigureDsl
-import java.util.logging.ConsoleHandler
 import java.util.logging.Logger
 import kotlin.reflect.KClass
 
 object LoggerFactory {
-    val loggerConfigNode = LoggerConfigNode(
-        null, "", LoggerConfig(
-            level = LogLevel.INFO,
-            handlers = mutableListOf()
-        )
-    )
-    val defaultConfig = LoggerConfig(
-        level = LogLevel.INFO,
-        handlers = mutableListOf()
+    val loggerNode = LoggerNode(
+        null, ""
     )
 
     init {
@@ -30,22 +19,22 @@ object LoggerFactory {
             }
     }
 
-    fun get(clazz: KClass<*>): Logger = get(clazz.qualifiedName!!)
-    fun get(name: String): Logger {
-        return Logger.getLogger(name)
+    fun get(clazz: KClass<*>): Kogger = get(clazz.qualifiedName!!)
+    internal fun getInternal(name: String): Kogger = Logger.getLogger(name)
+    fun get(name: String): Kogger {
+        return getInternal(name)
     }
 
     fun configure(block: RootLoggerConfigureDsl.() -> Unit) {
         RootLoggerConfigureDsl().apply(block).let {
-            configureRoot(it.rootLoggerConfig)
-            loggerConfigNode.configure(it)
+            configureRoot()
+            loggerNode.configureDsl(it)
         }
     }
-    private fun configureRoot(rootLoggerConfig: RootLoggerConfig) = Logger.getLogger("").apply {
-        val handlerConfig = rootLoggerConfig.rootConsoleHandlerConfig
-        handlers.filterIsInstance<ConsoleHandler>().forEach {
-            it.level = handlerConfig.level?.primary
-            it.formatter = JvmLoggerFormatter(handlerConfig.formatter)
+
+    private fun configureRoot() = get("").apply {
+        handlers.forEach {
+            removeHandler(it)
         }
     }
 }

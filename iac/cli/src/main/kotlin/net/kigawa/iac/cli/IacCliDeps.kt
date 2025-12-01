@@ -57,7 +57,6 @@ class IacCliDeps(depContext: DepContext<IacCliDepsScope>): DepsBase<IacCliDepsSc
         BitwardenService(
             localCmdExecutor.i(),
             bitwardenSecretFile.i().readOrType("bitwarden secret key"),
-            logger,
             secretDir.i()
         )
     }
