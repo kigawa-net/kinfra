@@ -30,9 +30,7 @@ class BitwardenService(
                 .create(
                     StrCmd(
                         listOf(
-                            "bws", "secret", "get", id, "--access-token", accessToken.value.also {
-                                logger.debug("Getting secret $id from Bitwarden")
-                            }, "--output", "json"
+                            "bws", "secret", "get", id, "--access-token", accessToken.value, "--output", "json"
                         )
                     )
                 )

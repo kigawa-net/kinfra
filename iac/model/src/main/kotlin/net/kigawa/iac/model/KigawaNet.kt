@@ -18,7 +18,7 @@ class KigawaNet<D: DepScope<D>>(
     val username = UsernameResource("kigawa")
     val hostname = HostnameResource("192.168.1.50")
     val privateKey = dep {
-        secretService.secretFile("ssh", kinfraCtx)
+        secretService.secretFile("0393671f-6ef0-4650-be98-b364013f8644", kinfraCtx)
     }
 
     val ssh = dep {

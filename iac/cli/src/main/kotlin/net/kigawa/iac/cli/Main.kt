@@ -10,8 +10,11 @@ object Main {
     @JvmStatic
     fun main(args: Array<String>) {
         LoggerFactory.configure {
-            level = LogLevel.DEBUG
+            level = LogLevel.INFO
             handler(::StdHandler) {
+                level = LogLevel.DEBUG
+            }
+            child("net.kigawa.kinfra"){
                 level = LogLevel.DEBUG
             }
         }

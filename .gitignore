@@ -95,3 +95,4 @@ terraform/hosts.auto.tfvars
 /.kotlin/
 /kinfra-cli/logs/
 /iac/cli/hs_err_pid*.log
+/temp

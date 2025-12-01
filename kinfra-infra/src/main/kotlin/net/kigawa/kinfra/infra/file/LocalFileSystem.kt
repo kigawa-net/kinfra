@@ -47,7 +47,7 @@ class LocalFileSystem: FileSystem {
     ): T {
         val p = Path(path.strPath)
         return SystemFileSystem.sink(p).use { sink ->
-            val writer = KxLineWriter(sink)
+            val writer = FileLineWriter(sink)
             writer.block()
         }
     }

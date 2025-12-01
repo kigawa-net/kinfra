@@ -17,7 +17,6 @@ class LocalCmdExecutor(
     val kogger: Kogger,
 ): CmdExecutor {
     override suspend fun <SI, SO, SE> execute(processConfig: ProcessConfig<SI, SO, SE>): ProcessRes<SI, SO, SE> {
-        kogger.debug("execute: ${processConfig.cmd.raw}")
         val processBuilder = ProcessBuilder(processConfig.cmd.raw)
 
         // 作業ディレクトリの設定
