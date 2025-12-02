@@ -12,10 +12,10 @@ import net.kigawa.kodel.api.dep.context.DepScope
  * @param block 依存を作成するブロック
  * @param depContext 依存コンテキスト
  */
-class Dep<T, S : DepScope<S>>(
+class Dep<T, S: DepScope<S>>(
     depProviderFactory: DepProviderFactory,
     block: suspend context(DepContext<S>)
-    () -> T,
+        () -> T,
     val depContext: DepContext<S>,
 ) {
     val provider = depProviderFactory.create(block, depContext)
@@ -26,9 +26,9 @@ class Dep<T, S : DepScope<S>>(
      * @param childContext 子依存コンテキスト（context receiver）
      * @return 依存のインスタンス
      */
-    suspend context(childContext: DepContext<S>) fun get(): T {
+    suspend context(childContext: DepContext<S>) fun i(): T {
         depContext.closeHook { childContext.close() }
-        childContext.appendParentDepScope(depContext.depScope)
+        childContext.appendParentDepContext(depContext)
         return provider.get(childContext, childContext)
     }
 }

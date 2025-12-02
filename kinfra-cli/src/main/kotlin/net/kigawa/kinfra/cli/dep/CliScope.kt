@@ -28,4 +28,8 @@ class CliScope(
     override fun close() {
         depCoroutineScope.close()
     }
+
+    override fun toString(): String {
+        return "CliScope(depCoroutineScope=$depCoroutineScope)"
+    }
 }

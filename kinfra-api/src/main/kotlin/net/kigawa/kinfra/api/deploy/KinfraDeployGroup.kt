@@ -1,30 +1,23 @@
 package net.kigawa.kinfra.api.deploy
 
-import net.kigawa.kinfra.api.HashValue
-import net.kigawa.kinfra.api.Hasher
-import net.kigawa.kinfra.api.KinfraContext
+import net.kigawa.kinfra.api.ctx.KinfraContext
+import net.kigawa.kinfra.api.hash.HashSrc
+import net.kigawa.kodel.api.dep.DepContext
+import net.kigawa.kodel.api.dep.DepsBase
+import net.kigawa.kodel.api.dep.context.DepScope
 
-abstract class KinfraDeployGroup(
-    val ctx: KinfraContext
-): KinfraDeploy {
-    var resources = listOf<KinfraDeploy>()
-        private set
-
-    fun <T: KinfraDeploy> deployResource(resource: T): Deployed<T> {
-        resources += resource
-        return Deployed(resource)
-    }
-
-    fun <T: KinfraDeploy> T.deploy(): Deployed<T> = deployResource(this@deploy)
-
-
-    override suspend fun hash(hasher: Hasher): HashValue {
-        return hasher.hash(
-            hash = resources.map { it.hash(hasher) }
-        )
+abstract class KinfraDeployGroup<D: DepScope<D>>(
+    depContext: DepContext<DeployGroupDepScope<D>>,
+): DepsBase<DeployGroupDepScope<D>>(depContext), KinfraDeploy {
+    val kinfraCtx get() = depContext.depScope.ctx
+    abstract suspend fun deploy(): List<KinfraDeploy>
+    override suspend fun hashSrc(): HashSrc {
+        return HashSrc.resource(deploy())
     }
 
     override suspend fun execute(ctx: KinfraContext) {
-        resources.forEach { ctx.deployer.deploy(it, ctx.childContext()) }
+        deploy().forEach { resource ->
+            ctx.deployer.deploy(resource, ctx.childContext(resource.name))
+        }
     }
 }

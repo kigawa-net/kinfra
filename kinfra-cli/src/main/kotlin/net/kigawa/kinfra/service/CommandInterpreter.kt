@@ -2,8 +2,11 @@ package net.kigawa.kinfra.service
 
 import net.kigawa.kinfra.model.ActionType
 import net.kigawa.kinfra.model.SubActionType
-import net.kigawa.kinfra.model.logging.Logger
+import net.kigawa.kodel.api.log.Kogger
 import net.kigawa.kinfra.model.util.AnsiColors
+import net.kigawa.kodel.api.log.traceignore.debug
+import net.kigawa.kodel.api.log.traceignore.error
+import net.kigawa.kodel.api.log.traceignore.warn
 import kotlin.system.exitProcess
 
 data class ParsedCommand(
@@ -13,27 +16,27 @@ data class ParsedCommand(
     val showHelp: Boolean = false,
 )
 
-class CommandInterpreter(private val logger: Logger) {
+class CommandInterpreter(private val kogger: Kogger) {
     fun parse(args: Array<String>): ParsedCommand? {
         if (args.isEmpty()) {
-            logger.warn("No action provided")
+            kogger.warn("No action provided")
             return null
         }
 
         var actionName = args[0]
         var subActionType: SubActionType? = null
         var actionArgs = args.drop(1)
-        logger.debug("Original action: $actionName")
+        kogger.debug("Original action: $actionName")
 
         // Handle subcommands
         if ((actionName == ActionType.SUB.actionName || actionName == ActionType.CURRENT.actionName) && args.size > 1) {
             val subActionName = args[1]
             subActionType = SubActionType.fromString(subActionName)
             if (subActionType != null) {
-                logger.debug("Detected subcommand: $actionName $subActionName")
+                kogger.debug("Detected subcommand: $actionName $subActionName")
                 actionArgs = args.drop(2)
             } else {
-                logger.error("Unknown subcommand: $actionName $subActionName")
+                kogger.error("Unknown subcommand: $actionName $subActionName")
                 return null
             }
         }
@@ -42,13 +45,13 @@ class CommandInterpreter(private val logger: Logger) {
         val workingDirIndex = actionArgs.indexOfFirst { it == "--working-dir" || it == "--path" }
         if (workingDirIndex != -1 && workingDirIndex + 1 < actionArgs.size) {
             actionArgs = actionArgs.filterIndexed { index, _ -> index != workingDirIndex && index != workingDirIndex + 1 }
-            logger.debug("Ignoring --working-dir/--path option, using logged-in repository")
+            kogger.debug("Ignoring --working-dir/--path option, using logged-in repository")
         }
 
         // Map --help and -h flags to help action
         if (actionName == "--help" || actionName == "-h") {
             actionName = ActionType.HELP.actionName
-            logger.debug("Mapped $actionName to help action")
+            kogger.debug("Mapped $actionName to help action")
         }
 
 // Handle config subcommands
@@ -60,34 +63,34 @@ class CommandInterpreter(private val logger: Logger) {
                     actionName = ActionType.CONFIG_EDIT.actionName
                     // Remove subcommand but keep flags
                     actionArgs = actionArgs.filter { it != "edit" }
-                    logger.info("Mapped 'config edit' to config-edit action")
+                    kogger.info("Mapped 'config edit' to config-edit action")
                 }
 
                 "add-subproject" -> {
                     // Keep as CONFIG_EDIT but don't remove subcommand
                     actionName = ActionType.CONFIG_EDIT.actionName
-                    logger.info("Mapped 'config add-subproject' to config-edit action")
+                    kogger.info("Mapped 'config add-subproject' to config-edit action")
                 }
             }
         }
 
         // Handle direct config-edit command
         if (actionName == ActionType.CONFIG_EDIT.actionName) {
-            logger.debug("Direct config-edit command detected")
+            kogger.debug("Direct config-edit command detected")
         }
 
         // deploy アクションは常に SDK 版を使用
         when (actionName) {
             ActionType.DEPLOY.actionName -> {
                 actionName = ActionType.DEPLOY_SDK.actionName
-                logger.info("Action redirected to SDK version: $actionName")
+                kogger.info("Action redirected to SDK version: $actionName")
             }
         }
 
         // Check if --help or -h is in the arguments
         val showHelp = actionArgs.contains("--help") || actionArgs.contains("-h")
         if (showHelp) {
-            logger.debug("Showing help for action: $actionName")
+            kogger.debug("Showing help for action: $actionName")
         }
 
         return ParsedCommand(
@@ -114,11 +117,11 @@ class CommandInterpreter(private val logger: Logger) {
         actionName: String,
         helpAction: (() -> Unit)? = null,
     ) {
-        logger.error("Unknown action: $actionName")
+        kogger.error("Unknown action: $actionName")
 
         when (actionName) {
             ActionType.DEPLOY_SDK.actionName -> {
-                logger.error("BWS_ACCESS_TOKEN is not set for SDK action: $actionName")
+                kogger.error("BWS_ACCESS_TOKEN is not set for SDK action: $actionName")
                 println("${AnsiColors.RED}Error:${AnsiColors.RESET} BWS_ACCESS_TOKEN is not set.")
                 println()
                 println("${AnsiColors.BLUE}Secret Manager is required for this action.${AnsiColors.RESET}")
@@ -133,7 +136,7 @@ class CommandInterpreter(private val logger: Logger) {
             }
 
             ActionType.CONFIG_EDIT.actionName -> {
-                logger.error("config-edit action not found: $actionName")
+                kogger.error("config-edit action not found: $actionName")
                 println("${AnsiColors.RED}Error:${AnsiColors.RESET} Unknown action: $actionName")
                 println()
                 println("${AnsiColors.BLUE}Did you mean:${AnsiColors.RESET}")

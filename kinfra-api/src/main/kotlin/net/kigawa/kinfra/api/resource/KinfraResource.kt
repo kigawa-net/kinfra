@@ -1,8 +1,7 @@
 package net.kigawa.kinfra.api.resource
 
-import net.kigawa.kinfra.api.HashValue
-import net.kigawa.kinfra.api.Hasher
+import net.kigawa.kinfra.api.hash.HashSrc
 
 interface KinfraResource {
-    suspend fun hash(hasher: Hasher): HashValue
+    suspend fun hashSrc(): HashSrc
 }

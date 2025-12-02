@@ -29,4 +29,5 @@ interface DepCoroutineScope {
         onFinally: () -> Unit = {},
         block: suspend DepCoroutineScope.() -> Unit,
     )
+    override fun toString(): String
 }

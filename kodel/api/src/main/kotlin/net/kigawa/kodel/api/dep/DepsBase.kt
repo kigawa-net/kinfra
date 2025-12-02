@@ -19,12 +19,12 @@ abstract class DepsBase<S: DepScope<S>>(
      * @param block 依存を作成するブロック
      * @return 作成された依存
      */
-    fun <T> dep(
+    inline fun <reified T> dep(
         depProviderFactory: DepProviderFactory = depContext.depScope.defaultDepProviderFactory,
-        block: suspend context (DepContext<S>)
+        noinline block: suspend context (DepContext<S>)
             () -> T,
     ): Dep<T, S> {
-        return Dep(depProviderFactory, block, depContext.newDepContext())
+        return Dep(depProviderFactory, block, depContext.newDepContext(T::class))
     }
 
     /**
@@ -50,7 +50,7 @@ abstract class DepsBase<S: DepScope<S>>(
         block: suspend (S) -> T,
     ): DepContext<T> {
         return DepContext(
-            block(depContext.depScope)
+            block(depContext.depScope), depContext.depClass,
         ).also { closeHook { it.close() } }
     }
 

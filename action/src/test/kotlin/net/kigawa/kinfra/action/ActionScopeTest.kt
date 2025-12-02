@@ -23,6 +23,8 @@ class ActionScopeTest {
             override fun close() {
                 depCoroutineScope.close()
             }
+
+            override fun toString(): String = "TestActionScope(defaultDepProviderFactory=$defaultDepProviderFactory)"
         }
 
         // When

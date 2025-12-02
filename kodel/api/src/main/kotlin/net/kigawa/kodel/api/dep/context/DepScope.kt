@@ -8,9 +8,10 @@ import net.kigawa.kodel.api.dep.DepProviderFactory
  *
  * @param S スコープの型
  */
-interface DepScope<S : DepScope<S>> {
+interface DepScope<S: DepScope<S>> {
     /** デフォルトの依存プロバイダファクトリ */
     val defaultDepProviderFactory: DepProviderFactory
+
     /** 依存コルーチンスコープ */
     val depCoroutineScope: DepCoroutineScope
 
@@ -33,4 +34,5 @@ interface DepScope<S : DepScope<S>> {
      * スコープをクローズする。
      */
     fun close()
+    override fun toString(): String
 }

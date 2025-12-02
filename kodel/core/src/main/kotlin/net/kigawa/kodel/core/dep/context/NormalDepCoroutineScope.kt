@@ -51,6 +51,10 @@ class NormalDepCoroutineScope(
         }
     }
 
+    override fun toString(): String {
+        return "NormalDepCoroutineScope(ownCoroutineContext=$ownCoroutineContext)"
+    }
+
     /**
      * 別のスコープと結合する。
      *
