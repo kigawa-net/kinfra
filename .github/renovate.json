@@ -1,0 +1,10 @@
+{
+    "extends": [
+        "schedule:automergeDaily",
+        ":dependencyDashboard",
+        "config:recommended"
+    ],
+    "rebaseWhen": "behind-base-branch",
+    "prConcurrentLimit": 0,
+    "prHourlyLimit": 0
+}
