@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="test" type="CompoundRunConfigurationType">
+    <toRun name="kinfra [allTests]" type="GradleRunConfiguration" />
+    <toRun name="kinfra [test]" type="GradleRunConfiguration" />
+    <method v="2" />
+  </configuration>
+</component>

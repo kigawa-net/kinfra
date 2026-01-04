@@ -1,0 +1,27 @@
+FROM eclipse-temurin:21-jdk-noble
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+      wget \
+      gnupg \
+      ca-certificates \
+      apt-transport-https && \
+    install -d -m 0755 /etc/apt/keyrings && \
+    wget -q https://packages.mozilla.org/apt/repo-signing-key.gpg -O /etc/apt/keyrings/packages.mozilla.org.asc && \
+    gpg -n -q --import --import-options import-show /etc/apt/keyrings/packages.mozilla.org.asc | \
+      awk '/pub/{getline; gsub(/^ +| +$/,""); \
+        if($0 == "35BAA0B33E9EB396F59CA838C0BA5CE6DC6315A3") \
+          print "Mozilla key verified"; \
+        else exit 1 }' && \
+    printf "Types: deb\nURIs: https://packages.mozilla.org/apt\nSuites: mozilla\nComponents: main\nSigned-By: /etc/apt/keyrings/packages.mozilla.org.asc\n" \
+      > /etc/apt/sources.list.d/mozilla.sources && \
+    printf "Package: *\nPin: origin packages.mozilla.org\nPin-Priority: 1000\n" \
+      > /etc/apt/preferences.d/mozilla && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends firefox && \
+    wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && \
+    dpkg -i google-chrome-stable_current_amd64.deb || apt-get -f install -y && \
+    rm -f google-chrome-stable_current_amd64.deb && \
+    rm -rf /var/lib/apt/lists/*

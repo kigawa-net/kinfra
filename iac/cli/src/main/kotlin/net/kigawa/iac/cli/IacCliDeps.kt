@@ -14,10 +14,10 @@ import net.kigawa.kinfra.infra.secret.FileSecret
 import net.kigawa.kodel.api.dep.Dep
 import net.kigawa.kodel.api.dep.DepContext
 import net.kigawa.kodel.api.dep.DepsBase
-import net.kigawa.kodel.api.log.getLogger
+import net.kigawa.kodel.api.log.getKogger
 
 class IacCliDeps(depContext: DepContext<IacCliDepsScope>): DepsBase<IacCliDepsScope>(depContext) {
-    val logger = getLogger()
+    val logger = getKogger()
 
     val localFileSystem = LocalFileSystem()
 

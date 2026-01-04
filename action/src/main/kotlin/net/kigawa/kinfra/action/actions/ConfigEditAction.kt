@@ -6,13 +6,11 @@ import net.kigawa.kinfra.model.execution.ConfigEditor
 import net.kigawa.kinfra.model.util.AnsiColors
 import net.kigawa.kodel.api.log.Kogger
 import net.kigawa.kodel.api.log.traceignore.debug
-import net.kigawa.kodel.api.log.getLogger
 
 class ConfigEditAction(
-    private val loginRepo: LoginRepo,
+    loginRepo: LoginRepo,
     val kogger: Kogger,
-) : Action {
-    val logger = getLogger()
+): Action {
     private val configEditor = ConfigEditor(loginRepo)
 
     override fun execute(args: List<String>): Int {
