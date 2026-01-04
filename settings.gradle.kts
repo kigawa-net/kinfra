@@ -19,5 +19,6 @@ include("kinfra-api")
 include("kinfra-infra")
 include("kodel:api")
 include("kodel:core")
+include("kodel:coroutine")
 
 include("action")
