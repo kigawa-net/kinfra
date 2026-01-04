@@ -8,7 +8,7 @@ dependencies {
     implementation(project(":kodel:core"))
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
     implementation("com.charleskorn.kaml:kaml:0.104.0")
-    implementation("com.google.code.gson:gson:2.10.1")
+    implementation("com.google.code.gson:gson:2.13.2")
     // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
     // https://mvnrepository.com/artifact/software.amazon.awssdk/s3
