@@ -6,7 +6,7 @@ plugins{
 dependencies {
     implementation(project(":action"))
     implementation(project(":kodel:core"))
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
     implementation("com.charleskorn.kaml:kaml:0.104.0")
     implementation("com.google.code.gson:gson:2.13.2")
     // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
