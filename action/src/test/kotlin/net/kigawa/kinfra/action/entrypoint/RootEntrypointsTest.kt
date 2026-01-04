@@ -38,7 +38,7 @@ class RootEntrypointsTest {
         val input = KinfraInput()
 
         // When
-        val result = entrypoints.access(input)
+        val result = entrypoints.access(input, Unit)
 
         // Then
         assertTrue(result is Res.Ok)

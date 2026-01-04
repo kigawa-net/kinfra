@@ -96,3 +96,5 @@ terraform/hosts.auto.tfvars
 /kinfra-cli/logs/
 /iac/cli/hs_err_pid*.log
 /temp
+/cache/
+/kotlin-js-store/

@@ -5,7 +5,7 @@ import net.kigawa.kodel.api.entrypoint.EntrypointGroupBase
 import net.kigawa.kodel.api.entrypoint.EntrypointInfo
 import net.kigawa.kodel.api.err.Res
 
-class RootEntrypoints : EntrypointGroupBase<KinfraInput, Res<Unit, Nothing>>() {
+class RootEntrypoints: EntrypointGroupBase<KinfraInput, Res<Unit, Nothing>, Unit>() {
     override val info: EntrypointInfo
         get() =
             EntrypointInfo(
@@ -14,7 +14,10 @@ class RootEntrypoints : EntrypointGroupBase<KinfraInput, Res<Unit, Nothing>>() {
                 "Kinfra command line tool",
             )
 
-    override fun access(input: KinfraInput): Res<Unit, Nothing> {
+
+    override fun onSubEntrypointNotFound(
+        input: KinfraInput,
+    ): Res<Unit, Nothing> {
         return Res.Ok(Unit)
     }
 }

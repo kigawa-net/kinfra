@@ -1,4 +1,6 @@
-plugins {}
+plugins {
+    id("common")
+}
 dependencies {
     implementation(project(":iac:model"))
     implementation(project(":kinfra-cli"))

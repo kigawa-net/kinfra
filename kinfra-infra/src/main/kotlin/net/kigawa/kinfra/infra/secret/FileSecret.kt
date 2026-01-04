@@ -7,7 +7,7 @@ import net.kigawa.kinfra.api.hash.HashSrc
 import net.kigawa.kinfra.api.resource.KinfraResource
 import net.kigawa.kinfra.api.secret.PlainTxtSecret
 import net.kigawa.kinfra.api.secret.SecretResource
-import net.kigawa.kodel.api.log.getLogger
+import net.kigawa.kodel.api.log.getKogger
 import net.kigawa.kodel.api.log.traceignore.debug
 
 class FileSecret(
@@ -15,7 +15,7 @@ class FileSecret(
     val fileSystem: FileSystem,
     val userInterface: UserInterface,
 ): KinfraResource {
-    val logger = getLogger()
+    val logger = getKogger()
     suspend fun readOrType(displayName: String): SecretResource {
         readOrNull()?.let { if (it.value.isNotBlank()) return it }
         fileSystem.createDir(filePathResource.parent())

@@ -13,8 +13,7 @@ import net.kigawa.kinfra.api.secret.SecretFileResource
 import net.kigawa.kinfra.api.secret.SecretResource
 import net.kigawa.kinfra.api.secret.SecretService
 import net.kigawa.kinfra.model.BitwardenSecret
-import net.kigawa.kodel.api.log.getLogger
-import net.kigawa.kodel.api.log.traceignore.debug
+import net.kigawa.kodel.api.log.getKogger
 import net.kigawa.kodel.api.log.traceignore.error
 
 class BitwardenService(
@@ -23,7 +22,7 @@ class BitwardenService(
     val secretDir: DirResource,
 ): SecretService {
     private val gson = Gson()
-    val logger = getLogger()
+    val logger = getKogger()
     override suspend fun getSecret(id: String): BitwardenSecret {
         val res = cmdExecutor.execute(
             ProcessConfig

@@ -27,16 +27,15 @@ import net.kigawa.kinfra.model.conf.global.GlobalConfig
 import net.kigawa.kinfra.model.config.ConfigRepository
 import net.kigawa.kinfra.model.config.EnvFileLoader
 import net.kigawa.kinfra.model.execution.SubProjectExecutor
-import net.kigawa.kodel.api.log.LogLevel
-import net.kigawa.kodel.api.log.Kogger
 import net.kigawa.kinfra.model.service.TerraformService
 import net.kigawa.kinfra.model.update.AutoUpdater
 import net.kigawa.kinfra.model.update.VersionChecker
 import net.kigawa.kinfra.service.CommandInterpreter
 import net.kigawa.kinfra.service.SystemRequirement
 import net.kigawa.kinfra.service.UpdateHandler
-import net.kigawa.kodel.api.log.LoggerFactory
-import net.kigawa.kodel.api.log.getLogger
+import net.kigawa.kodel.api.log.Kogger
+import net.kigawa.kodel.api.log.LogLevel
+import net.kigawa.kodel.api.log.getKogger
 
 class DependencyContainer {
     // Infrastructure layer
@@ -52,7 +51,7 @@ class DependencyContainer {
             } catch (_: IllegalArgumentException) {
                 LogLevel.INFO
             }
-        getLogger()
+        getKogger()
     }
 
     val envFileLoader: EnvFileLoader by lazy { EnvFileLoaderImpl() }
