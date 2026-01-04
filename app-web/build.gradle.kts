@@ -4,7 +4,7 @@
 
 plugins {
     application
-    id("io.ktor.plugin") version "3.0.3"
+    id("io.ktor.plugin") version "3.3.3"
 }
 
 dependencies {
@@ -22,7 +22,7 @@ dependencies {
     implementation("io.ktor:ktor-server-status-pages-jvm")
 
     // Logging
-    implementation("ch.qos.logback:logback-classic:1.5.13")
+    implementation("ch.qos.logback:logback-classic:1.5.23")
 
     // Testing
     testImplementation("io.ktor:ktor-server-test-host-jvm")
