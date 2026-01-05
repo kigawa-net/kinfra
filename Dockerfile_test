@@ -1,4 +1,4 @@
-FROM eclipse-temurin:21-jdk-noble
+FROM eclipse-temurin:21.0.9_10-jdk-noble
 
 ENV DEBIAN_FRONTEND=noninteractive
 
