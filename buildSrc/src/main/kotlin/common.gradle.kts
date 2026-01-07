@@ -11,7 +11,7 @@ repositories {
 
 dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
-    testImplementation("org.junit.jupiter:junit-jupiter-engine:6.0.1")
+    testImplementation("org.junit.jupiter:junit-jupiter-engine:6.0.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
