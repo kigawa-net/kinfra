@@ -1,7 +1,7 @@
 plugins{
-    id("common")
+    id("jvm")
 }
 
 dependencies {
-    implementation(project(":kodel:api"))
+    api(project(":kodel:api"))
 }

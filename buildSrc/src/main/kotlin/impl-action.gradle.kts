@@ -1,10 +1,10 @@
 plugins{
-    id("impl-model")
+//    id("impl-model")
+    id("jvm")
 }
 
 dependencies {
-    implementation(project(":kinfra-api"))
-    testImplementation(kotlin("test"))
+    api(project(":kinfra-api"))
     testImplementation(project(":kodel:core"))
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
 }
