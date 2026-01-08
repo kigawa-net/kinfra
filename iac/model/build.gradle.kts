@@ -1,5 +1,5 @@
 plugins {
-    id("common")
+    id("jvm")
 }
 dependencies {
     implementation(project(":kinfra-api"))

@@ -4,7 +4,7 @@
 
 plugins {
     application
-    id("com.github.johnrengelman.shadow")
+//    id("com.github.johnrengelman.shadow")
     id("impl-cli")
 }
 
@@ -42,28 +42,28 @@ application {
     mainClass = "net.kigawa.kinfra.AppKt"
 }
 
-tasks.shadowJar {
-    archiveBaseName.set("kinfra-cli")
-    archiveClassifier.unset()
-    archiveVersion.unset()
-    manifest {
-        attributes["Main-Class"] = "net.kigawa.kinfra.AppKt"
-        attributes["Implementation-Version"] = project.version.toString()
-    }
-}
+//tasks.shadowJar {
+//    archiveBaseName.set("kinfra-cli")
+//    archiveClassifier.unset()
+//    archiveVersion.unset()
+//    manifest {
+//        attributes["Main-Class"] = "net.kigawa.kinfra.AppKt"
+//        attributes["Implementation-Version"] = project.version.toString()
+//    }
+//}
 
 tasks.distTar {
-    dependsOn(tasks.shadowJar)
+//    dependsOn(tasks.shadowJar)
 }
 
 tasks.distZip {
-    dependsOn(tasks.shadowJar)
+//    dependsOn(tasks.shadowJar)
 }
 
 tasks.startScripts {
-    dependsOn(tasks.shadowJar)
+//    dependsOn(tasks.shadowJar)
 }
 
-tasks.startShadowScripts {
-    dependsOn(tasks.jar)
-}
+//tasks.startShadowScripts {
+//    dependsOn(tasks.jar)
+//}
