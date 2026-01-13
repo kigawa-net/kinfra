@@ -67,7 +67,7 @@ jobs:
           cat renovate.json
 
       - name: Self-hosted Renovate
-        uses: renovatebot/github-action@v44.2.3
+        uses: renovatebot/github-action@v44.2.4
         with:
           configurationFile: renovate.json
           token: ${{ steps.get_token.outputs.token }}
