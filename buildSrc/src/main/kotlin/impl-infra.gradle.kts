@@ -12,7 +12,7 @@ dependencies {
     // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
     // https://mvnrepository.com/artifact/software.amazon.awssdk/s3
-    implementation("software.amazon.awssdk:s3:2.41.8")
+    implementation("software.amazon.awssdk:s3:2.41.9")
     // https://mvnrepository.com/artifact/net.openhft/zero-allocation-hashing
     implementation("net.openhft:zero-allocation-hashing:0.27ea1")
     // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-io-core
