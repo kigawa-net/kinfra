@@ -1,0 +1,27 @@
+name: renovate-merge.yml
+on:
+  pull_request:
+    types: [synchronize, opened, reopened, edited]
+    branches:
+      - develop
+      - dev
+jobs:
+  test:
+    if: startsWith(github.head_ref,'renovate/')
+    uses: ./.github/workflows/ci.yml
+  merge:
+    needs: test
+    runs-on: ubuntu-latest
+    if: startsWith(github.head_ref,'renovate/')
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Merge
+        uses: devmasx/merge-branch@v1.4.0
+        with:
+          type: now
+          from_branch: ${{ github.head_ref }}
+          target_branch: ${{ github.base_ref }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
