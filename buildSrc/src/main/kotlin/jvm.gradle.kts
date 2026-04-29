@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -19,17 +20,17 @@ dependencies {
 //    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
-//java {
-//    toolchain {
-//        languageVersion = JavaLanguageVersion.of(21)
-//    }
-//}
-//
+java {
+    sourceCompatibility = JavaVersion.VERSION_24
+    targetCompatibility = JavaVersion.VERSION_24
+}
+
 //tasks.named<Test>("test") {
 //    useJUnitPlatform()
 //}
 val compileKotlin: KotlinCompile by tasks
 compileKotlin.compilerOptions {
+    jvmTarget = JvmTarget.JVM_24
     freeCompilerArgs.set(listOf("-Xcontext-parameters"))
 }
 
