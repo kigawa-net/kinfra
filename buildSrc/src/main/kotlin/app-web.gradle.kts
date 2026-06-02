@@ -18,5 +18,5 @@ dependencies {
     implementation("io.ktor:ktor-server-status-pages-jvm")
 
     // Logging
-    implementation("ch.qos.logback:logback-classic:1.5.33")
+    implementation("ch.qos.logback:logback-classic:1.5.34")
 }
