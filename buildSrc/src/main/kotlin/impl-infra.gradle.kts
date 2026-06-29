@@ -16,5 +16,5 @@ dependencies {
     // https://mvnrepository.com/artifact/net.openhft/zero-allocation-hashing
     implementation("net.openhft:zero-allocation-hashing:0.27ea1")
     // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-io-core
-    implementation("org.jetbrains.kotlinx:kotlinx-io-core:0.9.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-io-core:0.9.1")
 }
