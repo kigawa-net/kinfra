@@ -1,0 +1,37 @@
+name: 'kigawa-net App Token'
+description: >-
+  Mints a short-lived installation access token for the "kigawa-net" GitHub App
+  (app_id 4316503, contents:write), for use in place of a long-lived PAT such
+  as the shared GIT_TOKEN secret. Wraps actions/create-github-app-token.
+inputs:
+  private-key:
+    description: >-
+      PEM private key for the kigawa-net GitHub App. Pass via a secret, e.g.
+      ${{ secrets.KIGAWA_NET_APP_PRIVATE_KEY }}.
+    required: true
+  app-id:
+    description: 'GitHub App ID. Defaults to the kigawa-net app.'
+    required: false
+    default: '4316503'
+  owner:
+    description: 'Restrict the token to this owner. Defaults to the calling repository owner.'
+    required: false
+  repositories:
+    description: >-
+      Newline- or comma-separated repo names (without owner) to scope the
+      token to. Defaults to the calling repository only.
+    required: false
+outputs:
+  token:
+    description: 'Short-lived installation access token'
+    value: ${{ steps.app-token.outputs.token }}
+runs:
+  using: 'composite'
+  steps:
+    - id: app-token
+      uses: actions/create-github-app-token@v3
+      with:
+        app-id: ${{ inputs.app-id }}
+        private-key: ${{ inputs.private-key }}
+        owner: ${{ inputs.owner }}
+        repositories: ${{ inputs.repositories }}
