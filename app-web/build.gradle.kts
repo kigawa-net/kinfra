@@ -4,22 +4,15 @@
 
 plugins {
     id("app-web")
-//    application
-//    id("io.ktor.plugin") version "3.3.3"
+    application
 }
 
-dependencies {
-//
-//    // Testing
-//    testImplementation("io.ktor:ktor-server-test-host-jvm")
+application {
+    mainClass = "net.kigawa.kinfra.ApplicationKt"
 }
 
-//application {
-//    mainClass = "net.kigawa.kinfra.ApplicationKt"
-//}
-
-//ktor {
-//    fatJar {
-//        archiveFileName.set("kinfra-web-${project.version}.jar")
-//    }
-//}
+ktor {
+    fatJar {
+        archiveFileName.set("kinfra-web-${project.version}.jar")
+    }
+}

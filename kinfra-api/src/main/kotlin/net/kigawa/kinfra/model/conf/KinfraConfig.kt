@@ -38,8 +38,7 @@ interface TerraformSettings {
     /**
      * -backend-configとしてterraformに渡すキーバリュー。値はkinfra.kts/kinfra-parent.ktsの
      * `bws("secret-key")`で参照されたBitwardenシークレットのマーカーを含み得る
-     * （[net.kigawa.kinfra.infra.config.script.BwsMarker]参照）。実際にterraformを呼び出す
-     * 直前に解決される。
+     * （[BwsMarker]参照）。実際にterraformを呼び出す直前に[BackendConfigResolver]で解決される。
      */
     val backendConfig: Map<String, String>
         get() = emptyMap()

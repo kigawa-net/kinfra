@@ -8,7 +8,12 @@ import net.kigawa.kinfra.model.execution.SubProjectExecutor
 import net.kigawa.kinfra.model.util.AnsiColors
 import java.io.File
 
-class SubPlanAction(
+/**
+ * 指定したサブプロジェクトでterraform applyを実行する。
+ * 設定解決ロジックはSubPlanActionと同一（親+サブプロジェクトのbackendConfigをマージし、
+ * bws()マーカーをBitwarden Secret Managerから解決する）。
+ */
+class SubApplyAction(
     private val loginRepo: LoginRepo,
     private val subProjectExecutor: SubProjectExecutor,
     private val bitwardenSecretManagerRepository: BitwardenSecretManagerRepository? = null,
@@ -52,16 +57,17 @@ class SubPlanAction(
             return 1
         }
 
-        // サブプロジェクトでplanを実行
+        val additionalArgs = args.drop(1)
+
+        // サブプロジェクトでapplyを実行
         val result =
             subProjectExecutor.executeInSubProjects(listOf(subProject)) { _, subProjectDir ->
-                // backend.tfvarsファイルが存在するかチェック
                 val backendTfvarsFile = File(subProjectDir, "backend.tfvars")
                 val mergedBackendConfig = subProjectExecutor.getMergedBackendConfig(subProject)
                 val flattenedBackendConfig =
                     BackendConfigResolver.flattenAndResolve(mergedBackendConfig, bitwardenSecretManagerRepository)
 
-                // plan前にinitを実行
+                // apply前にinitを実行
                 println("${AnsiColors.BLUE}Initializing Terraform for sub-project ${subProject.name}...${AnsiColors.RESET}")
                 val initArgs = mutableListOf("terraform", "init", "-input=false")
                 flattenedBackendConfig.forEach { (key, value) ->
@@ -83,17 +89,26 @@ class SubPlanAction(
                     return@executeInSubProjects initExitCode
                 }
 
-                val planArgs = mutableListOf("terraform", "plan", "-input=false")
+                // ドキュメント通り自動承認する（未指定の場合のみ付与）
+                val argsWithAutoApprove =
+                    if (additionalArgs.contains("-auto-approve")) {
+                        additionalArgs
+                    } else {
+                        additionalArgs + "-auto-approve"
+                    }
+
+                val applyArgs = mutableListOf("terraform", "apply", "-input=false")
                 flattenedBackendConfig.forEach { (key, value) ->
-                    planArgs.add("-backend-config=$key=$value")
+                    applyArgs.add("-backend-config=$key=$value")
                 }
                 if (backendTfvarsFile.exists()) {
-                    planArgs.add("-backend-config=backend.tfvars")
+                    applyArgs.add("-backend-config=backend.tfvars")
                 }
+                applyArgs.addAll(argsWithAutoApprove)
 
-                // サブプロジェクトディレクトリでterraform planを実行
+                // サブプロジェクトディレクトリでterraform applyを実行
                 val process =
-                    ProcessBuilder(planArgs)
+                    ProcessBuilder(applyArgs)
                         .directory(subProjectDir)
                         .redirectOutput(ProcessBuilder.Redirect.INHERIT)
                         .redirectError(ProcessBuilder.Redirect.INHERIT)
@@ -106,19 +121,19 @@ class SubPlanAction(
     }
 
     override fun getDescription(): String {
-        return "Run terraform plan in a sub-project"
+        return "Run terraform apply in a sub-project"
     }
 
     override fun showHelp() {
-        println("Usage: kinfra sub plan <sub-project-name>")
+        println("Usage: kinfra sub apply <sub-project-name>")
         println()
-        println("Run terraform plan in the specified sub-project.")
+        println("Run terraform apply in the specified sub-project.")
         println()
         println("Arguments:")
         println("  <sub-project-name>  Name of the sub-project")
         println()
         println("Examples:")
-        println("  kinfra sub plan my-project")
+        println("  kinfra sub apply my-project")
     }
 
     private fun showUsage() {

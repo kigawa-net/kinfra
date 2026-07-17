@@ -1,10 +1,10 @@
 package net.kigawa.kinfra.infra.service
 
-import net.kigawa.kinfra.infra.config.script.BwsMarker
 import net.kigawa.kinfra.infra.process.ProcessExecutor
 import net.kigawa.kinfra.infra.terraform.TerraformRepository
 import net.kigawa.kinfra.model.LoginRepo
 import net.kigawa.kinfra.model.bitwarden.BitwardenSecretManagerRepository
+import net.kigawa.kinfra.model.conf.BackendConfigResolver
 import net.kigawa.kinfra.model.conf.TerraformConfig
 import net.kigawa.kinfra.model.service.TerraformService
 import net.kigawa.kodel.api.err.ActionException
@@ -25,37 +25,8 @@ class TerraformServiceImpl(
      * backendConfigをフラットなキーバリューペアに変換し、bws()マーカーが含まれる値は
      * Bitwarden Secret Managerから解決する
      */
-    private fun flattenBackendConfig(
-        backendConfig: Map<String, Any>,
-        prefix: String = "",
-    ): Map<String, String> {
-        val result = mutableMapOf<String, String>()
-
-        backendConfig.forEach { (key, value) ->
-            val fullKey = if (prefix.isEmpty()) key else "$prefix.$key"
-
-            when (value) {
-                is String -> result[fullKey] = resolveBwsValue(value)
-                is Number -> result[fullKey] = value.toString()
-                is Boolean -> result[fullKey] = value.toString()
-                is Map<*, *> -> {
-                    @Suppress("UNCHECKED_CAST")
-                    val nestedMap = value as Map<String, Any>
-                    result.putAll(flattenBackendConfig(nestedMap, fullKey))
-                }
-
-                else -> result[fullKey] = value.toString()
-            }
-        }
-
-        return result
-    }
-
-    /**
-     * 値がbws()のマーカーであればBitwarden Secret Managerから解決する。マーカーでなければそのまま返す。
-     */
-    private fun resolveBwsValue(value: String): String =
-        BwsMarker.resolve(value) { secretKey -> bitwardenSecretManagerRepository?.findSecretByKey(secretKey)?.value }
+    private fun flattenBackendConfig(backendConfig: Map<String, Any>): Map<String, String> =
+        BackendConfigResolver.flattenAndResolve(backendConfig, bitwardenSecretManagerRepository)
 
     override fun init(
         additionalArgs: List<String>,

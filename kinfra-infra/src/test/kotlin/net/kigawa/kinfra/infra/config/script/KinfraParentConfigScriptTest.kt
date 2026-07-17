@@ -1,5 +1,6 @@
 package net.kigawa.kinfra.infra.config.script
 
+import net.kigawa.kinfra.model.conf.BwsMarker
 import java.io.File
 import kotlin.io.path.createTempFile
 import kotlin.test.Test

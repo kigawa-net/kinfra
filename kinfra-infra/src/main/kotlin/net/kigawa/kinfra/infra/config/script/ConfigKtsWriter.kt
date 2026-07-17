@@ -3,6 +3,7 @@ package net.kigawa.kinfra.infra.config.script
 import net.kigawa.kinfra.infra.config.KinfraConfigScheme
 import net.kigawa.kinfra.infra.config.KinfraParentConfigScheme
 import net.kigawa.kinfra.infra.config.TerraformSettingsScheme
+import net.kigawa.kinfra.model.conf.BwsMarker
 
 /**
  * KinfraParentConfigScheme/KinfraConfigSchemeオブジェクトから、正規化された

@@ -3,6 +3,7 @@ package net.kigawa.kinfra.infra.config.script
 import net.kigawa.kinfra.infra.config.KinfraParentConfigScheme
 import net.kigawa.kinfra.infra.config.SubProjectScheme
 import net.kigawa.kinfra.infra.config.TerraformSettingsScheme
+import net.kigawa.kinfra.model.conf.BwsMarker
 import kotlin.io.path.createTempFile
 import kotlin.test.Test
 import kotlin.test.assertEquals

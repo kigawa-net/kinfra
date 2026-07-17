@@ -5,6 +5,7 @@ import net.kigawa.kinfra.infra.config.KinfraParentConfigScheme
 import net.kigawa.kinfra.infra.config.SubProjectScheme
 import net.kigawa.kinfra.infra.config.TerraformSettingsScheme
 import net.kigawa.kinfra.infra.config.UpdateSettingsScheme
+import net.kigawa.kinfra.model.conf.BwsMarker
 import kotlin.script.experimental.annotations.KotlinScript
 
 /**
