@@ -30,6 +30,25 @@ class SubProjectExecutor(
     }
 
     /**
+     * 親プロジェクト名を取得する（変更検出でR2上のハッシュ保存キーとして使う）
+     *
+     * @return 親プロジェクト名。設定が存在しない場合はnull
+     */
+    fun getParentProjectName(): String? {
+        val parentConfigPath = loginRepo.kinfraBaseConfigPath().toString()
+        if (!configRepository.kinfraParentConfigExists(parentConfigPath)) {
+            return null
+        }
+
+        return configRepository.loadKinfraParentConfig(parentConfigPath)?.projectName
+    }
+
+    /**
+     * サブプロジェクトの実際のディレクトリを解決する
+     */
+    fun resolveSubProjectDir(subProject: SubProject): File = loginRepo.repoPath.resolve(subProject.path).toFile()
+
+    /**
      * 親プロジェクトのbackendConfigを取得
      *
      * @return backendConfig。設定が存在しない場合は空のMap
@@ -57,7 +76,7 @@ class SubProjectExecutor(
         val parentBackendConfig = getBackendConfig()
 
         // サブプロジェクトのkinfra.yamlからbackendConfigを取得
-        val subProjectDir = loginRepo.repoPath.resolve(subProject.path).toFile()
+        val subProjectDir = resolveSubProjectDir(subProject)
         val subProjectConfigPath = subProjectDir.resolve("kinfra.kts")
 
         val subProjectBackendConfig: Map<String, Any> =
@@ -91,7 +110,7 @@ class SubProjectExecutor(
             println("${AnsiColors.CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${AnsiColors.RESET}")
             println()
 
-            val subProjectDir = loginRepo.repoPath.resolve(subProject.path).toFile()
+            val subProjectDir = resolveSubProjectDir(subProject)
             if (!subProjectDir.exists()) {
                 println("${AnsiColors.RED}Error:${AnsiColors.RESET} Sub-project directory not found: ${subProjectDir.absolutePath}")
                 return 1
