@@ -14,6 +14,7 @@ import net.kigawa.kinfra.infra.config.LoginRepoImpl
 import net.kigawa.kinfra.infra.file.FileRepositoryImpl
 import net.kigawa.kinfra.infra.file.SystemHomeDirGetter
 import net.kigawa.kinfra.infra.process.ProcessExecutorImpl
+import net.kigawa.kinfra.infra.r2.R2SubProjectChangeFilterFactory
 import net.kigawa.kinfra.infra.terraform.TerraformRepositoryImpl
 import net.kigawa.kinfra.infra.update.AutoUpdaterImpl
 import net.kigawa.kinfra.infra.update.VersionCheckerImpl
@@ -26,6 +27,7 @@ import net.kigawa.kinfra.model.conf.HomeDirGetter
 import net.kigawa.kinfra.model.conf.global.GlobalConfig
 import net.kigawa.kinfra.model.config.ConfigRepository
 import net.kigawa.kinfra.model.config.EnvFileLoader
+import net.kigawa.kinfra.model.execution.SubProjectChangeFilterFactory
 import net.kigawa.kinfra.model.execution.SubProjectExecutor
 import net.kigawa.kinfra.model.service.TerraformService
 import net.kigawa.kinfra.model.update.AutoUpdater
@@ -116,6 +118,7 @@ class DependencyContainer {
     }
 
     val subProjectExecutor: SubProjectExecutor by lazy { SubProjectExecutor(configRepository, loginRepo) }
+    val changeFilterFactory: SubProjectChangeFilterFactory by lazy { R2SubProjectChangeFilterFactory() }
 
 
     // Actions (without HelpAction first to avoid circular dependency)
@@ -137,8 +140,25 @@ class DependencyContainer {
             )
             put(Pair(ActionType.HELLO.actionName, null), HelloAction(terraformService, kogger, gitHelper))
             put(Pair(ActionType.INIT.actionName, null), InitAction(terraformService, gitHelper))
-            put(Pair(ActionType.PLAN.actionName, null), PlanAction(terraformService, gitHelper, subProjectExecutor))
-            put(Pair(ActionType.APPLY.actionName, null), ApplyAction(terraformService))
+            put(
+                Pair(ActionType.PLAN.actionName, null),
+                PlanAction(
+                    terraformService,
+                    gitHelper,
+                    subProjectExecutor,
+                    bitwardenSecretManagerRepository,
+                    changeFilterFactory,
+                ),
+            )
+            put(
+                Pair(ActionType.APPLY.actionName, null),
+                ApplyAction(
+                    terraformService,
+                    subProjectExecutor,
+                    bitwardenSecretManagerRepository,
+                    changeFilterFactory,
+                ),
+            )
             put(Pair(ActionType.DESTROY.actionName, null), DestroyAction(terraformService, gitHelper))
             put(
                 Pair(ActionType.DEPLOY.actionName, null),
@@ -147,6 +167,8 @@ class DependencyContainer {
                     configRepository,
                     loginRepo,
                     kogger,
+                    bitwardenSecretManagerRepository,
+                    changeFilterFactory,
                 ),
             )
             put(Pair(ActionType.PUSH.actionName, null), PushAction(gitHelper))
@@ -221,6 +243,8 @@ class DependencyContainer {
                         configRepository,
                         loginRepo,
                         kogger,
+                        bitwardenSecretManagerRepository,
+                        changeFilterFactory,
                     ),
                 )
             }

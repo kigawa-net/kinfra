@@ -10,12 +10,21 @@ import software.amazon.awssdk.services.s3.model.*
 import java.net.URI
 
 class R2Client(
-    accountId: String,
+    private val endpoint: String,
     accessKey: String,
     secretKey: String,
-) {
-
-    private val endpoint = "https://$accountId.r2.cloudflarestorage.com"
+) : R2ObjectStore {
+    companion object {
+        /**
+         * Cloudflareアカウント ID から `https://<accountId>.r2.cloudflarestorage.com` を
+         * エンドポイントとして組み立てて生成する（従来の呼び出し方法、iac/cli向け）。
+         */
+        fun fromAccountId(
+            accountId: String,
+            accessKey: String,
+            secretKey: String,
+        ): R2Client = R2Client("https://$accountId.r2.cloudflarestorage.com", accessKey, secretKey)
+    }
 
     private val s3Client: S3Client by lazy {
         val creds = AwsBasicCredentials.create(accessKey, secretKey)
@@ -48,7 +57,7 @@ class R2Client(
         return resp.contents()
     }
 
-    fun putObject(bucketName: String, key: String, data: ByteArray) {
+    override fun putObject(bucketName: String, key: String, data: ByteArray) {
         s3Client.putObject(
             PutObjectRequest.builder()
                 .bucket(bucketName)
@@ -58,7 +67,7 @@ class R2Client(
         )
     }
 
-    fun getObject(bucketName: String, key: String): ByteArray {
+    override fun getObject(bucketName: String, key: String): ByteArray {
         val resp = s3Client.getObject(
             GetObjectRequest.builder()
                 .bucket(bucketName)

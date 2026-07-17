@@ -13,7 +13,7 @@ class R2DeployRecorder(
     secretKey: String,
     private val bucketName: String,
 ): DeployRecorder {
-    val r2Client = R2Client(accountId, accessKey, secretKey)
+    val r2Client = R2Client.fromAccountId(accountId, accessKey, secretKey)
     private val deployNode = DeployNode(null, mutableMapOf())
 
     override suspend fun recordPreExec(hash: HashValue, ctx: KinfraContext) {
