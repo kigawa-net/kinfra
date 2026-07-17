@@ -28,10 +28,11 @@ java {
 //tasks.named<Test>("test") {
 //    useJUnitPlatform()
 //}
-val compileKotlin: KotlinCompile by tasks
-compileKotlin.compilerOptions {
-    jvmTarget = JvmTarget.JVM_24
-    freeCompilerArgs.set(listOf("-Xcontext-parameters"))
+tasks.withType<KotlinCompile>().configureEach {
+    compilerOptions {
+        jvmTarget = JvmTarget.JVM_24
+        freeCompilerArgs.set(listOf("-Xcontext-parameters"))
+    }
 }
 
 // Configure ktlint - Temporarily disabled

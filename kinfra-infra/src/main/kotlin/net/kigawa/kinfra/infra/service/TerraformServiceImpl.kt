@@ -2,14 +2,14 @@ package net.kigawa.kinfra.infra.service
 
 import net.kigawa.kinfra.infra.process.ProcessExecutor
 import net.kigawa.kinfra.infra.terraform.TerraformRepository
+import net.kigawa.kinfra.model.LoginRepo
 import net.kigawa.kinfra.model.bitwarden.BitwardenSecretManagerRepository
+import net.kigawa.kinfra.model.conf.BackendConfigResolver
 import net.kigawa.kinfra.model.conf.TerraformConfig
-import net.kigawa.kinfra.model.config.ConfigRepository
 import net.kigawa.kinfra.model.service.TerraformService
 import net.kigawa.kodel.api.err.ActionException
 import net.kigawa.kodel.api.err.Res
 import java.io.File
-import java.nio.file.Paths
 
 /**
  * TerraformServiceの実装
@@ -17,38 +17,16 @@ import java.nio.file.Paths
 class TerraformServiceImpl(
     private val processExecutor: ProcessExecutor,
     private val terraformRepository: TerraformRepository,
-    private val configRepository: ConfigRepository,
+    private val loginRepo: LoginRepo,
     private val bitwardenSecretManagerRepository: BitwardenSecretManagerRepository?,
     override val terraformConfig: TerraformConfig,
 ): TerraformService {
     /**
-     * backendConfigをフラットなキーバリューペアに変換
+     * backendConfigをフラットなキーバリューペアに変換し、bws()マーカーが含まれる値は
+     * Bitwarden Secret Managerから解決する
      */
-    private fun flattenBackendConfig(
-        backendConfig: Map<String, Any>,
-        prefix: String = "",
-    ): Map<String, String> {
-        val result = mutableMapOf<String, String>()
-
-        backendConfig.forEach { (key, value) ->
-            val fullKey = if (prefix.isEmpty()) key else "$prefix.$key"
-
-            when (value) {
-                is String -> result[fullKey] = value
-                is Number -> result[fullKey] = value.toString()
-                is Boolean -> result[fullKey] = value.toString()
-                is Map<*, *> -> {
-                    @Suppress("UNCHECKED_CAST")
-                    val nestedMap = value as Map<String, Any>
-                    result.putAll(flattenBackendConfig(nestedMap, fullKey))
-                }
-
-                else -> result[fullKey] = value.toString()
-            }
-        }
-
-        return result
-    }
+    private fun flattenBackendConfig(backendConfig: Map<String, Any>): Map<String, String> =
+        BackendConfigResolver.flattenAndResolve(backendConfig, bitwardenSecretManagerRepository)
 
     override fun init(
         additionalArgs: List<String>,
@@ -234,8 +212,7 @@ class TerraformServiceImpl(
      * Bitwardenシークレットから.tfvarsファイルを生成
      */
     private fun generateTfvarsFromBitwarden(): String? {
-        val configPath = configRepository.getProjectConfigFilePath()
-        val kinfraConfig = configRepository.loadKinfraConfig(Paths.get(configPath)) ?: return null
+        val kinfraConfig = loginRepo.loadKinfraConfig() ?: return null
 
         val settings = kinfraConfig.rootProject.terraform ?: return null
         if (settings.variableMappings.isEmpty() || bitwardenSecretManagerRepository == null) {

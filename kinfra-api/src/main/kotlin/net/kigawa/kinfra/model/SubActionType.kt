@@ -7,6 +7,7 @@ enum class SubActionType(val actionName: String) {
     EDIT("edit"),
     REMOVE("rm"),
     PLAN("plan"),
+    APPLY("apply"),
     GENERATE("generate"),
     ;
 

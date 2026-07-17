@@ -58,7 +58,7 @@ class SubProjectExecutor(
 
         // サブプロジェクトのkinfra.yamlからbackendConfigを取得
         val subProjectDir = loginRepo.repoPath.resolve(subProject.path).toFile()
-        val subProjectConfigPath = subProjectDir.resolve("kinfra.yaml")
+        val subProjectConfigPath = subProjectDir.resolve("kinfra.kts")
 
         val subProjectBackendConfig: Map<String, Any> =
             if (subProjectConfigPath.exists()) {

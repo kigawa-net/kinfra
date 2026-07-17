@@ -16,7 +16,7 @@ dependencies {
     implementation(kotlinPluginId("jvm"))
     implementation(kotlinPluginId("multiplatform"))
     implementation(kotlinPluginId("plugin.serialization", version = "2.2.0"))
-//    implementation(pluginId("com.github.johnrengelman.shadow", "8.1.1"))
+    implementation(pluginId("com.gradleup.shadow", "9.5.1"))
     implementation(pluginId("org.jlleitschuh.gradle.ktlint", "12.1.1"))
     implementation(pluginId("io.ktor.plugin", "3.3.3"))
 }

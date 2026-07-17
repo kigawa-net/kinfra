@@ -1,7 +1,11 @@
 package net.kigawa.kinfra.infra.config
 
 import com.charleskorn.kaml.Yaml
-import com.charleskorn.kaml.YamlConfiguration
+import net.kigawa.kinfra.infra.config.script.KinfraConfigKtsWriter
+import net.kigawa.kinfra.infra.config.script.KinfraConfigScript
+import net.kigawa.kinfra.infra.config.script.KinfraParentConfigKtsWriter
+import net.kigawa.kinfra.infra.config.script.ScriptConfigCache
+import net.kigawa.kinfra.infra.config.script.ScriptHost
 import net.kigawa.kinfra.model.conf.FilePaths
 import net.kigawa.kinfra.model.conf.GlobalConfigCompleter
 import net.kigawa.kinfra.model.conf.KinfraConfig
@@ -20,15 +24,6 @@ class ConfigRepositoryImpl(
     private val kogger: net.kigawa.kodel.api.log.Kogger,
     private val globalConfigCompleter: GlobalConfigCompleter,
 ): ConfigRepository {
-    private val yaml =
-        Yaml(
-            configuration =
-                YamlConfiguration(
-                    encodeDefaults = false,
-                    strictMode = false,
-                ),
-        )
-
     // 基本設定ディレクトリ
     private val configDir
         get() =
@@ -86,7 +81,10 @@ class ConfigRepositoryImpl(
 
     override fun loadKinfraConfig(filePath: Path): KinfraConfig? {
         val file = filePath.toFile()
-        return if (file.exists()) yaml.decodeFromString(KinfraConfigScheme.serializer(), file.readText()) else null
+        if (!file.exists()) return null
+        return ScriptConfigCache.loadOrEval(file, KinfraConfigScheme.serializer()) {
+            ScriptHost.eval<KinfraConfigScript>(file).toScheme()
+        }
     }
 
     override fun saveKinfraConfig(
@@ -94,8 +92,7 @@ class ConfigRepositoryImpl(
         filePath: String,
     ) {
         val file = File(filePath)
-        val yaml = Yaml.default.encodeToString(KinfraConfigScheme.serializer(), KinfraConfigScheme.from(config))
-        file.writeText(yaml)
+        file.writeText(KinfraConfigKtsWriter.render(KinfraConfigScheme.from(config)))
     }
 
     override fun kinfraConfigExists(filePath: String) = File(filePath).exists()
@@ -105,10 +102,7 @@ class ConfigRepositoryImpl(
         filePath: String,
     ) {
         val file = File(filePath)
-        val yaml = Yaml.default.encodeToString(
-            KinfraParentConfigScheme.serializer(), KinfraParentConfigScheme.from(config)
-        )
-        file.writeText(yaml)
+        file.writeText(KinfraParentConfigKtsWriter.render(KinfraParentConfigScheme.from(config)))
     }
 
     override fun loadKinfraParentConfig(filePath: String): KinfraParentConfig? {

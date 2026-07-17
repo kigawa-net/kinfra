@@ -16,6 +16,7 @@ class DepContext<S: DepScope<S>>(
 ) {
     val parentContexts = mutableListOf<DepContext<S>>()
     var closeHooks = listOf<suspend () -> Unit>({ depScope.close() })
+    private var closed = false
 
     /**
      * 親依存スコープを追加する。
@@ -60,8 +61,13 @@ class DepContext<S: DepScope<S>>(
     /**
      * コンテキストをクローズする。
      * 登録されたクローズフックを逆順に実行する。
+     *
+     * closeHookは相互に他方のcloseを呼び戻す構造になり得るため、
+     * 二重実行を防いで無限再帰（StackOverflowError）を避ける。
      */
     suspend fun close() {
+        if (closed) return
+        closed = true
         closeHooks.reversed().forEach {
             try {
                 it()

@@ -29,7 +29,15 @@ class ApplyAction(
 
         val argsWithoutPlan = if (planFile != null) args.drop(1) else args
 
-        val result = terraformService.apply(planFile, argsWithoutPlan, quiet = false)
+        // ドキュメント通り自動承認する（未指定の場合のみ付与）
+        val argsWithAutoApprove =
+            if (argsWithoutPlan.contains("-auto-approve")) {
+                argsWithoutPlan
+            } else {
+                argsWithoutPlan + "-auto-approve"
+            }
+
+        val result = terraformService.apply(planFile, argsWithAutoApprove, quiet = false)
 
         // エラーが発生した場合、プロジェクト情報を表示
         if (result.isFailure()) {

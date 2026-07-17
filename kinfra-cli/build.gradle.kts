@@ -4,7 +4,7 @@
 
 plugins {
     application
-//    id("com.github.johnrengelman.shadow")
+    id("com.gradleup.shadow")
     id("impl-cli")
 }
 
@@ -42,28 +42,28 @@ application {
     mainClass = "net.kigawa.kinfra.AppKt"
 }
 
-//tasks.shadowJar {
-//    archiveBaseName.set("kinfra-cli")
-//    archiveClassifier.unset()
-//    archiveVersion.unset()
-//    manifest {
-//        attributes["Main-Class"] = "net.kigawa.kinfra.AppKt"
-//        attributes["Implementation-Version"] = project.version.toString()
-//    }
-//}
+// 通常のjarタスクとshadowJarタスクが同一ファイル名(kinfra-cli-<version>.jar)を
+// 生成すると、後から実行された方が他方を上書きしてしまう。plainなjarにはclassifierを
+// 付けて分離し、install.sh/release.ymlが期待する非classifierの名前は
+// 常にshadowJar(全依存を含む実行可能jar)が生成するようにする。
+tasks.jar {
+    archiveClassifier.set("thin")
+}
+
+tasks.shadowJar {
+    archiveBaseName.set("kinfra-cli")
+    archiveClassifier.set("")
+    archiveVersion.set(project.version.toString())
+    manifest {
+        attributes["Main-Class"] = "net.kigawa.kinfra.AppKt"
+        attributes["Implementation-Version"] = project.version.toString()
+    }
+}
 
 tasks.distTar {
-//    dependsOn(tasks.shadowJar)
+    dependsOn(tasks.shadowJar)
 }
 
 tasks.distZip {
-//    dependsOn(tasks.shadowJar)
+    dependsOn(tasks.shadowJar)
 }
-
-tasks.startScripts {
-//    dependsOn(tasks.shadowJar)
-}
-
-//tasks.startShadowScripts {
-//    dependsOn(tasks.jar)
-//}

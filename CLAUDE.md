@@ -66,7 +66,7 @@ model (依存なし) → action (契約) → infrastructure (実装) → app-cli
 
 ## 設定
 
-**ファイル配置**: `~/.local/kinfra/` - `project.json` / プロジェクトルート - `kinfra.yaml`（`login`時自動生成）、`backend.tfvars`（バックエンド設定）
+**ファイル配置**: `~/.local/kinfra/` - `project.json` / プロジェクトルート - `kinfra.kts`/`kinfra-parent.kts`（Kotlinスクリプト、`login`時自動生成）、`backend.tfvars`（バックエンド設定）
 
 **環境変数**:
 - `BWS_ACCESS_TOKEN` - Bitwarden Secret Manager（または`.bws_token`）。SDKコマンド有効化
@@ -96,7 +96,7 @@ claude mcp add serena -- uvx --from git+https://github.com/oraios/serena serena 
 
 ## 実装ノート
 
-- **エラー**: `ConfigRepository`のYAML読込は例外スロー。呼出側でハンドル
-- **シリアライゼーション**: JSON=Gson、YAML=kotlinx-serialization+kaml。modelの`@Serializable`必須
-- **設定管理**: `ConfigRepositoryImpl`は`project.json`(Gson)、`kinfra.yaml`(kaml)を管理
+- **エラー**: `ConfigRepository`の設定読込は例外スロー。呼出側でハンドル
+- **シリアライゼーション**: JSON=Gson、`project.json`=kotlinx-serialization+kaml（YAML）。`kinfra.kts`/`kinfra-parent.kts`はKotlinスクリプトとして実行時にコンパイル・評価（`kotlin-scripting-jvm-host`、`net.kigawa.kinfra.infra.config.script`パッケージ）。書き込みは`KinfraConfigKtsWriter`/`KinfraParentConfigKtsWriter`でオブジェクトから`.kts`ソースを再生成
+- **設定管理**: `ConfigRepositoryImpl`/`LoginRepoImpl`は`project.json`(Gson)、`kinfra.kts`/`kinfra-parent.kts`(Kotlinスクリプト)を管理。Bitwardenシークレットは設定内で`bws("secret-key")`関数により参照する（`BwsMarker`で遅延解決）
 - **環境管理**: 環境（prod/dev等）の概念は削除済み。全てのコマンドは環境パラメータなしで動作

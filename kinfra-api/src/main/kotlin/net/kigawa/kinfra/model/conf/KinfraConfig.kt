@@ -35,6 +35,11 @@ interface TerraformSettings {
         get() = emptyList()
     val outputMappings: List<TerraformOutputMapping>
         get() = emptyList()
+    /**
+     * -backend-configとしてterraformに渡すキーバリュー。値はkinfra.kts/kinfra-parent.ktsの
+     * `bws("secret-key")`で参照されたBitwardenシークレットのマーカーを含み得る
+     * （[BwsMarker]参照）。実際にterraformを呼び出す直前に[BackendConfigResolver]で解決される。
+     */
     val backendConfig: Map<String, String>
         get() = emptyMap()
     val generateOutputDir: String?

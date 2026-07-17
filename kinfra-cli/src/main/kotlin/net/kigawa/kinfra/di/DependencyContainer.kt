@@ -165,7 +165,14 @@ class DependencyContainer {
                 Pair(ActionType.CURRENT.actionName, SubActionType.GENERATE),
                 CurrentGenerateVariableAction(configRepository)
             )
-            put(Pair(ActionType.CURRENT.actionName, SubActionType.PLAN), CurrentPlanAction(configRepository))
+            put(
+                Pair(ActionType.CURRENT.actionName, SubActionType.PLAN),
+                CurrentPlanAction(configRepository, bitwardenSecretManagerRepository),
+            )
+            put(
+                Pair(ActionType.CURRENT.actionName, SubActionType.APPLY),
+                CurrentApplyAction(configRepository, bitwardenSecretManagerRepository),
+            )
             put(Pair(ActionType.NEXT.actionName, null), NextAction(processExecutor, loginRepo, kogger))
             put(Pair(ActionType.SUBMODULE.actionName, null), SubmoduleAction(processExecutor, kogger))
 
@@ -193,6 +200,15 @@ class DependencyContainer {
                 SubPlanAction(
                     loginRepo,
                     subProjectExecutor,
+                    bitwardenSecretManagerRepository,
+                ),
+            )
+            put(
+                Pair(ActionType.SUB.actionName, SubActionType.APPLY),
+                SubApplyAction(
+                    loginRepo,
+                    subProjectExecutor,
+                    bitwardenSecretManagerRepository,
                 ),
             )
 

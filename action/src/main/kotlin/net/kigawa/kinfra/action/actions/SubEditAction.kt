@@ -58,11 +58,11 @@ class SubEditAction(
         val configFile =
             if (subProject.path.startsWith('/')) {
                 // Absolute path
-                File(subProject.path, "kinfra.yaml")
+                File(subProject.path, "kinfra.kts")
             } else {
                 // Relative path - resolve from parent config directory
                 val parentConfigDir = loginRepo.kinfraBaseConfigPath().parent
-                parentConfigDir.resolve(subProject.path).resolve("kinfra.yaml").toFile()
+                parentConfigDir.resolve(subProject.path).resolve("kinfra.kts").toFile()
             }
 
         // Create sample config if it doesn't exist
@@ -91,24 +91,27 @@ class SubEditAction(
 
         val sampleContent =
             """
-            # Kinfra Sub-Project Configuration: ${subProject.name}
+            // Kinfra Sub-Project Configuration: ${subProject.name}
 
-            rootProject:
-              projectId: "${subProject.name}"
-              description: "Sub-project: ${subProject.name}"
-              terraform:
-                version: "1.5.0"
-                workingDirectory: "."
+            projectId = "${subProject.name}"
+            description = "Sub-project: ${subProject.name}"
 
-            # Optional Bitwarden settings
-            # bitwarden:
-            #   projectId: "your-bitwarden-project-id"
+            terraform {
+                version = "1.5.0"
+                workingDirectory = "."
+            }
 
-            # Optional update settings
-            # update:
-            #   autoUpdate: true
-            #   checkInterval: 86400000
-            #   githubRepo: "kigawa-net/kinfra"
+            // Optional Bitwarden settings
+            // bitwarden {
+            //     projectId = "your-bitwarden-project-id"
+            // }
+
+            // Optional update settings
+            // update {
+            //     autoUpdate = true
+            //     checkInterval = 86400000
+            //     githubRepo = "kigawa-net/kinfra"
+            // }
             """.trimIndent()
 
         configFile.writeText(sampleContent)
@@ -205,7 +208,7 @@ class SubEditAction(
         println("  kinfra sub edit api")
         println()
         println("${AnsiColors.BLUE}Note:${AnsiColors.RESET}")
-        println("  Opens the kinfra.yaml file for the specified sub-project in your default editor")
+        println("  Opens the kinfra.kts file for the specified sub-project in your default editor")
         println("  If the configuration file doesn't exist, a sample will be created")
     }
 

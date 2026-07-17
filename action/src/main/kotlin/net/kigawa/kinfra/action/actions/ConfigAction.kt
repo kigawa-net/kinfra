@@ -20,7 +20,7 @@ class ConfigAction(
     }
 
     private fun showProjectConfig(): Int {
-        val configPath = loginRepo.kinfraBaseConfigPath()
+        val configPath = loginRepo.kinfraConfigPath()
 
         val configFile = configPath.toFile()
 
