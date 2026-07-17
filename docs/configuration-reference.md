@@ -311,6 +311,27 @@ terraform {
 - `AWS_ACCESS_KEY_ID`: R2アクセスキー
 - `AWS_SECRET_ACCESS_KEY`: R2シークレットキー
 
+これらは`kinfra.yaml`の`backendSecrets`にBitwardenのシークレットキーを対応付けておくと、
+`init`/`plan`/`apply`/`destroy`/`show`実行時にkinfraが自動的にBitwarden Secret Managerから取得し、
+環境変数としてterraformプロセスに注入する（手動での`export`は不要）:
+
+```yaml
+project:
+  terraform:
+    backendConfig:
+      bucket: "terraform-state"
+      key: "project/terraform.tfstate"
+      region: "auto"
+    backendSecrets:
+      - envVar: "AWS_ACCESS_KEY_ID"
+        bitwardenSecretKey: "r2-access-key-id"
+      - envVar: "AWS_SECRET_ACCESS_KEY"
+        bitwardenSecretKey: "r2-secret-access-key"
+```
+
+`bitwardenSecretKey`にはBitwarden Secret Manager上のシークレットのキー名を指定する。
+`BWS_ACCESS_TOKEN`（SDKモード）が設定されていない場合、`backendSecrets`は無視される。
+
 ---
 
 ## ログ設定

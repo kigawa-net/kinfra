@@ -28,6 +28,15 @@ interface TerraformOutputMapping {
     val bitwardenSecretKey: String
 }
 
+/**
+ * Terraformのstateバックエンド（R2等）を認証するための環境変数を
+ * Bitwardenのシークレットから解決するマッピング
+ */
+interface TerraformBackendSecretMapping {
+    val envVar: String
+    val bitwardenSecretKey: String
+}
+
 interface TerraformSettings {
     val version: String
     val workingDirectory: String
@@ -37,6 +46,8 @@ interface TerraformSettings {
         get() = emptyList()
     val backendConfig: Map<String, String>
         get() = emptyMap()
+    val backendSecrets: List<TerraformBackendSecretMapping>
+        get() = emptyList()
     val generateOutputDir: String?
         get() = null
 }

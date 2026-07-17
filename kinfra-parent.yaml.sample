@@ -15,6 +15,13 @@ terraform:
     bucket: "my-terraform-state-bucket"
     key: "terraform.tfstate"
     region: "us-east-1"
+  # Bitwarden Secret Manager keys resolved into env vars for the backend
+  # (e.g. R2/S3 credentials), injected automatically on init/plan/apply/destroy/show
+  backendSecrets:
+    - envVar: "AWS_ACCESS_KEY_ID"
+      bitwardenSecretKey: "r2-access-key-id"
+    - envVar: "AWS_SECRET_ACCESS_KEY"
+      bitwardenSecretKey: "r2-secret-access-key"
 
 # List of sub-project paths or identifiers
 subProjects:

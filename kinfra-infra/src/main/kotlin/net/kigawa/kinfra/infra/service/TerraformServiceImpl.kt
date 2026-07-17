@@ -72,7 +72,7 @@ class TerraformServiceImpl(
         return processExecutor.execute(
             args = args.toTypedArray(),
             workingDir = config.workingDirectory,
-            environment = emptyMap(),
+            environment = resolveBackendSecrets(),
             quiet = quiet,
         )
     }
@@ -114,7 +114,7 @@ class TerraformServiceImpl(
         return processExecutor.execute(
             args = args.toTypedArray(),
             workingDir = terraformConfig.workingDirectory,
-            environment = mapOf("SSH_CONFIG" to terraformConfig.sshConfigPath),
+            environment = resolveBackendSecrets() + mapOf("SSH_CONFIG" to terraformConfig.sshConfigPath),
             quiet = quiet,
         )
     }
@@ -162,7 +162,7 @@ class TerraformServiceImpl(
         return processExecutor.execute(
             args = args.toTypedArray(),
             workingDir = config.workingDirectory,
-            environment = mapOf("SSH_CONFIG" to config.sshConfigPath),
+            environment = resolveBackendSecrets() + mapOf("SSH_CONFIG" to config.sshConfigPath),
             quiet = quiet,
         )
     }
@@ -188,7 +188,7 @@ class TerraformServiceImpl(
         return processExecutor.execute(
             args = args,
             workingDir = config.workingDirectory,
-            environment = mapOf("SSH_CONFIG" to config.sshConfigPath),
+            environment = resolveBackendSecrets() + mapOf("SSH_CONFIG" to config.sshConfigPath),
             quiet = quiet,
         )
     }
@@ -225,9 +225,32 @@ class TerraformServiceImpl(
         return processExecutor.execute(
             args = args,
             workingDir = config.workingDirectory,
-            environment = mapOf("SSH_CONFIG" to config.sshConfigPath),
+            environment = resolveBackendSecrets() + mapOf("SSH_CONFIG" to config.sshConfigPath),
             quiet = quiet,
         )
+    }
+
+    /**
+     * kinfra.yamlのbackendSecretsに従い、Bitwardenからstateバックエンド（R2等）の
+     * 認証情報を解決し、terraformプロセスへ渡す環境変数を組み立てる
+     */
+    private fun resolveBackendSecrets(): Map<String, String> {
+        val configPath = configRepository.getProjectConfigFilePath()
+        val kinfraConfig = configRepository.loadKinfraConfig(Paths.get(configPath)) ?: return emptyMap()
+
+        val settings = kinfraConfig.rootProject.terraform ?: return emptyMap()
+        if (settings.backendSecrets.isEmpty() || bitwardenSecretManagerRepository == null) {
+            return emptyMap()
+        }
+
+        val env = mutableMapOf<String, String>()
+        for (mapping in settings.backendSecrets) {
+            val secret = bitwardenSecretManagerRepository.findSecretByKey(mapping.bitwardenSecretKey)
+            if (secret != null) {
+                env[mapping.envVar] = secret.value
+            }
+        }
+        return env
     }
 
     /**
