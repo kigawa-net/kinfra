@@ -29,6 +29,18 @@ object BackendConfigResolver {
         }
     }
 
+    /**
+     * 単一のnullable String値（r2Bucket/r2Endpoint等、backendConfigのMapに属さない値）に
+     * 含まれ得る`bws(...)`マーカーを解決する。
+     */
+    fun resolveValue(
+        value: String?,
+        secretManager: BitwardenSecretManagerRepository?,
+    ): String? {
+        if (value == null) return null
+        return BwsMarker.resolve(value) { resolveSecret(secretManager, it) }
+    }
+
     fun flattenAndResolve(
         backendConfig: Map<String, Any>,
         secretManager: BitwardenSecretManagerRepository?,

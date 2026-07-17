@@ -20,13 +20,13 @@ class ConfigKtsWriterTest {
                         workingDirectory = ".",
                         backendConfig =
                             mapOf(
-                                "bucket" to "kinfra",
                                 "key" to "kinfra.tfstate",
                                 "region" to "auto",
-                                "endpoint" to BwsMarker.wrap("r2-api"),
                                 "access_key" to BwsMarker.wrap("r2-access"),
                                 "secret_key" to BwsMarker.wrap("r2-secret"),
                             ),
+                        r2Bucket = "kinfra",
+                        r2Endpoint = BwsMarker.wrap("r2-api"),
                     ),
                 subProjects =
                     listOf(

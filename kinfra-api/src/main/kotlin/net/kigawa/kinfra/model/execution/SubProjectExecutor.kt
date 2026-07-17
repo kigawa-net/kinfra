@@ -49,6 +49,22 @@ class SubProjectExecutor(
     fun resolveSubProjectDir(subProject: SubProject): File = loginRepo.repoPath.resolve(subProject.path).toFile()
 
     /**
+     * 変更検出（[SubProjectChangeFilter]）のハッシュキャッシュ用R2バケット名/エンドポイントを取得する
+     * （親プロジェクト設定のみ。値は`bws()`マーカーを含み得るため未解決のまま返す）
+     *
+     * @return (r2Bucket, r2Endpoint)のペア。設定が存在しない場合はnull同士のペア
+     */
+    fun getR2Config(): Pair<String?, String?> {
+        val parentConfigPath = loginRepo.kinfraBaseConfigPath().toString()
+        if (!configRepository.kinfraParentConfigExists(parentConfigPath)) {
+            return null to null
+        }
+
+        val terraform = configRepository.loadKinfraParentConfig(parentConfigPath)?.terraform
+        return terraform?.r2Bucket to terraform?.r2Endpoint
+    }
+
+    /**
      * 親プロジェクトのbackendConfigを取得
      *
      * @return backendConfig。設定が存在しない場合は空のMap

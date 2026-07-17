@@ -130,7 +130,13 @@ class SubProjectChangeFilterTest {
 
     @Test
     fun factoryFailsOpenWhenCredentialsMissing() {
-        val filter = R2SubProjectChangeFilterFactory().create(mapOf("bucket" to "infra"), "hardware")
+        val filter =
+            R2SubProjectChangeFilterFactory().create(
+                backendConfig = emptyMap(),
+                r2Bucket = "infra",
+                r2Endpoint = null,
+                parentProjectName = "hardware",
+            )
 
         runBlocking {
             val dir = tempSubProjectDir("resource \"a\" {}")
@@ -149,13 +155,14 @@ class SubProjectChangeFilterTest {
         // 返ってくることだけを確認する
         val filter =
             R2SubProjectChangeFilterFactory().create(
-                mapOf(
-                    "bucket" to "infra",
-                    "endpoint" to "https://example.r2.cloudflarestorage.com",
-                    "access_key" to "ak",
-                    "secret_key" to "sk",
-                ),
-                "hardware",
+                backendConfig =
+                    mapOf(
+                        "access_key" to "ak",
+                        "secret_key" to "sk",
+                    ),
+                r2Bucket = "infra",
+                r2Endpoint = "https://example.r2.cloudflarestorage.com",
+                parentProjectName = "hardware",
             )
 
         assertTrue(filter is R2SubProjectChangeFilter)

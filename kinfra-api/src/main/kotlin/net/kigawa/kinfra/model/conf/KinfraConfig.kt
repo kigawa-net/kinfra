@@ -44,6 +44,17 @@ interface TerraformSettings {
         get() = emptyMap()
     val generateOutputDir: String?
         get() = null
+    /**
+     * サブプロジェクトの変更検出（[net.kigawa.kinfra.model.execution.SubProjectChangeFilter]）が
+     * ハッシュキャッシュの読み書きに使うR2バケット名/エンドポイント。
+     * これらは各モジュールの`.tf`ファイル側backendブロックに既にハードコードされていることが多く、
+     * `backendConfig`（-backend-config引数）に含めるとterraform initが二重定義エラーになるため、
+     * 意図的に別フィールドとして分離している。値は[BwsMarker]でラップされ得る。
+     */
+    val r2Bucket: String?
+        get() = null
+    val r2Endpoint: String?
+        get() = null
 }
 
 interface BitwardenSettings {

@@ -162,8 +162,11 @@ class ApplyAction(
                 executor.getBackendConfig(),
                 bitwardenSecretManagerRepository,
             )
+        val (r2Bucket, r2Endpoint) = executor.getR2Config()
+        val resolvedR2Bucket = BackendConfigResolver.resolveValue(r2Bucket, bitwardenSecretManagerRepository)
+        val resolvedR2Endpoint = BackendConfigResolver.resolveValue(r2Endpoint, bitwardenSecretManagerRepository)
         val parentProjectName = executor.getParentProjectName() ?: return SubProjectChangeFilter.NOOP
-        return factory.create(resolvedBackendConfig, parentProjectName)
+        return factory.create(resolvedBackendConfig, resolvedR2Bucket, resolvedR2Endpoint, parentProjectName)
     }
 
     override fun getDescription(): String {
