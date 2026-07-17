@@ -21,8 +21,8 @@ class CurrentGenerateVariableAction(private val configRepository: ConfigReposito
         val outputDir =
             options["output-dir"] ?: run {
                 val currentDir = System.getProperty("user.dir")
-                val kinfraConfigPath = Paths.get(currentDir, "kinfra.yaml")
-                val kinfraParentConfigPath = Paths.get(currentDir, "kinfra-parent.yaml")
+                val kinfraConfigPath = Paths.get(currentDir, "kinfra.kts")
+                val kinfraParentConfigPath = Paths.get(currentDir, "kinfra-parent.kts")
 
                 val configOutputDir =
                     if (configRepository.kinfraConfigExists(kinfraConfigPath.toString())) {
@@ -50,8 +50,8 @@ class CurrentGenerateVariableAction(private val configRepository: ConfigReposito
             if (remainingArgs.isEmpty()) {
                 // Generate all variables from kinfra.yaml or kinfra-parent.yaml
                 val currentDir = System.getProperty("user.dir")
-                val kinfraConfigPath = Paths.get(currentDir, "kinfra.yaml")
-                val kinfraParentConfigPath = Paths.get(currentDir, "kinfra-parent.yaml")
+                val kinfraConfigPath = Paths.get(currentDir, "kinfra.kts")
+                val kinfraParentConfigPath = Paths.get(currentDir, "kinfra-parent.kts")
 
                 val variableMappings =
                     if (configRepository.kinfraConfigExists(kinfraConfigPath.toString())) {
@@ -110,8 +110,8 @@ class CurrentGenerateVariableAction(private val configRepository: ConfigReposito
                 if (remainingArgs.isEmpty()) {
                     // Generate all outputs from kinfra.yaml or kinfra-parent.yaml
                     val currentDir = System.getProperty("user.dir")
-                    val kinfraConfigPath = Paths.get(currentDir, "kinfra.yaml")
-                    val kinfraParentConfigPath = Paths.get(currentDir, "kinfra-parent.yaml")
+                    val kinfraConfigPath = Paths.get(currentDir, "kinfra.kts")
+                    val kinfraParentConfigPath = Paths.get(currentDir, "kinfra-parent.kts")
 
                     val outputMappings =
                         if (configRepository.kinfraConfigExists(kinfraConfigPath.toString())) {

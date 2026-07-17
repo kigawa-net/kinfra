@@ -1,15 +1,15 @@
 package net.kigawa.kinfra.infra.service
 
+import net.kigawa.kinfra.infra.config.script.BwsMarker
 import net.kigawa.kinfra.infra.process.ProcessExecutor
 import net.kigawa.kinfra.infra.terraform.TerraformRepository
+import net.kigawa.kinfra.model.LoginRepo
 import net.kigawa.kinfra.model.bitwarden.BitwardenSecretManagerRepository
 import net.kigawa.kinfra.model.conf.TerraformConfig
-import net.kigawa.kinfra.model.config.ConfigRepository
 import net.kigawa.kinfra.model.service.TerraformService
 import net.kigawa.kodel.api.err.ActionException
 import net.kigawa.kodel.api.err.Res
 import java.io.File
-import java.nio.file.Paths
 
 /**
  * TerraformServiceの実装
@@ -17,12 +17,13 @@ import java.nio.file.Paths
 class TerraformServiceImpl(
     private val processExecutor: ProcessExecutor,
     private val terraformRepository: TerraformRepository,
-    private val configRepository: ConfigRepository,
+    private val loginRepo: LoginRepo,
     private val bitwardenSecretManagerRepository: BitwardenSecretManagerRepository?,
     override val terraformConfig: TerraformConfig,
 ): TerraformService {
     /**
-     * backendConfigをフラットなキーバリューペアに変換
+     * backendConfigをフラットなキーバリューペアに変換し、bws()マーカーが含まれる値は
+     * Bitwarden Secret Managerから解決する
      */
     private fun flattenBackendConfig(
         backendConfig: Map<String, Any>,
@@ -34,7 +35,7 @@ class TerraformServiceImpl(
             val fullKey = if (prefix.isEmpty()) key else "$prefix.$key"
 
             when (value) {
-                is String -> result[fullKey] = value
+                is String -> result[fullKey] = resolveBwsValue(value)
                 is Number -> result[fullKey] = value.toString()
                 is Boolean -> result[fullKey] = value.toString()
                 is Map<*, *> -> {
@@ -49,6 +50,12 @@ class TerraformServiceImpl(
 
         return result
     }
+
+    /**
+     * 値がbws()のマーカーであればBitwarden Secret Managerから解決する。マーカーでなければそのまま返す。
+     */
+    private fun resolveBwsValue(value: String): String =
+        BwsMarker.resolve(value) { secretKey -> bitwardenSecretManagerRepository?.findSecretByKey(secretKey)?.value }
 
     override fun init(
         additionalArgs: List<String>,
@@ -72,7 +79,7 @@ class TerraformServiceImpl(
         return processExecutor.execute(
             args = args.toTypedArray(),
             workingDir = config.workingDirectory,
-            environment = resolveBackendSecrets(),
+            environment = emptyMap(),
             quiet = quiet,
         )
     }
@@ -114,7 +121,7 @@ class TerraformServiceImpl(
         return processExecutor.execute(
             args = args.toTypedArray(),
             workingDir = terraformConfig.workingDirectory,
-            environment = resolveBackendSecrets() + mapOf("SSH_CONFIG" to terraformConfig.sshConfigPath),
+            environment = mapOf("SSH_CONFIG" to terraformConfig.sshConfigPath),
             quiet = quiet,
         )
     }
@@ -162,7 +169,7 @@ class TerraformServiceImpl(
         return processExecutor.execute(
             args = args.toTypedArray(),
             workingDir = config.workingDirectory,
-            environment = resolveBackendSecrets() + mapOf("SSH_CONFIG" to config.sshConfigPath),
+            environment = mapOf("SSH_CONFIG" to config.sshConfigPath),
             quiet = quiet,
         )
     }
@@ -188,7 +195,7 @@ class TerraformServiceImpl(
         return processExecutor.execute(
             args = args,
             workingDir = config.workingDirectory,
-            environment = resolveBackendSecrets() + mapOf("SSH_CONFIG" to config.sshConfigPath),
+            environment = mapOf("SSH_CONFIG" to config.sshConfigPath),
             quiet = quiet,
         )
     }
@@ -225,40 +232,16 @@ class TerraformServiceImpl(
         return processExecutor.execute(
             args = args,
             workingDir = config.workingDirectory,
-            environment = resolveBackendSecrets() + mapOf("SSH_CONFIG" to config.sshConfigPath),
+            environment = mapOf("SSH_CONFIG" to config.sshConfigPath),
             quiet = quiet,
         )
-    }
-
-    /**
-     * kinfra.yamlのbackendSecretsに従い、Bitwardenからstateバックエンド（R2等）の
-     * 認証情報を解決し、terraformプロセスへ渡す環境変数を組み立てる
-     */
-    private fun resolveBackendSecrets(): Map<String, String> {
-        val configPath = configRepository.getProjectConfigFilePath()
-        val kinfraConfig = configRepository.loadKinfraConfig(Paths.get(configPath)) ?: return emptyMap()
-
-        val settings = kinfraConfig.rootProject.terraform ?: return emptyMap()
-        if (settings.backendSecrets.isEmpty() || bitwardenSecretManagerRepository == null) {
-            return emptyMap()
-        }
-
-        val env = mutableMapOf<String, String>()
-        for (mapping in settings.backendSecrets) {
-            val secret = bitwardenSecretManagerRepository.findSecretByKey(mapping.bitwardenSecretKey)
-            if (secret != null) {
-                env[mapping.envVar] = secret.value
-            }
-        }
-        return env
     }
 
     /**
      * Bitwardenシークレットから.tfvarsファイルを生成
      */
     private fun generateTfvarsFromBitwarden(): String? {
-        val configPath = configRepository.getProjectConfigFilePath()
-        val kinfraConfig = configRepository.loadKinfraConfig(Paths.get(configPath)) ?: return null
+        val kinfraConfig = loginRepo.loadKinfraConfig() ?: return null
 
         val settings = kinfraConfig.rootProject.terraform ?: return null
         if (settings.variableMappings.isEmpty() || bitwardenSecretManagerRepository == null) {

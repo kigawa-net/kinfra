@@ -28,8 +28,8 @@ class FilePaths(
      * 設定ファイル名
      */
     val projectConfigFileName = "project.yaml"
-    val kinfraConfigFileName = "kinfra.yaml"
-    val kinfraParentConfigFileName = "kinfra-parent.yaml"
+    val kinfraConfigFileName = "kinfra.kts"
+    val kinfraParentConfigFileName = "kinfra-parent.kts"
 
     /**
      * Bitwarden関連ファイル

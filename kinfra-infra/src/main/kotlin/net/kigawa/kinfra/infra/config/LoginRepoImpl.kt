@@ -1,6 +1,10 @@
 package net.kigawa.kinfra.infra.config
 
-import com.charleskorn.kaml.Yaml
+import net.kigawa.kinfra.infra.config.script.KinfraConfigKtsWriter
+import net.kigawa.kinfra.infra.config.script.KinfraConfigScript
+import net.kigawa.kinfra.infra.config.script.KinfraParentConfigKtsWriter
+import net.kigawa.kinfra.infra.config.script.ScriptConfigCache
+import net.kigawa.kinfra.infra.config.script.ScriptHost
 import net.kigawa.kinfra.model.LoginRepo
 import net.kigawa.kinfra.model.conf.FilePaths
 import net.kigawa.kinfra.model.conf.KinfraConfig
@@ -52,12 +56,7 @@ class LoginRepoImpl(
     override fun createKinfraParentConfig(kinfraParentConfigData: KinfraParentConfigData): KinfraParentConfig {
         kinfraParentConfigFile.parentFile.mkdirs()
         val scheme = KinfraParentConfigScheme.from(kinfraParentConfigData)
-        kinfraParentConfigFile.writeText(
-            Yaml.default.encodeToString(
-                KinfraParentConfigScheme.serializer(),
-                scheme,
-            ),
-        )
+        kinfraParentConfigFile.writeText(KinfraParentConfigKtsWriter.render(scheme))
         return KinfraParentConfigImpl(scheme, kinfraParentConfigFile)
     }
 
@@ -67,15 +66,15 @@ class LoginRepoImpl(
             return null
         }
 
-        val yamlContent = file.readText()
-        return Yaml.default.decodeFromString(KinfraConfigScheme.serializer(), yamlContent)
+        return ScriptConfigCache.loadOrEval(file, KinfraConfigScheme.serializer()) {
+            ScriptHost.eval<KinfraConfigScript>(file).toScheme()
+        }
     }
 
     override fun saveKinfraConfig(config: KinfraConfig) {
         val file = kinfraConfigPath().toFile()
         file.parentFile?.mkdirs()
-        val yamlContent = Yaml.default.encodeToString(KinfraConfigScheme.serializer(), KinfraConfigScheme.from(config))
-        file.writeText(yamlContent)
+        file.writeText(KinfraConfigKtsWriter.render(KinfraConfigScheme.from(config)))
     }
 
     override fun kinfraConfigExists(): Boolean {

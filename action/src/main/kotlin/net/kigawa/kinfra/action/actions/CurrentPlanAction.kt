@@ -52,8 +52,8 @@ class CurrentPlanAction(private val configRepository: ConfigRepository) : Action
         }
 
         // kinfra.yamlとkinfra-parent.yamlからbackendConfigを読み込み、マージする
-        val kinfraConfigPath = Paths.get(currentDir.absolutePath, "kinfra.yaml")
-        val kinfraParentConfigPath = Paths.get(currentDir.absolutePath, "kinfra-parent.yaml")
+        val kinfraConfigPath = Paths.get(currentDir.absolutePath, "kinfra.kts")
+        val kinfraParentConfigPath = Paths.get(currentDir.absolutePath, "kinfra-parent.kts")
         println("Config paths: $kinfraConfigPath, $kinfraParentConfigPath")
 
         // 親プロジェクトのbackendConfigを取得

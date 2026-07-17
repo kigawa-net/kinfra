@@ -12,7 +12,6 @@ import kotlinx.serialization.encoding.Encoder
 import net.kigawa.kinfra.model.conf.BitwardenSettings
 import net.kigawa.kinfra.model.conf.KinfraConfig
 import net.kigawa.kinfra.model.conf.ProjectInfo
-import net.kigawa.kinfra.model.conf.TerraformBackendSecretMapping
 import net.kigawa.kinfra.model.conf.TerraformOutputMapping
 import net.kigawa.kinfra.model.conf.TerraformSettings
 import net.kigawa.kinfra.model.conf.TerraformVariableMapping
@@ -79,12 +78,6 @@ data class TerraformOutputMappingScheme(
 ) : TerraformOutputMapping
 
 @Serializable
-data class TerraformBackendSecretMappingScheme(
-    override val envVar: String,
-    override val bitwardenSecretKey: String,
-) : TerraformBackendSecretMapping
-
-@Serializable
 data class TerraformSettingsScheme(
     override val version: String = "",
     override val workingDirectory: String = ".",
@@ -92,7 +85,6 @@ data class TerraformSettingsScheme(
     override val outputMappings: List<TerraformOutputMappingScheme> = emptyList(),
     @Serializable(with = BackendConfigSerializer::class)
     override val backendConfig: Map<String, String> = emptyMap(),
-    override val backendSecrets: List<TerraformBackendSecretMappingScheme> = emptyList(),
     override val generateOutputDir: String? = null,
 ) : TerraformSettings {
     companion object {
@@ -118,13 +110,6 @@ data class TerraformSettingsScheme(
                         )
                     },
                 backendConfig = settings.backendConfig,
-                backendSecrets =
-                    settings.backendSecrets.map {
-                        TerraformBackendSecretMappingScheme(
-                            envVar = it.envVar,
-                            bitwardenSecretKey = it.bitwardenSecretKey,
-                        )
-                    },
                 generateOutputDir = settings.generateOutputDir,
             )
         }

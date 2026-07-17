@@ -50,26 +50,27 @@ class ConfigEditor(
 
         val sampleContent =
             """
-            # Kinfra Project Configuration
+            // Kinfra Project Configuration
 
-            rootProject:
-              projectId: "my-project"
-              description: "My infrastructure project"
-              terraform:
-                version: "1.5.0"
-                workingDirectory: "."
+            projectId = "my-project"
+            description = "My infrastructure project"
 
-            subProjects: []
+            terraform {
+                version = "1.5.0"
+                workingDirectory = "."
+            }
 
-            # Optional Bitwarden settings
-            # bitwarden:
-            #   projectId: "your-bitwarden-project-id"
+            // Optional Bitwarden settings
+            // bitwarden {
+            //     projectId = "your-bitwarden-project-id"
+            // }
 
-            # Optional update settings
-            # update:
-            #   autoUpdate: true
-            #   checkInterval: 86400000
-            #   githubRepo: "kigawa-net/kinfra"
+            // Optional update settings
+            // update {
+            //     autoUpdate = true
+            //     checkInterval = 86400000
+            //     githubRepo = "kigawa-net/kinfra"
+            // }
             """.trimIndent()
 
         configFile.writeText(sampleContent)
@@ -85,31 +86,42 @@ class ConfigEditor(
 
         val sampleContent =
             """
-            # Kinfra Parent Project Configuration
+            // Kinfra Parent Project Configuration
 
-            projectName: "my-infrastructure"
-            description: "Parent project for managing multiple infrastructure components"
+            projectName = "my-infrastructure"
+            description = "Parent project for managing multiple infrastructure components"
 
-            # Common Terraform settings for all sub-projects
-            #terraform:
-            #  version: "1.5.0"
-            #  workingDirectory: "."
+            // Common Terraform settings for all sub-projects
+            // terraform {
+            //     version = "1.5.0"
+            //     workingDirectory = "."
+            //     backendConfig {
+            //         bucket = "my-terraform-state-bucket"
+            //         key = "terraform.tfstate"
+            //         region = "auto"
+            //         // Bitwarden Secret Managerから解決される
+            //         accessKey = bws("r2-access-key-id")
+            //         secretKey = bws("r2-secret-access-key")
+            //     }
+            // }
 
-            # List of sub-project paths or identifiers
-            #subProjects:
-            #  - "project-a"
-            #  - "project-b"
-            #  - "project-c"
+            // List of sub-projects
+            // subProjects {
+            //     subProject("project-a")
+            //     subProject("project-b", path = "../project-b")
+            // }
 
-            # Optional Bitwarden settings
-            # bitwarden:
-            #   projectId: "your-bitwarden-project-id"
+            // Optional Bitwarden settings
+            // bitwarden {
+            //     projectId = "your-bitwarden-project-id"
+            // }
 
-            # Optional update settings
-            # update:
-            #   autoUpdate: true
-            #   checkInterval: 86400000
-            #   githubRepo: "kigawa-net/kinfra"
+            // Optional update settings
+            // update {
+            //     autoUpdate = true
+            //     checkInterval = 86400000
+            //     githubRepo = "kigawa-net/kinfra"
+            // }
             """.trimIndent()
 
         path.toFile().writeText(sampleContent)

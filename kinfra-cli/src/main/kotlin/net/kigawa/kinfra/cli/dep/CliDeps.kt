@@ -25,7 +25,7 @@ class CliDeps(depContext: DepContext<CliScope>): DepsBase<CliScope>(depContext) 
     val terraformService = dep {
         TerraformServiceImpl(
             container.i().processExecutor, container.i().terraformRepository,
-            container.i().configRepository,
+            container.i().loginRepo,
             container.i().bitwardenSecretManagerRepository,
             terraformConfig.i() ?: throw IllegalStateException("Bitwarden secret manager not initialized"),
         )

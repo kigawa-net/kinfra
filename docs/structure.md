@@ -13,7 +13,7 @@
 ## 目次
 
 - [親プロジェクト構造](#親プロジェクト構造)
-  - [kinfra-parent.yaml](#kinfra-parentyaml)
+  - [kinfra-parent.kts](#kinfra-parentkts)
   - [サブプロジェクト管理](#サブプロジェクト管理)
 - [ディレクトリ構造](#ディレクトリ構造)
 - [ファイル説明](#ファイル説明)
@@ -35,19 +35,19 @@
 
 kinfraは親プロジェクトとサブプロジェクトの階層構造をサポートしています。
 
-### kinfra-parent.yaml
+### kinfra-parent.kts
 
 親プロジェクトのルートに配置される設定ファイル：
 
-```yaml
-projectName: "my-infrastructure"
-description: "Parent project for managing multiple infrastructure components"
+```kotlin
+projectName = "my-infrastructure"
+description = "Parent project for managing multiple infrastructure components"
 
-# List of sub-project paths or identifiers
-subProjects:
-  - "network"
-  - "compute"
-  - "storage"
+subProjects {
+    subProject("network")
+    subProject("compute")
+    subProject("storage")
+}
 ```
 
 ### サブプロジェクト管理
