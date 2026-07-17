@@ -14,19 +14,17 @@ CI token instead.
 
 1. On admin-panel's side, an org admin generates the App's private key
    (App settings → Generate a private key) and registers it as the
-   `admin-panel-github-app` k8s Secret (`private-key` key) — see
+   `admin-panel-github-app` k8s Secret (`private-key` key), via the
+   `BitwardenSecret` CRD in `k8s/base/github-app-bws.yaml` — see
    kigawa-net/admin-panel#46.
-2. Pick a random shared secret and register it **twice**, with the same value:
-   - As the `ci-token` key in the same `admin-panel-github-app` k8s Secret
-     (admin-panel reads it as `GITHUB_APP_CI_TOKEN`).
-   - As an **organization-level GitHub Actions secret** named
-     `ADMIN_PANEL_CI_TOKEN`, visible to the repos that need it.
-
-   Example for generating the value:
-
-   ```bash
-   openssl rand -hex 32
-   ```
+2. The shared CI token is generated and wired up entirely by Terraform
+   (`platform/admin-panel` in kigawa-net/infra#35): it's stored in Bitwarden
+   as the `ci-token` key of the same `admin-panel-github-app` k8s Secret,
+   *and* registered directly as the organization-level GitHub Actions
+   secret `ADMIN_PANEL_CI_TOKEN` (visible only to admin-panel and kinfra) —
+   no manual `gh secret set` needed. The only remaining manual step is
+   minting the `admin:org`-scoped GitHub PAT that module's `github` provider
+   authenticates with; see kigawa-net/infra#35 for details.
 
 ## Usage
 
