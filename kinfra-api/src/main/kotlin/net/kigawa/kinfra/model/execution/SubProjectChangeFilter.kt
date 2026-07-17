@@ -43,12 +43,18 @@ interface SubProjectChangeFilter {
 }
 
 /**
- * 解決済み（bws()マーカー解決済み）backendConfigから[SubProjectChangeFilter]を組み立てる。
+ * 解決済み（bws()マーカー解決済み）backendConfig/r2Bucket/r2Endpointから[SubProjectChangeFilter]を組み立てる。
  * 実装はkinfra-infra層にあり、DIコンテナで生成されてaction層に注入される。
+ *
+ * r2Bucket/r2EndpointがbackendConfigと別引数なのは、多くの利用側で各モジュールの`.tf`ファイルに
+ * 既にbucket/endpointがハードコードされており、`-backend-config`として同じキーを渡すと
+ * terraform initが二重定義エラーになるため（[net.kigawa.kinfra.model.conf.TerraformSettings.r2Bucket]参照）。
  */
 interface SubProjectChangeFilterFactory {
     fun create(
         backendConfig: Map<String, String>,
+        r2Bucket: String?,
+        r2Endpoint: String?,
         parentProjectName: String,
     ): SubProjectChangeFilter
 }

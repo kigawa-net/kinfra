@@ -86,6 +86,8 @@ data class TerraformSettingsScheme(
     @Serializable(with = BackendConfigSerializer::class)
     override val backendConfig: Map<String, String> = emptyMap(),
     override val generateOutputDir: String? = null,
+    override val r2Bucket: String? = null,
+    override val r2Endpoint: String? = null,
 ) : TerraformSettings {
     companion object {
         fun from(settings: TerraformSettings): TerraformSettingsScheme {
@@ -111,6 +113,8 @@ data class TerraformSettingsScheme(
                     },
                 backendConfig = settings.backendConfig,
                 generateOutputDir = settings.generateOutputDir,
+                r2Bucket = settings.r2Bucket,
+                r2Endpoint = settings.r2Endpoint,
             )
         }
     }

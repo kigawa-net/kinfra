@@ -95,6 +95,8 @@ private fun renderTerraformBlock(tf: TerraformSettingsScheme?): String? {
         if (tf.version.isNotEmpty()) appendLine("    version = ${quoted(tf.version)}")
         appendLine("    workingDirectory = ${quoted(tf.workingDirectory)}")
         tf.generateOutputDir?.let { appendLine("    generateOutputDir = ${quoted(it)}") }
+        tf.r2Bucket?.let { appendLine("    r2Bucket = ${renderBackendConfigValue(it)}") }
+        tf.r2Endpoint?.let { appendLine("    r2Endpoint = ${renderBackendConfigValue(it)}") }
 
         if (tf.backendConfig.isNotEmpty()) {
             appendLine("    backendConfig {")

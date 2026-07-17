@@ -37,18 +37,18 @@ class R2SubProjectChangeFilter(
 class R2SubProjectChangeFilterFactory : SubProjectChangeFilterFactory {
     override fun create(
         backendConfig: Map<String, String>,
+        r2Bucket: String?,
+        r2Endpoint: String?,
         parentProjectName: String,
     ): SubProjectChangeFilter {
-        val bucket = backendConfig["bucket"]
-        val endpoint = backendConfig["endpoint"]
         val accessKey = backendConfig["access_key"]
         val secretKey = backendConfig["secret_key"]
 
-        if (bucket == null || endpoint == null || accessKey == null || secretKey == null) {
+        if (r2Bucket == null || r2Endpoint == null || accessKey == null || secretKey == null) {
             return SubProjectChangeFilter.NOOP
         }
 
-        val r2Client = R2Client(endpoint, accessKey, secretKey)
-        return R2SubProjectChangeFilter(SubProjectHashStore(r2Client, bucket, parentProjectName))
+        val r2Client = R2Client(r2Endpoint, accessKey, secretKey)
+        return R2SubProjectChangeFilter(SubProjectHashStore(r2Client, r2Bucket, parentProjectName))
     }
 }

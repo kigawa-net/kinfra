@@ -16,6 +16,15 @@ class TerraformConfigBuilder {
     var version: String = ""
     var workingDirectory: String = "."
     var generateOutputDir: String? = null
+
+    /**
+     * サブプロジェクト変更検出のハッシュキャッシュ用R2バケット名/エンドポイント。
+     * 各モジュールの`.tf`ファイルのbackendブロックに既にbucket/endpointがハードコードされている場合、
+     * backendConfig{}に同じキーを含めるとterraform initが二重定義エラーになるため、
+     * ここでは意図的にbackendConfigとは別のトップレベルフィールドとして扱う。
+     */
+    var r2Bucket: String? = null
+    var r2Endpoint: String? = null
     private val backendConfigMap = mutableMapOf<String, String>()
     private val variableMappingsList = mutableListOf<TerraformVariableMappingScheme>()
     private val outputMappingsList = mutableListOf<TerraformOutputMappingScheme>()
@@ -46,6 +55,8 @@ class TerraformConfigBuilder {
             outputMappings = outputMappingsList.toList(),
             backendConfig = backendConfigMap.toMap(),
             generateOutputDir = generateOutputDir,
+            r2Bucket = r2Bucket,
+            r2Endpoint = r2Endpoint,
         )
 }
 
