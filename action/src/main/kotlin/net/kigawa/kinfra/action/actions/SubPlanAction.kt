@@ -83,13 +83,9 @@ class SubPlanAction(
                     return@executeInSubProjects initExitCode
                 }
 
+                // -backend-config はterraform initのみが受け付けるオプションであり、
+                // planには渡さない(渡すとplanがエラーになる)。
                 val planArgs = mutableListOf("terraform", "plan", "-input=false")
-                flattenedBackendConfig.forEach { (key, value) ->
-                    planArgs.add("-backend-config=$key=$value")
-                }
-                if (backendTfvarsFile.exists()) {
-                    planArgs.add("-backend-config=backend.tfvars")
-                }
 
                 // サブプロジェクトディレクトリでterraform planを実行
                 val process =

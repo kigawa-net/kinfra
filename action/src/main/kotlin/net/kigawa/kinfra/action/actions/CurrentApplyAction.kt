@@ -93,13 +93,9 @@ class CurrentApplyAction(
                 args + "-auto-approve"
             }
 
+        // -backend-config はterraform initのみが受け付けるオプションであり、
+        // applyには渡さない(渡すとapplyがエラーになる)。
         val applyArgs = mutableListOf("terraform", "apply", "-input=false")
-        flattenedConfig.forEach { (key, value) ->
-            applyArgs.add("-backend-config=$key=$value")
-        }
-        if (backendTfvarsFile.exists()) {
-            applyArgs.add("-backend-config=backend.tfvars")
-        }
         applyArgs.addAll(argsWithAutoApprove)
 
         val process =

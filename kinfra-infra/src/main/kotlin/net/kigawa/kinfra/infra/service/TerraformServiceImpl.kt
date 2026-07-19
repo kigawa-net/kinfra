@@ -19,7 +19,7 @@ class TerraformServiceImpl(
     private val terraformRepository: TerraformRepository,
     private val loginRepo: LoginRepo,
     private val bitwardenSecretManagerRepository: BitwardenSecretManagerRepository?,
-    override val terraformConfig: TerraformConfig,
+    override val terraformConfig: TerraformConfig?,
 ): TerraformService {
     /**
      * backendConfigをフラットなキーバリューペアに変換し、bws()マーカーが含まれる値は
@@ -60,18 +60,20 @@ class TerraformServiceImpl(
         quiet: Boolean,
         planFile: String?,
     ): Res<Int, ActionException> {
+        val config = terraformConfig
+            ?: return Res.Err(ActionException(1, "Terraform configuration not found"))
 
         // Bitwardenシークレットから.tfvarsファイルを生成
         val generatedTfvarsFile =
             generateTfvarsFromBitwarden()?.let { content ->
-                saveTfvarsFile(terraformConfig, content)
+                saveTfvarsFile(config, content)
             }
 
         val varFileArgs = mutableListOf<String>()
 
         // 既存のvarFileがある場合
-        if (terraformConfig.hasVarFile()) {
-            varFileArgs.add("-var-file=${terraformConfig.varFile!!.absolutePath}")
+        if (config.hasVarFile()) {
+            varFileArgs.add("-var-file=${config.varFile!!.absolutePath}")
         }
 
         // 生成された.tfvarsファイルがある場合
@@ -91,8 +93,8 @@ class TerraformServiceImpl(
 
         return processExecutor.execute(
             args = args.toTypedArray(),
-            workingDir = terraformConfig.workingDirectory,
-            environment = mapOf("SSH_CONFIG" to terraformConfig.sshConfigPath),
+            workingDir = config.workingDirectory,
+            environment = mapOf("SSH_CONFIG" to config.sshConfigPath),
             quiet = quiet,
         )
     }

@@ -19,13 +19,13 @@ class InitAction(
 
         val config = terraformService.terraformConfig
 
-        ColorLogger.info("Working directory: ${config.workingDirectory.absolutePath}")
+        config?.let { ColorLogger.info("Working directory: ${it.workingDirectory.absolutePath}") }
 
         val result = terraformService.init(args, quiet = false)
 
         // エラーが発生した場合、プロジェクト情報を表示
         if (result.isFailure()) {
-            ColorLogger.error("Error in project: ${config.workingDirectory.absolutePath}")
+            config?.let { ColorLogger.error("Error in project: ${it.workingDirectory.absolutePath}") }
             result.message()?.let { ColorLogger.error("Details: $it") }
         }
 

@@ -24,7 +24,7 @@ class FormatAction(
 
         // エラーが発生した場合、プロジェクト情報を表示
         if (result.isFailure()) {
-            println("${AnsiColors.RED}Error in project:${AnsiColors.RESET} ${config.workingDirectory.absolutePath}")
+            config?.let { println("${AnsiColors.RED}Error in project:${AnsiColors.RESET} ${it.workingDirectory.absolutePath}") }
             result.message()?.let { println("${AnsiColors.RED}Details: $it${AnsiColors.RESET}") }
         }
 

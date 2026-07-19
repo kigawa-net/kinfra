@@ -32,7 +32,9 @@ class PlanAction(
 
         // 親プロジェクトのplanを実行（設定がある場合のみ）
         // プロジェクト名を表示
-        println("${AnsiColors.BLUE}Planning Terraform changes for project:${AnsiColors.RESET} ${config.workingDirectory.absolutePath}")
+        config?.let {
+            println("${AnsiColors.BLUE}Planning Terraform changes for project:${AnsiColors.RESET} ${it.workingDirectory.absolutePath}")
+        }
 
         // plan実行前に自動でinitを実行
         println("${AnsiColors.BLUE}Initializing Terraform...${AnsiColors.RESET}")
@@ -47,7 +49,7 @@ class PlanAction(
 
         // エラーが発生した場合、プロジェクト情報を表示
         if (result.isFailure()) {
-            println("${AnsiColors.RED}Error in project:${AnsiColors.RESET} ${config.workingDirectory.absolutePath}")
+            config?.let { println("${AnsiColors.RED}Error in project:${AnsiColors.RESET} ${it.workingDirectory.absolutePath}") }
             result.message()?.let { println("${AnsiColors.RED}Details: $it${AnsiColors.RESET}") }
         }
 
@@ -103,10 +105,9 @@ class PlanAction(
                             return@executeInSubProjects initExitCode
                         }
 
+                        // -backend-config はterraform initのみが受け付けるオプションであり、
+                        // planには渡さない(渡すとplanがエラーになる)。
                         val planArgs = mutableListOf("terraform", "plan", "-input=false")
-                        backendConfig.forEach { (key, value) ->
-                            planArgs.add("-backend-config=$key=$value")
-                        }
 
                         val process =
                             ProcessBuilder(planArgs)

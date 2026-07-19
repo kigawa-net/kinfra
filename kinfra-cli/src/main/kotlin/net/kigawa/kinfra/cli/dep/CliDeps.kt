@@ -21,13 +21,17 @@ class CliDeps(depContext: DepContext<CliScope>): DepsBase<CliScope>(depContext) 
     val container = dep { DependencyContainer() }
 
     // Presentation layer
+    // ログイン前やterraformブロックの無いプロジェクトではnullになる。ここで例外を投げると
+    // `kinfra login`/`kinfra --help`などterraform設定を必要としないコマンドまで起動できなく
+    // なるため、nullのままTerraformServiceImplに渡し、実際にterraform操作を行うメソッド側で
+    // 必要に応じてエラーを返す。
     val terraformConfig = dep { container.i().terraformRepository.getTerraformConfig() }
     val terraformService = dep {
         TerraformServiceImpl(
             container.i().processExecutor, container.i().terraformRepository,
             container.i().loginRepo,
             container.i().bitwardenSecretManagerRepository,
-            terraformConfig.i() ?: throw IllegalStateException("Bitwarden secret manager not initialized"),
+            terraformConfig.i(),
         )
     }
 
