@@ -1,0 +1,72 @@
+name: 'kigawa-net App Token'
+description: >-
+  Mints a short-lived installation access token for the "kigawa-net" GitHub App
+  (app_id 4316503, contents:write) by calling admin-panel's GitHub App broker
+  endpoint. The App's private key lives only on admin-panel; this action (and
+  the CI workflows using it) only ever handles a shared CI token, never the
+  key itself. Flow: custom action -> admin-panel -> GitHub App.
+inputs:
+  ci-token:
+    description: >-
+      Shared secret for admin-panel's CI token endpoint. Pass via
+      ${{ secrets.ADMIN_PANEL_CI_TOKEN }}.
+    required: true
+  owner:
+    description: 'GitHub org/user to scope the token to.'
+    required: false
+    default: 'kigawa-net'
+  repositories:
+    description: >-
+      Newline- or comma-separated repo names (without owner) to scope the
+      token to. Defaults to every repo the App can access for the owner.
+    required: false
+  permissions:
+    description: >-
+      JSON object of a permission subset to request, e.g. {"contents":"write"}.
+      Defaults to the App's full granted permissions.
+    required: false
+  admin-panel-url:
+    description: 'Base URL of the admin-panel API.'
+    required: false
+    default: 'https://admin.kigawa.net/api'
+outputs:
+  token:
+    description: 'Short-lived installation access token'
+    value: ${{ steps.request-token.outputs.token }}
+runs:
+  using: 'composite'
+  steps:
+    - id: request-token
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        repos_json="null"
+        if [ -n "${{ inputs.repositories }}" ]; then
+          repos_json=$(printf '%s' "${{ inputs.repositories }}" | tr ',\n' '\n' | sed '/^[[:space:]]*$/d' | jq -R . | jq -s .)
+        fi
+
+        perms_json="${{ inputs.permissions }}"
+        if [ -z "$perms_json" ]; then
+          perms_json="null"
+        fi
+
+        body=$(jq -n \
+          --arg owner "${{ inputs.owner }}" \
+          --argjson repositories "$repos_json" \
+          --argjson permissions "$perms_json" \
+          '{owner: $owner, repositories: $repositories, permissions: $permissions}')
+
+        response=$(curl -sS -f -X POST "${{ inputs.admin-panel-url }}/github-app/ci-token" \
+          -H "X-CI-Token: ${{ inputs.ci-token }}" \
+          -H "Content-Type: application/json" \
+          -d "$body")
+
+        token=$(printf '%s' "$response" | jq -r .token)
+        if [ -z "$token" ] || [ "$token" = "null" ]; then
+          echo "::error::admin-panel did not return a token"
+          exit 1
+        fi
+
+        echo "::add-mask::$token"
+        echo "token=$token" >> "$GITHUB_OUTPUT"
