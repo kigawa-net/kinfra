@@ -103,10 +103,9 @@ class PlanAction(
                             return@executeInSubProjects initExitCode
                         }
 
+                        // -backend-configはterraform init専用のフラグでplanでは受け付けられない
+                        // (backendは直前のinitで既に設定済み)
                         val planArgs = mutableListOf("terraform", "plan", "-input=false")
-                        backendConfig.forEach { (key, value) ->
-                            planArgs.add("-backend-config=$key=$value")
-                        }
 
                         val process =
                             ProcessBuilder(planArgs)

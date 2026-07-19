@@ -97,13 +97,9 @@ class SubApplyAction(
                         additionalArgs + "-auto-approve"
                     }
 
+                // -backend-configはterraform init専用のフラグでapplyでは受け付けられない
+                // (backendは直前のinitで既に設定済み)
                 val applyArgs = mutableListOf("terraform", "apply", "-input=false")
-                flattenedBackendConfig.forEach { (key, value) ->
-                    applyArgs.add("-backend-config=$key=$value")
-                }
-                if (backendTfvarsFile.exists()) {
-                    applyArgs.add("-backend-config=backend.tfvars")
-                }
                 applyArgs.addAll(argsWithAutoApprove)
 
                 // サブプロジェクトディレクトリでterraform applyを実行

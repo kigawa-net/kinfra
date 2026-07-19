@@ -132,10 +132,9 @@ class ApplyAction(
             return initExitCode
         }
 
+        // -backend-configはterraform init専用のフラグでapplyでは受け付けられない
+        // (backendは直前のinitで既に設定済み)
         val applyArgs = mutableListOf("terraform", "apply", "-input=false", "-auto-approve")
-        backendConfig.forEach { (key, value) ->
-            applyArgs.add("-backend-config=$key=$value")
-        }
 
         val process =
             ProcessBuilder(applyArgs)
