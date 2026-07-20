@@ -1,40 +1,25 @@
 package net.kigawa.kinfra.action.actions
 
-import net.kigawa.kinfra.action.config.ConfigRepository
 import net.kigawa.kinfra.model.Action
+import net.kigawa.kinfra.model.bitwarden.BitwardenSecretManagerRepository
+import net.kigawa.kinfra.model.conf.BackendConfigResolver
+import net.kigawa.kinfra.model.config.ConfigRepository
 import net.kigawa.kinfra.model.util.AnsiColors
 import java.io.File
 import java.nio.file.Paths
 
-class CurrentPlanAction(private val configRepository: ConfigRepository) : Action {
-
+class CurrentPlanAction(
+    private val configRepository: ConfigRepository,
+    private val bitwardenSecretManagerRepository: BitwardenSecretManagerRepository? = null,
+) : Action {
     /**
-     * backendConfigをフラットなキーバリューペアに変換
+     * backendConfigをフラットなキーバリューペアに変換し、bws()マーカーが含まれる値は
+     * Bitwarden Secret Managerから解決する
      */
-    private fun flattenBackendConfig(backendConfig: Map<String, Any>, prefix: String = ""): Map<String, String> {
-        val result = mutableMapOf<String, String>()
-
-        backendConfig.forEach { (key, value) ->
-            val fullKey = if (prefix.isEmpty()) key else "$prefix.$key"
-
-            when (value) {
-                is String -> result[fullKey] = value
-                is Number -> result[fullKey] = value.toString()
-                is Boolean -> result[fullKey] = value.toString()
-                is Map<*, *> -> {
-                    @Suppress("UNCHECKED_CAST")
-                    val nestedMap = value as Map<String, Any>
-                    result.putAll(flattenBackendConfig(nestedMap, fullKey))
-                }
-                else -> result[fullKey] = value.toString()
-            }
-        }
-
-        return result
-    }
+    private fun flattenBackendConfig(backendConfig: Map<String, Any>): Map<String, String> =
+        BackendConfigResolver.flattenAndResolve(backendConfig, bitwardenSecretManagerRepository)
 
     override fun execute(args: List<String>): Int {
-
         val currentDir = File(".").absoluteFile
 
         // カレントディレクトリにTerraformファイルがあるかチェック
@@ -42,39 +27,44 @@ class CurrentPlanAction(private val configRepository: ConfigRepository) : Action
         val hasTerraformFiles = terraformFiles.any { File(currentDir, it).exists() }
 
         if (!hasTerraformFiles) {
-            println("${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} No Terraform files found in current directory (${currentDir.absolutePath})")
+            println(
+                "${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} No Terraform files found in " +
+                    "current directory (${currentDir.absolutePath})",
+            )
             println("Expected files: ${terraformFiles.joinToString(", ")}")
             return 1
         }
 
-        // kinfra.yamlとkinfra-parent.yamlからbackendConfigを読み込み、マージする
-        val kinfraConfigPath = Paths.get(currentDir.absolutePath, "kinfra.yaml")
-        val kinfraParentConfigPath = Paths.get(currentDir.absolutePath, "kinfra-parent.yaml")
+        // kinfra.ktsとkinfra-parent.ktsからbackendConfigを読み込み、マージする
+        val kinfraConfigPath = Paths.get(currentDir.absolutePath, "kinfra.kts")
+        val kinfraParentConfigPath = Paths.get(currentDir.absolutePath, "kinfra-parent.kts")
         println("Config paths: $kinfraConfigPath, $kinfraParentConfigPath")
 
         // 親プロジェクトのbackendConfigを取得
-        val parentBackendConfig: Map<String, Any> = if (configRepository.kinfraParentConfigExists(kinfraParentConfigPath.toString())) {
-            println("kinfra-parent.yaml exists")
-            val config = configRepository.loadKinfraParentConfig(kinfraParentConfigPath.toString())
-            val bc = config?.terraform?.backendConfig
-            println("Backend config from kinfra-parent.yaml: $bc")
-            bc ?: emptyMap()
-        } else {
-            println("kinfra-parent.yaml not found")
-            emptyMap()
-        }
+        val parentBackendConfig: Map<String, Any> =
+            if (configRepository.kinfraParentConfigExists(kinfraParentConfigPath.toString())) {
+                println("kinfra-parent.kts exists")
+                val config = configRepository.loadKinfraParentConfig(kinfraParentConfigPath.toString())
+                val bc = config?.terraform?.backendConfig
+                println("Backend config from kinfra-parent.kts: $bc")
+                bc ?: emptyMap()
+            } else {
+                println("kinfra-parent.kts not found")
+                emptyMap()
+            }
 
         // サブプロジェクトのbackendConfigを取得
-        val subProjectBackendConfig: Map<String, Any> = if (configRepository.kinfraConfigExists(kinfraConfigPath.toString())) {
-            println("kinfra.yaml exists")
-            val config = configRepository.loadKinfraConfig(kinfraConfigPath)
-            val bc = config?.rootProject?.terraform?.backendConfig
-            println("Backend config from kinfra.yaml: $bc")
-            bc ?: emptyMap()
-        } else {
-            println("kinfra.yaml not found")
-            emptyMap()
-        }
+        val subProjectBackendConfig: Map<String, Any> =
+            if (configRepository.kinfraConfigExists(kinfraConfigPath.toString())) {
+                println("kinfra.kts exists")
+                val config = configRepository.loadKinfraConfig(kinfraConfigPath)
+                val bc = config?.rootProject?.terraform?.backendConfig
+                println("Backend config from kinfra.kts: $bc")
+                bc ?: emptyMap()
+            } else {
+                println("kinfra.kts not found")
+                emptyMap()
+            }
 
         // 親プロジェクトとサブプロジェクトの設定をマージ（サブプロジェクトが優先）
         val backendConfig = parentBackendConfig + subProjectBackendConfig
@@ -105,11 +95,12 @@ class CurrentPlanAction(private val configRepository: ConfigRepository) : Action
 
         println("Init args: ${initArgs.joinToString(" ")}")
 
-        val initProcess = ProcessBuilder(initArgs)
-            .directory(currentDir)
-            .redirectOutput(ProcessBuilder.Redirect.INHERIT)
-            .redirectError(ProcessBuilder.Redirect.INHERIT)
-            .start()
+        val initProcess =
+            ProcessBuilder(initArgs)
+                .directory(currentDir)
+                .redirectOutput(ProcessBuilder.Redirect.INHERIT)
+                .redirectError(ProcessBuilder.Redirect.INHERIT)
+                .start()
 
         val initExitCode = initProcess.waitFor()
         if (initExitCode != 0) {
@@ -117,28 +108,17 @@ class CurrentPlanAction(private val configRepository: ConfigRepository) : Action
             return initExitCode
         }
 
+        // -backend-config はterraform initのみが受け付けるオプションであり、
+        // planには渡さない(渡すとplanがエラーになる)。
         val planArgs = mutableListOf("terraform", "plan", "-input=false")
-
-        // backendConfigから-backend-configオプションを追加
-        backendConfig?.let { config ->
-            val flattenedConfig = flattenBackendConfig(config)
-            flattenedConfig.forEach { (key, value) ->
-                planArgs.add("-backend-config=$key=$value")
-            }
-        }
-
-        // backend.tfvarsが存在する場合も追加
-        if (backendTfvarsFile.exists()) {
-            planArgs.add("-backend-config=backend.tfvars")
-        }
-
         planArgs.addAll(args)
 
-        val process = ProcessBuilder(planArgs)
-            .directory(currentDir)
-            .redirectOutput(ProcessBuilder.Redirect.INHERIT)
-            .redirectError(ProcessBuilder.Redirect.INHERIT)
-            .start()
+        val process =
+            ProcessBuilder(planArgs)
+                .directory(currentDir)
+                .redirectOutput(ProcessBuilder.Redirect.INHERIT)
+                .redirectError(ProcessBuilder.Redirect.INHERIT)
+                .start()
 
         val exitCode = process.waitFor()
 

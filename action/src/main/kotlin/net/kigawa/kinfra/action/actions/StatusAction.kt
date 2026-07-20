@@ -1,16 +1,15 @@
 package net.kigawa.kinfra.action.actions
-import net.kigawa.kinfra.model.util.exitCode
-import net.kigawa.kinfra.model.util.message
-
+import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.GitHelper
 import net.kigawa.kinfra.model.service.TerraformService
-import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.util.AnsiColors
+import net.kigawa.kinfra.model.util.exitCode
 import net.kigawa.kinfra.model.util.isFailure
+import net.kigawa.kinfra.model.util.message
 
 class StatusAction(
     private val terraformService: TerraformService,
-    private val gitHelper: GitHelper
+    private val gitHelper: GitHelper,
 ) : Action {
     override fun execute(args: List<String>): Int {
         // Pull latest changes from git repository
@@ -19,16 +18,13 @@ class StatusAction(
         }
 
         // Terraform設定が取得できない場合は静かにスキップ
-        val config = terraformService.getTerraformConfig()
-        if (config == null) {
-            return 0
-        }
+        val config = terraformService.terraformConfig
 
         val result = terraformService.show(args, quiet = false)
 
         // エラーが発生した場合、プロジェクト情報を表示
         if (result.isFailure()) {
-            println("${AnsiColors.RED}Error in project:${AnsiColors.RESET} ${config.workingDirectory.absolutePath}")
+            config?.let { println("${AnsiColors.RED}Error in project:${AnsiColors.RESET} ${it.workingDirectory.absolutePath}") }
             result.message()?.let { println("${AnsiColors.RED}Details: $it${AnsiColors.RESET}") }
         }
 

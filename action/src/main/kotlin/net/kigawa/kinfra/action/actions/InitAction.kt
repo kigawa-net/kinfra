@@ -1,16 +1,15 @@
 package net.kigawa.kinfra.action.actions
-import net.kigawa.kinfra.model.util.exitCode
-import net.kigawa.kinfra.model.util.message
-
+import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.GitHelper
 import net.kigawa.kinfra.model.service.TerraformService
-import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.util.ColorLogger
+import net.kigawa.kinfra.model.util.exitCode
 import net.kigawa.kinfra.model.util.isFailure
+import net.kigawa.kinfra.model.util.message
 
 class InitAction(
     private val terraformService: TerraformService,
-    private val gitHelper: GitHelper
+    private val gitHelper: GitHelper,
 ) : Action {
     override fun execute(args: List<String>): Int {
         // Pull latest changes from git repository
@@ -18,19 +17,15 @@ class InitAction(
             ColorLogger.warning("Warning: Failed to pull from git repository, continuing anyway...")
         }
 
-        val config = terraformService.getTerraformConfig()
-        if (config == null) {
-            // 設定がない場合は静かにスキップ
-            return 0
-        }
+        val config = terraformService.terraformConfig
 
-        ColorLogger.info("Working directory: ${config.workingDirectory.absolutePath}")
+        config?.let { ColorLogger.info("Working directory: ${it.workingDirectory.absolutePath}") }
 
         val result = terraformService.init(args, quiet = false)
 
         // エラーが発生した場合、プロジェクト情報を表示
         if (result.isFailure()) {
-            ColorLogger.error("Error in project: ${config.workingDirectory.absolutePath}")
+            config?.let { ColorLogger.error("Error in project: ${it.workingDirectory.absolutePath}") }
             result.message()?.let { ColorLogger.error("Details: $it") }
         }
 

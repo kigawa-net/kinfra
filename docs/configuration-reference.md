@@ -17,7 +17,7 @@ kinfraの設定ファイルと環境変数のリファレンス。
   - [KINFRA_LOG_LEVEL](#kinfra_log_level)
   - [KINFRA_LOG_DIR](#kinfra_log_dir)
 - [設定ファイル](#設定ファイル)
-  - [kinfra.yaml](#kinfrayaml)
+  - [kinfra.kts / kinfra-parent.kts](#kinfrakts--kinfra-parentkts)
   - [~/.local/kinfra/project.json](#localkinfraprojectjson)
 - [Terraform設定](#terraform設定)
 - [ログ設定](#ログ設定)
@@ -110,121 +110,134 @@ export KINFRA_LOG_DIR=/var/log/kinfra
 
 ## 設定ファイル
 
-### kinfra.yaml
+### kinfra.kts / kinfra-parent.kts
 
 **場所**: プロジェクトルート
 
-**生成方法**: `kinfra login`コマンドで自動生成
+**生成方法**: `kinfra login`コマンドで自動生成（`kinfra config edit`でサンプルからも生成可能）
 
-**形式**: YAML
+**形式**: Kotlinスクリプト（`.kts`）。実行時にkinfraがコンパイル・評価する、型安全な設定DSL。
+`kinfra.kts`はプロジェクト単位（サブプロジェクトも含む）のTerraform設定、`kinfra-parent.kts`は
+複数プロジェクトをまとめる親設定を表す。
 
-**例** (新しい形式):
+**例** (`kinfra-parent.kts`):
 
-**variableMappings**: BitwardenのシークレットとTerraform変数のマッピングを定義します。各マッピングは以下のフィールドを持ちます:
-- `terraformVariable`: Terraformで使用する変数名
-- `bitwardenSecretKey`: Bitwardenのシークレットキー
+```kotlin
+projectName = "my-infrastructure"
+description = "Parent project for managing multiple infrastructure components"
 
-plan/apply実行時に、これらのマッピングに基づいて`secrets.tfvars`ファイルが自動生成され、Terraform変数として使用されます。
+terraform {
+    version = "1.5.0"
+    workingDirectory = "."
+    generateOutputDir = "./generated"  // generateコマンドの出力ディレクトリ
 
-```yaml
-project:
-  projectId: "my-infrastructure"
-  description: "Parent project for managing multiple infrastructure components"
-  terraform:
-    version: "1.5.0"
-    workingDirectory: "."
-    generateOutputDir: "./generated"  # generateコマンドの出力ディレクトリ
-    variableMappings:
-      - terraformVariable: "cloudflare_api_token"
-        bitwardenSecretKey: "cloudflare-api-token"
-      - terraformVariable: "aws_access_key"
-        bitwardenSecretKey: "aws-access-key"
+    backendConfig {
+        bucket = "terraform-state"
+        key = "project/terraform.tfstate"
+        region = "auto"
+        // bws(...)はBitwarden Secret Managerのシークレットキーを参照する。
+        // 実際にterraformを呼び出す直前に解決される（手動exportは不要）
+        accessKey = bws("r2-access-key-id")
+        secretKey = bws("r2-secret-access-key")
+    }
 
-bitwarden:
-  projectId: "your-bitwarden-project-id"
+    variable("cloudflare_api_token", "cloudflare-api-token")
+    variable("aws_access_key", "aws-access-key")
+}
 
-subProjects:
-  - projectId: "project-a"
-    description: "First sub-project"
-    terraform:
-      version: "1.5.0"
-      workingDirectory: "./project-a"
-  - projectId: "project-b"
-    description: "Second sub-project"
+subProjects {
+    subProject("project-a")
+    subProject("project-b", path = "../project-b")
+}
 
-update:
-  autoUpdate: true
-  checkInterval: 86400000  # 24 hours in milliseconds
-  githubRepo: "kigawa-net/kinfra"
+bitwarden {
+    projectId = "your-bitwarden-project-id"
+}
+
+update {
+    autoUpdate = true
+    checkInterval = 86400000  // 24 hours in milliseconds
+    githubRepo = "kigawa-net/kinfra"
+}
 ```
 
-**例** (古い形式、互換性維持):
+**例** (`kinfra.kts`、サブプロジェクトなど単一プロジェクトの場合):
 
-```yaml
-rootProject:
-  projectId: "my-infrastructure"
-  description: "Parent project for managing multiple infrastructure components"
-  terraform:
-    version: "1.5.0"
-    workingDirectory: "."
+```kotlin
+projectId = "my-infrastructure"
+description = "Parent project for managing multiple infrastructure components"
 
-bitwarden:
-  projectId: "your-bitwarden-project-id"
+terraform {
+    version = "1.5.0"
+    workingDirectory = "."
+}
 
-subProjects:
-  - name: "project-a"  # 古い形式では 'name' を使用
-    description: "First sub-project"
-    terraform:
-      version: "1.5.0"
-      workingDirectory: "./project-a"
-
-update:
-  autoUpdate: true
-  checkInterval: 86400000
-  githubRepo: "kigawa-net/kinfra"
+bitwarden {
+    projectId = "your-bitwarden-project-id"
+}
 ```
 
-**フィールド**:
+**DSLリファレンス**:
 
-| フィールド | 型 | 説明 |
-|-----------|-----|------|
-| project | object | ルートプロジェクト設定 (推奨) |
-| rootProject | object | ルートプロジェクト設定 (古い形式、互換性維持) |
-| bitwarden | object | Bitwarden設定 |
-| subProjects | array | サブプロジェクトのリスト |
-| update | object | 自動更新設定 |
+| トップレベル | 説明 |
+|-----------|------|
+| `projectName` (parent) / `projectId` (project) | プロジェクト名/ID |
+| `description` | プロジェクト説明（任意） |
+| `terraform { }` | Terraform設定ブロック |
+| `subProjects { }` | サブプロジェクトのリスト（`kinfra-parent.kts`のみ） |
+| `bitwarden { }` | Bitwarden設定ブロック |
+| `update { }` | 自動更新設定ブロック |
+| `bws("secret-key")` | Bitwarden Secret Managerのシークレットを参照する関数。どの設定値の中でも使える |
 
-#### プロジェクト設定 (project/rootProject)
-
-| フィールド | 型 | 説明 |
-|-----------|-----|------|
-| projectId | string | プロジェクトID (新しい形式) |
-| name | string | プロジェクト名 (古い形式、互換性維持) |
-| description | string | プロジェクト説明 (任意) |
-| terraform | object | Terraform設定 |
-
-#### Terraform設定
+#### terraform { } ブロック
 
 | フィールド | 型 | 説明 | デフォルト |
 |-----------|-----|------|----------|
-| version | string | Terraformバージョン | "1.5.0" |
-| workingDirectory | string | 作業ディレクトリ | "." |
-| generateOutputDir | string | generateコマンドの出力ディレクトリ | null (カレントディレクトリ) |
-| variableMappings | array | BitwardenシークレットとTerraform変数のマッピング | [] |
+| `version` | String | Terraformバージョン | `""` |
+| `workingDirectory` | String | 作業ディレクトリ | `"."` |
+| `generateOutputDir` | String? | generateコマンドの出力ディレクトリ | `null`（カレントディレクトリ） |
+| `backendConfig { }` | ブロック | `-backend-config`としてterraformに渡す設定 | なし |
+| `variable(terraformVariable, bitwardenSecretKey)` | 関数 | Bitwardenシークレット→Terraform変数のマッピングを追加 | なし |
+| `output(terraformOutput, bitwardenSecretKey)` | 関数 | Terraform出力→Bitwardenシークレットのマッピングを追加 | なし |
 
-#### Bitwarden設定
+**variable(...)** で登録したマッピングに基づき、plan/apply実行時に`secrets.tfvars`が自動生成され、Terraform変数として使用される。
 
-| フィールド | 型 | 説明 |
+#### backendConfig { } ブロック
+
+| フィールド | 型 | 説明|
 |-----------|-----|------|
-| projectId | string | BitwardenプロジェクトID |
+| `bucket` | String? | ステートを保存するバケット名 |
+| `key` | String? | ステートファイルのキー（パス） |
+| `region` | String? | リージョン（R2の場合は`"auto"`） |
+| `endpoint` | String? | S3互換エンドポイントURL |
+| `accessKey` | String? | アクセスキー（`bws(...)`推奨） |
+| `secretKey` | String? | シークレットキー（`bws(...)`推奨） |
+| `set(key, value)` | 関数 | 上記以外の任意の`-backend-config`キーを追加 |
 
-#### 更新設定
+#### subProjects { } ブロック（kinfra-parent.ktsのみ）
+
+| 関数 | 説明 |
+|------|------|
+| `subProject(name, path = name)` | サブプロジェクトを追加する。`path`省略時は`name`と同じ |
+
+#### bitwarden { } / update { } ブロック
 
 | フィールド | 型 | 説明 | デフォルト |
 |-----------|-----|------|----------|
-| autoUpdate | boolean | 自動更新有効 | true |
-| checkInterval | number | チェック間隔 (ミリ秒) | 86400000 (24時間) |
-| githubRepo | string | GitHubリポジトリ | "kigawa-net/kinfra" |
+| `bitwarden.projectId` | String | BitwardenプロジェクトID | `""` |
+| `update.autoUpdate` | Boolean | 自動更新有効 | `true` |
+| `update.checkInterval` | Long | チェック間隔（ミリ秒） | 86400000（24時間） |
+| `update.githubRepo` | String | GitHubリポジトリ | `"kigawa-net/kinfra"` |
+
+**注意（既存プロジェクトの移行）**: 以前のYAML形式（`kinfra.yaml`/`kinfra-parent.yaml`）からの
+自動変換は提供しない。`.kts`ファイルを新規に作成し、上記DSLで書き直す必要がある。
+
+**プログラム的な変更の挙動**: `kinfra sub add`/`kinfra sub remove`/`kinfra config add-subproject`など
+CLIから設定を変更するコマンドは、`.kts`ファイルを評価して得た設定オブジェクトを変更し、
+正規化されたKotlinコードとしてファイル全体を再生成する。手書きで追加したコメントや、
+DSLの範囲を超える独自のKotlinロジックがある場合、これらのコマンドを実行すると
+上書きされる点に注意（YAML時代の`saveData()`も同様にファイル全体を再生成していたため、
+既存の制約を引き継いだ形になる）。
 
 ### generateOutputDir設定
 
@@ -232,16 +245,16 @@ update:
 
 **優先順位**:
 1. `--output-dir` / `-o` CLIフラグ (最高優先度)
-2. `kinfra.yaml`の`terraform.generateOutputDir`設定
+2. `kinfra.kts`の`terraform.generateOutputDir`設定
 3. カレントディレクトリ (フォールバック)
 
 **使用例**:
 
-```yaml
-# kinfra.yaml
-project:
-  terraform:
-    generateOutputDir: "./generated/variables"
+```kotlin
+// kinfra.kts
+terraform {
+    generateOutputDir = "./generated/variables"
+}
 ```
 
 ```bash
@@ -307,9 +320,13 @@ terraform {
 }
 ```
 
-**必要なシークレット**:
-- `AWS_ACCESS_KEY_ID`: R2アクセスキー
-- `AWS_SECRET_ACCESS_KEY`: R2シークレットキー
+**必要な認証情報**: R2のアクセスキー/シークレットキー
+
+上記HCLの`accessKey`/`secretKey`相当は、`kinfra-parent.kts`/`kinfra.kts`の`backendConfig { }`内で
+`bws("secret-key")`を使ってBitwarden Secret Managerから参照できる（[設定ファイル](#kinfrakts--kinfra-parentkts)参照）。
+`init`/`plan`/`apply`/`destroy`/`show`実行時にkinfraが自動的に解決し、`-backend-config`として
+terraformに渡す（手動での`export`は不要）。`BWS_ACCESS_TOKEN`（SDKモード）が設定されていない場合、
+`bws(...)`の値は未解決のまま渡される。
 
 ---
 
@@ -355,7 +372,8 @@ export KINFRA_LOG_DIR=/var/log/kinfra
 └── kinfra               # 実行スクリプト
 
 <project-root>/
-├── kinfra.yaml          # プロジェクト設定
+├── kinfra.kts           # プロジェクト設定
+├── kinfra-parent.kts    # 親プロジェクト設定（マルチプロジェクトの場合）
 ├── terraform/           # Terraformファイル
 └── logs/                # ログディレクトリ
     └── kinfra.log
@@ -376,7 +394,8 @@ export KINFRA_LOG_DIR=/var/log/kinfra
 ```
 .bws_token
 .env
-kinfra.yaml
+kinfra.kts
+kinfra-parent.kts
 logs/
 ```
 

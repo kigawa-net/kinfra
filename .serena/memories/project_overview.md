@@ -1,50 +1,46 @@
-# Project Overview
+# kinfra Project Overview
 
 ## Purpose
-Kotlin-based Terraform wrapper with Bitwarden Secret Manager integration for secure secret management.
+Kotlin-based Terraform wrapper that simplifies infrastructure management with Bitwarden Secret Manager integration for secure secret handling.
 
 ## Tech Stack
 - **Language**: Kotlin 2.2.0
+- **Runtime**: JDK 21
 - **Build Tool**: Gradle 8.10.2
-- **JDK**: 21
-- **Web Framework**: Ktor (for app-web)
+- **Infrastructure**: Terraform
+- **Secrets**: Bitwarden Secret Manager
+- **Storage**: Cloudflare R2 (S3-compatible)
+- **Web Framework**: Ktor
+- **Serialization**: kotlinx.serialization, Gson, kaml
 - **DI**: Koin
-- **Serialization**: Gson (JSON), kotlinx-serialization + kaml (YAML)
-- **Testing**: JUnit
-- **Linting/Formatting**: ktlint
-
-## Interfaces
-- **CLI** (`app-cli`): Command-line tool
-- **Web API** (`app-web`): REST API on port 8080
+- **Testing**: JUnit 5
 
 ## Architecture
-Multi-module layered architecture:
-- **model**: Domain models and interfaces (no dependencies)
-- **action**: Business logic contracts
-- **infrastructure**: Implementations (Terraform, Bitwarden, config, logging)
-- **app-cli**: CLI application
-- **app-web**: Web application
+Multi-module Gradle project:
+- **kinfra-api**: Core interfaces and models
+- **action**: Business logic interfaces
+- **kinfra-infra**: Infrastructure implementations (R2, Bitwarden, etc.)
+- **app-cli**: Command-line interface
+- **app-web**: Web API server
+- **kodel**: Code generation utilities
 
 ## Key Features
-- Simplified Terraform operations
+- Terraform operation simplification
 - Secure secret management via Bitwarden
-- Modular design for maintainability
-- ANSI colored output
-- Environment variable configuration
+- Dual interface: CLI and Web API
+- Modular architecture for maintainability
+- Support for various deployment types (Kubernetes, SSH, etc.)
+
+## Interfaces
+- **CLI**: Commands like `kinfra init`, `plan`, `apply`, `deploy`
+- **Web API**: REST endpoints for automation
 
 ## Configuration
-- Global config: `~/.local/kinfra/project.json`
-- Project config: `kinfra.yaml` (auto-generated on login)
-- Backend config: `backend.tfvars`
-- Environment variables: BWS_ACCESS_TOKEN, BW_PROJECT, KINFRA_LOG_DIR, KINFRA_LOG_LEVEL
+- Environment variables for secrets and settings
+- YAML-based project configuration
+- Support for sub-projects
 
-## Recent Changes (2025-10-19)
-- TerraformRunnerクラスのリファクタリングを実施
-- executionパッケージを新規作成し、責務を分離
-- ActionExecutor: アクション実行の共通パターン
-- CommandInterpreter: コマンドライン引数の解釈
-- SystemRequirement: システム要件のチェック
-- UpdateHandler: アップデートのチェックと実行
-- ConfigEditor: 設定ファイル編集機能
-- DeploymentPipeline: デプロイパイプライン
-- UpdateProcessor: アップデート処理
+## Development Environment
+- Linux-based development
+- Gradle wrapper for consistent builds
+- Serena for advanced code analysis (Claude Code integration)

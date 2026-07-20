@@ -1,17 +1,16 @@
 package net.kigawa.kinfra.action.actions
 
-import net.kigawa.kinfra.action.config.ConfigRepository
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.LoginRepo
 import net.kigawa.kinfra.model.conf.FilePaths
+import net.kigawa.kinfra.model.config.ConfigRepository
 import net.kigawa.kinfra.model.util.AnsiColors
 
 class SubShowAction(
     private val configRepository: ConfigRepository,
     private val filePaths: FilePaths,
     val loginRepo: LoginRepo,
-): Action {
-
+) : Action {
     override fun execute(args: List<String>): Int {
         if (args.isEmpty()) {
             println("${AnsiColors.RED}Error:${AnsiColors.RESET} Sub-project name is required")
@@ -24,13 +23,13 @@ class SubShowAction(
 
         if (parentConfig == null) {
             println(
-                "${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Parent configuration file not found: ${loginRepo.kinfraBaseConfigPath()}"
+                "${AnsiColors.YELLOW}Warning:${AnsiColors.RESET} Parent configuration file not found: ${loginRepo.kinfraBaseConfigPath()}",
             )
             println(
-                "${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Run 'kinfra sub add <project-name>' to create a configuration file"
+                "${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Run 'kinfra sub add <project-name>' to create a configuration file",
             )
             println(
-                "${AnsiColors.BLUE}Note:${AnsiColors.RESET} Looking for ${filePaths.kinfraParentConfigFileName} in current directory"
+                "${AnsiColors.BLUE}Note:${AnsiColors.RESET} Looking for ${filePaths.kinfraParentConfigFileName} in current directory",
             )
             return 0
         }
@@ -43,11 +42,12 @@ class SubShowAction(
                 println("  ${AnsiColors.YELLOW}(none)${AnsiColors.RESET}")
             } else {
                 parentConfig.subProjects.forEach { project ->
-                    val displayText = if (project.path == project.name) {
-                        project.name
-                    } else {
-                        "${project.name}:${project.path}"
-                    }
+                    val displayText =
+                        if (project.path == project.name) {
+                            project.name
+                        } else {
+                            "${project.name}:${project.path}"
+                        }
                     println("  - $displayText")
                 }
             }
@@ -60,29 +60,33 @@ class SubShowAction(
 
         println("${AnsiColors.BLUE}Name:${AnsiColors.RESET} ${subProject.name}")
         println("${AnsiColors.BLUE}Path:${AnsiColors.RESET} ${subProject.path}")
-        
+
         // Check if sub-project directory exists
-        val projectPath = if (subProject.path.startsWith('/')) {
-            java.nio.file.Paths.get(subProject.path)
-        } else {
-            loginRepo.kinfraConfigPath().parent.resolve(subProject.path)
-        }
-        
+        val projectPath =
+            if (subProject.path.startsWith('/')) {
+                java.nio.file.Paths.get(subProject.path)
+            } else {
+                loginRepo.kinfraConfigPath().parent.resolve(subProject.path)
+            }
+
         println("${AnsiColors.BLUE}Full path:${AnsiColors.RESET} $projectPath")
         println(
             "${AnsiColors.BLUE}Status:${AnsiColors.RESET} ${
-                if (projectPath.toFile().exists()) "${AnsiColors.GREEN}Directory exists${AnsiColors.RESET}"
-                else "${AnsiColors.YELLOW}Directory not found${AnsiColors.RESET}"
-            }"
+                if (projectPath.toFile().exists()) {
+                    "${AnsiColors.GREEN}Directory exists${AnsiColors.RESET}"
+                } else {
+                    "${AnsiColors.YELLOW}Directory not found${AnsiColors.RESET}"
+                }
+            }",
         )
 
         if (projectPath.toFile().exists()) {
             // Check for kinfra.yaml in sub-project
-            val subProjectConfigFile = projectPath.resolve( filePaths.kinfraConfigFileName)
+            val subProjectConfigFile = projectPath.resolve(filePaths.kinfraConfigFileName)
             if (subProjectConfigFile.toFile().exists()) {
                 println(
                     "${AnsiColors.BLUE}Config file:${AnsiColors.RESET} ${AnsiColors.GREEN}Found${AnsiColors.RESET} (${
-                        subProjectConfigFile.fileName})"
+                        subProjectConfigFile.fileName})",
                 )
 
                 val subProjectConfig = configRepository.loadKinfraConfig(subProjectConfigFile)
@@ -90,7 +94,7 @@ class SubShowAction(
                     println()
                     println("${AnsiColors.BLUE}--- Configuration details ---${AnsiColors.RESET}")
                     println(
-                        "${AnsiColors.BLUE}Project ID:${AnsiColors.RESET} ${subProjectConfig.rootProject.projectId}"
+                        "${AnsiColors.BLUE}Project ID:${AnsiColors.RESET} ${subProjectConfig.rootProject.projectId}",
                     )
 
                     val description = subProjectConfig.rootProject.description
@@ -102,7 +106,7 @@ class SubShowAction(
                     if (terraform != null) {
                         println("${AnsiColors.BLUE}Terraform version:${AnsiColors.RESET} ${terraform.version}")
                         println(
-                            "${AnsiColors.BLUE}Terraform working directory:${AnsiColors.RESET} ${terraform.workingDirectory}"
+                            "${AnsiColors.BLUE}Terraform working directory:${AnsiColors.RESET} ${terraform.workingDirectory}",
                         )
                     }
 
@@ -113,7 +117,7 @@ class SubShowAction(
                 }
             } else {
                 println(
-                    "${AnsiColors.BLUE}Config file:${AnsiColors.RESET} ${AnsiColors.YELLOW}Not found${AnsiColors.RESET}"
+                    "${AnsiColors.BLUE}Config file:${AnsiColors.RESET} ${AnsiColors.YELLOW}Not found${AnsiColors.RESET}",
                 )
             }
 

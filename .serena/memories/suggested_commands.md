@@ -1,27 +1,25 @@
-# Suggested Commands for Development
+# Suggested Commands for kinfra Project
 
-## Build Commands
+## Build and Test
 - `./gradlew build` - Build the entire project
-- `./gradlew :app-cli:shadowJar` - Create CLI JAR
-- `./gradlew :app-web:shadowJar` - Create Web JAR
-
-## Test Commands
 - `./gradlew test` - Run all tests
-- `./gradlew test --tests "net.kigawa.kinfra.TestClass.testMethod"` - Run specific test
+- `./gradlew :kinfra-infra:build` - Build specific module
+- `./gradlew :kinfra-infra:test` - Test specific module
 
-## Lint and Format Commands
-- `./gradlew ktlintCheck` - Check code style
-- `./gradlew ktlintFormat` - Format code
+## Development
+- `./gradlew :app-cli:run --args="<command>"` - Run CLI application
+- `./gradlew :app-web:run` - Run web application
 
-## Run Commands
-- `./gradlew :app-cli:run --args="<command>"` - Run CLI with arguments
-- `./gradlew :app-web:run` - Run web server
+## Deployment
+- `kinfra init` - Initialize Terraform
+- `kinfra plan` - Plan Terraform changes
+- `kinfra apply` - Apply Terraform changes
+- `kinfra deploy` - Full deploy (init + plan + apply)
 
-## Utility Commands
-- `git status` - Check git status
-- `git add .` - Stage all changes
-- `git commit -m "message"` - Commit changes
-- `git push` - Push to remote
+## Utility
+- `./gradlew clean` - Clean build artifacts
+- `./gradlew shadowJar` - Create fat JAR
+- `./gradlew distTar` or `./gradlew distZip` - Create distribution archives
 
-## When Task is Completed
-Run: `./gradlew ktlintFormat && ./gradlew ktlintCheck && ./gradlew test && ./gradlew build`
+## Testing Specific
+- `./gradlew test --tests "TestClass.testMethod"` - Run specific test

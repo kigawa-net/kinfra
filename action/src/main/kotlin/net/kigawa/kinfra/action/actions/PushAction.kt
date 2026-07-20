@@ -1,10 +1,10 @@
 package net.kigawa.kinfra.action.actions
 
-import net.kigawa.kinfra.model.GitHelper
 import net.kigawa.kinfra.model.Action
+import net.kigawa.kinfra.model.GitHelper
 
 class PushAction(
-    private val gitHelper: GitHelper
+    private val gitHelper: GitHelper,
 ) : Action {
     override fun execute(args: List<String>): Int {
         // Add all changes
@@ -18,7 +18,9 @@ class PushAction(
         val commitMessage = args.getOrNull(0) ?: "Auto commit by kinfra push"
         val commitSuccess = gitHelper.commitChanges(commitMessage)
         if (!commitSuccess) {
-            println("${net.kigawa.kinfra.model.util.AnsiColors.RED}Failed to commit changes${net.kigawa.kinfra.model.util.AnsiColors.RESET}")
+            println(
+                "${net.kigawa.kinfra.model.util.AnsiColors.RED}Failed to commit changes${net.kigawa.kinfra.model.util.AnsiColors.RESET}",
+            )
             return 1
         }
 

@@ -38,7 +38,7 @@ kinfra CLIの全コマンドリファレンス。
   - [KINFRA_LOG_DIR](#kinfra_log_dir)
 - [設定ファイル](#設定ファイル)
   - [~/.local/kinfra/project.json](#localkinfraprojectjson)
-  - [kinfra.yaml](#kinfrayaml)
+  - [kinfra.kts](#kinfrakts)
 - [使用例](#使用例)
   - [基本ワークフロー](#基本ワークフロー)
   - [SDKモードでのデプロイ](#sdkモードでのデプロイ)
@@ -87,7 +87,7 @@ kinfra hello
 
 ### login
 
-プロジェクトにログインし、`kinfra.yaml`を作成。
+プロジェクトにログインし、`kinfra.kts`を作成。
 
 ```bash
 kinfra login
@@ -95,7 +95,7 @@ kinfra login
 
 **動作**:
 - Terraformディレクトリを検索
-- `kinfra.yaml`を生成してプロジェクトルートに保存
+- `kinfra.kts`を生成してプロジェクトルートに保存
 
 ---
 
@@ -103,28 +103,28 @@ kinfra login
 
 ### sub list
 
-kinfra-parent.yamlに設定されたサブプロジェクトの一覧を表示。
+kinfra-parent.ktsに設定されたサブプロジェクトの一覧を表示。
 
 ```bash
 kinfra sub list
 ```
 
 **実行内容**:
-- kinfra-parent.yamlからサブプロジェクト一覧を取得
+- kinfra-parent.ktsからサブプロジェクト一覧を取得
 - 番号付きで表示
 
 ---
 
 ### sub add
 
-kinfra-parent.yamlに新しいサブプロジェクトを追加。
+kinfra-parent.ktsに新しいサブプロジェクトを追加。
 
 ```bash
 kinfra sub add <project-name>
 ```
 
 **実行内容**:
-- 指定したプロジェクト名をkinfra-parent.yamlのsubProjectsに追加
+- 指定したプロジェクト名をkinfra-parent.ktsのsubProjectsに追加
 - 設定ファイルが存在しない場合は新規作成
 
 **例**:
@@ -168,19 +168,17 @@ kinfra current generate variable [options] [variable_name]
 - `--with-outputs`: 対応するoutputs.tfも生成
 
 **動作**:
-- kinfra.yamlまたはkinfra-parent.yamlからvariableMappingsを読み込み
+- kinfra.ktsまたはkinfra-parent.ktsからvariableMappingsを読み込み
 - 引数なし: 全ての変数を生成
 - 引数あり: 指定した変数のみを生成
-- 出力ディレクトリの優先順位: CLIオプション > kinfra.yaml設定 > カレントディレクトリ
+- 出力ディレクトリの優先順位: CLIオプション > kinfra.kts設定 > カレントディレクトリ
 
-**設定例 (kinfra.yaml)**:
-```yaml
-project:
-  terraform:
-    generateOutputDir: /path/to/output
-    variableMappings:
-      - terraformVariable: "my_var"
-        bitwardenSecret: "my_secret"
+**設定例 (kinfra.kts)**:
+```kotlin
+terraform {
+    generateOutputDir = "/path/to/output"
+    variable("my_var", "my_secret")
+}
 ```
 
 **使用例**:
@@ -210,19 +208,20 @@ kinfra current plan [terraform_options]
 
 **動作**:
 - カレントディレクトリにTerraformファイルがあるか確認
-- kinfra.yamlまたはkinfra-parent.yamlからbackendConfigを読み込み
+- kinfra.ktsまたはkinfra-parent.ktsからbackendConfigを読み込み
 - 自動でterraform initを実行
 - backendConfigをterraformコマンドに適用
 - terraform planを実行
 
-**設定例 (kinfra.yaml)**:
-```yaml
-project:
-  terraform:
-    backendConfig:
-      bucket: "my-terraform-state-bucket"
-      key: "terraform.tfstate"
-      region: "us-east-1"
+**設定例 (kinfra.kts)**:
+```kotlin
+terraform {
+    backendConfig {
+        bucket = "my-terraform-state-bucket"
+        key = "terraform.tfstate"
+        region = "us-east-1"
+    }
+}
 ```
 
 **使用例**:
@@ -405,16 +404,16 @@ export KINFRA_LOG_DIR=/var/log/kinfra
 
 ---
 
-### kinfra.yaml
+### kinfra.kts
 
-プロジェクトルートに配置（`login`時に自動生成）。
+プロジェクトルートに配置（`login`時に自動生成）。詳細は[設定リファレンス](configuration-reference.md#kinfrakts--kinfra-parentkts)を参照。
 
-```yaml
-terraform_dir: ./terraform
-environments:
-  - dev
-  - staging
-  - prod
+```kotlin
+projectId = "my-project"
+
+terraform {
+    workingDirectory = "./terraform"
+}
 ```
 
 ---

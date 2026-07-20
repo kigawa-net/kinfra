@@ -1,7 +1,7 @@
 package net.kigawa.kinfra.action.actions
 
-import net.kigawa.kinfra.action.config.ConfigRepository
 import net.kigawa.kinfra.model.Action
+import net.kigawa.kinfra.model.config.ConfigRepository
 import net.kigawa.kinfra.model.util.AnsiColors
 import java.io.File
 import java.nio.file.Paths
@@ -18,23 +18,25 @@ class CurrentGenerateVariableAction(private val configRepository: ConfigReposito
         val (options, remainingArgs) = parseOptions(args.drop(1))
 
         // Determine output directory: CLI flag > kinfra.yaml > current directory
-        val outputDir = options["output-dir"] ?: run {
-            val currentDir = System.getProperty("user.dir")
-            val kinfraConfigPath = Paths.get(currentDir, "kinfra.yaml")
-            val kinfraParentConfigPath = Paths.get(currentDir, "kinfra-parent.yaml")
+        val outputDir =
+            options["output-dir"] ?: run {
+                val currentDir = System.getProperty("user.dir")
+                val kinfraConfigPath = Paths.get(currentDir, "kinfra.kts")
+                val kinfraParentConfigPath = Paths.get(currentDir, "kinfra-parent.kts")
 
-            val configOutputDir = if (configRepository.kinfraConfigExists(kinfraConfigPath.toString())) {
-                val kinfraConfig = configRepository.loadKinfraConfig(kinfraConfigPath)
-                kinfraConfig?.rootProject?.terraform?.generateOutputDir
-            } else if (configRepository.kinfraParentConfigExists(kinfraParentConfigPath.toString())) {
-                val kinfraParentConfig = configRepository.loadKinfraParentConfig(kinfraParentConfigPath.toString())
-                kinfraParentConfig?.terraform?.generateOutputDir
-            } else {
-                null
+                val configOutputDir =
+                    if (configRepository.kinfraConfigExists(kinfraConfigPath.toString())) {
+                        val kinfraConfig = configRepository.loadKinfraConfig(kinfraConfigPath)
+                        kinfraConfig?.rootProject?.terraform?.generateOutputDir
+                    } else if (configRepository.kinfraParentConfigExists(kinfraParentConfigPath.toString())) {
+                        val kinfraParentConfig = configRepository.loadKinfraParentConfig(kinfraParentConfigPath.toString())
+                        kinfraParentConfig?.terraform?.generateOutputDir
+                    } else {
+                        null
+                    }
+
+                configOutputDir ?: currentDir
             }
-            
-            configOutputDir ?: currentDir
-        }
 
         val withOutputs = options.containsKey("with-outputs")
         val outputDirFile = File(outputDir)
@@ -44,103 +46,122 @@ class CurrentGenerateVariableAction(private val configRepository: ConfigReposito
         val variablesFile = File(outputDirFile, "variables.tf")
         val outputsFile = File(outputDirFile, "outputs.tf")
 
-        val variablesToGenerate = if (remainingArgs.isEmpty()) {
-            // Generate all variables from kinfra.yaml or kinfra-parent.yaml
-            val currentDir = System.getProperty("user.dir")
-            val kinfraConfigPath = Paths.get(currentDir, "kinfra.yaml")
-            val kinfraParentConfigPath = Paths.get(currentDir, "kinfra-parent.yaml")
+        val variablesToGenerate =
+            if (remainingArgs.isEmpty()) {
+                // Generate all variables from kinfra.yaml or kinfra-parent.yaml
+                val currentDir = System.getProperty("user.dir")
+                val kinfraConfigPath = Paths.get(currentDir, "kinfra.kts")
+                val kinfraParentConfigPath = Paths.get(currentDir, "kinfra-parent.kts")
 
-            val variableMappings = if (configRepository.kinfraConfigExists(kinfraConfigPath.toString())) {
-                val kinfraConfig = configRepository.loadKinfraConfig(kinfraConfigPath)
-                kinfraConfig?.rootProject?.terraform?.variableMappings ?: emptyList()
-            } else if (configRepository.kinfraParentConfigExists(kinfraParentConfigPath.toString())) {
-                val kinfraParentConfig = configRepository.loadKinfraParentConfig(kinfraParentConfigPath.toString())
-                kinfraParentConfig?.terraform?.variableMappings ?: emptyList()
+                val variableMappings =
+                    if (configRepository.kinfraConfigExists(kinfraConfigPath.toString())) {
+                        val kinfraConfig = configRepository.loadKinfraConfig(kinfraConfigPath)
+                        kinfraConfig?.rootProject?.terraform?.variableMappings ?: emptyList()
+                    } else if (configRepository.kinfraParentConfigExists(kinfraParentConfigPath.toString())) {
+                        val kinfraParentConfig = configRepository.loadKinfraParentConfig(kinfraParentConfigPath.toString())
+                        kinfraParentConfig?.terraform?.variableMappings ?: emptyList()
+                    } else {
+                        emptyList()
+                    }
+
+                if (variableMappings.isEmpty()) {
+                    println(
+                        "${AnsiColors.YELLOW}Warning: No variable mappings found in kinfra.yaml or kinfra-parent.yaml${AnsiColors.RESET}",
+                    )
+                    return 0
+                }
+                variableMappings.map { it.terraformVariable }
+            } else if (remainingArgs.size == 1) {
+                // Generate specific variable
+                listOf(remainingArgs[0])
             } else {
-                emptyList()
+                println("${AnsiColors.RED}Error: Too many arguments${AnsiColors.RESET}")
+                println("Usage: kinfra current generate variable [options] [variable_name]")
+                return 1
             }
 
-            if (variableMappings.isEmpty()) {
-                println("${AnsiColors.YELLOW}Warning: No variable mappings found in kinfra.yaml or kinfra-parent.yaml${AnsiColors.RESET}")
-                return 0
-            }
-            variableMappings.map { it.terraformVariable }
-        } else if (remainingArgs.size == 1) {
-            // Generate specific variable
-            listOf(remainingArgs[0])
-        } else {
-            println("${AnsiColors.RED}Error: Too many arguments${AnsiColors.RESET}")
-            println("Usage: kinfra current generate variable [options] [variable_name]")
-            return 1
-        }
-
-        val content = variablesToGenerate.joinToString("\n\n") { variableName ->
-            """
+        val content =
+            variablesToGenerate.joinToString("\n\n") { variableName ->
+                """
             |variable "$variableName" {
             |  description = "Generated variable: $variableName"
             |  type        = string
             |  default     = ""
             |}
-            """.trimMargin()
-        } + "\n"
+                """.trimMargin()
+            } + "\n"
 
         // Always overwrite the file
         variablesFile.writeText(content)
 
         if (variablesToGenerate.size == 1) {
-            println("${AnsiColors.GREEN}✓ Generated variable '${variablesToGenerate[0]}' in ${variablesFile.absolutePath}${AnsiColors.RESET}")
+            println(
+                "${AnsiColors.GREEN}✓ Generated variable '${variablesToGenerate[0]}' in ${variablesFile.absolutePath}${AnsiColors.RESET}",
+            )
         } else {
-            println("${AnsiColors.GREEN}✓ Generated ${variablesToGenerate.size} variables in ${variablesFile.absolutePath}${AnsiColors.RESET}")
+            println(
+                "${AnsiColors.GREEN}✓ Generated ${variablesToGenerate.size} variables in ${variablesFile.absolutePath}${AnsiColors.RESET}",
+            )
         }
 
         // Generate outputs.tf if --with-outputs option is specified
         if (withOutputs) {
-            val outputsToGenerate = if (remainingArgs.isEmpty()) {
-                // Generate all outputs from kinfra.yaml or kinfra-parent.yaml
-                val currentDir = System.getProperty("user.dir")
-                val kinfraConfigPath = Paths.get(currentDir, "kinfra.yaml")
-                val kinfraParentConfigPath = Paths.get(currentDir, "kinfra-parent.yaml")
+            val outputsToGenerate =
+                if (remainingArgs.isEmpty()) {
+                    // Generate all outputs from kinfra.yaml or kinfra-parent.yaml
+                    val currentDir = System.getProperty("user.dir")
+                    val kinfraConfigPath = Paths.get(currentDir, "kinfra.kts")
+                    val kinfraParentConfigPath = Paths.get(currentDir, "kinfra-parent.kts")
 
-                val outputMappings = if (configRepository.kinfraConfigExists(kinfraConfigPath.toString())) {
-                    val kinfraConfig = configRepository.loadKinfraConfig(kinfraConfigPath)
-                    kinfraConfig?.rootProject?.terraform?.outputMappings ?: emptyList()
-                } else if (configRepository.kinfraParentConfigExists(kinfraParentConfigPath.toString())) {
-                    val kinfraParentConfig = configRepository.loadKinfraParentConfig(kinfraParentConfigPath.toString())
-                    kinfraParentConfig?.terraform?.outputMappings ?: emptyList()
+                    val outputMappings =
+                        if (configRepository.kinfraConfigExists(kinfraConfigPath.toString())) {
+                            val kinfraConfig = configRepository.loadKinfraConfig(kinfraConfigPath)
+                            kinfraConfig?.rootProject?.terraform?.outputMappings ?: emptyList()
+                        } else if (configRepository.kinfraParentConfigExists(kinfraParentConfigPath.toString())) {
+                            val kinfraParentConfig = configRepository.loadKinfraParentConfig(kinfraParentConfigPath.toString())
+                            kinfraParentConfig?.terraform?.outputMappings ?: emptyList()
+                        } else {
+                            emptyList()
+                        }
+
+                    if (outputMappings.isEmpty()) {
+                        println(
+                            "${AnsiColors.YELLOW}Warning: No output mappings found in kinfra.yaml or kinfra-parent.yaml${AnsiColors.RESET}",
+                        )
+                        return 0
+                    }
+                    outputMappings.map { it.terraformOutput }
+                } else if (remainingArgs.size == 1) {
+                    // Generate output with the same name as the variable
+                    listOf(remainingArgs[0])
                 } else {
                     emptyList()
                 }
 
-                if (outputMappings.isEmpty()) {
-                    println("${AnsiColors.YELLOW}Warning: No output mappings found in kinfra.yaml or kinfra-parent.yaml${AnsiColors.RESET}")
-                    return 0
-                }
-                outputMappings.map { it.terraformOutput }
-            } else if (remainingArgs.size == 1) {
-                // Generate output with the same name as the variable
-                listOf(remainingArgs[0])
-            } else {
-                emptyList()
-            }
-
             if (outputsToGenerate.isNotEmpty()) {
-                val outputsContent = outputsToGenerate.joinToString("\n\n") { outputName ->
-                    """
+                val outputsContent =
+                    outputsToGenerate.joinToString("\n\n") { outputName ->
+                        """
                     |output "$outputName" {
                     |  description = "Generated output: $outputName"
                     |  value       = var.$outputName
                     |  sensitive   = true
                     |}
-                    """.trimMargin()
-                } + "\n"
+                        """.trimMargin()
+                    } + "\n"
 
                 // Always overwrite the file
                 outputsFile.writeText(outputsContent)
 
                 if (outputsToGenerate.size == 1) {
-                    println("${AnsiColors.GREEN}✓ Generated output '${outputsToGenerate[0]}' in ${outputsFile.absolutePath}${AnsiColors.RESET}")
+                    println(
+                        "${AnsiColors.GREEN}✓ Generated output '${outputsToGenerate[0]}' in ${outputsFile.absolutePath}${AnsiColors.RESET}",
+                    )
                 } else {
-                    println("${AnsiColors.GREEN}✓ Generated ${outputsToGenerate.size} outputs in ${outputsFile.absolutePath}${AnsiColors.RESET}")
+                    println(
+                        "${AnsiColors.GREEN}✓ Generated ${outputsToGenerate.size} outputs in " +
+                            "${outputsFile.absolutePath}${AnsiColors.RESET}",
+                    )
                 }
             }
         }

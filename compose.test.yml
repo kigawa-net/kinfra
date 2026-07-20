@@ -1,0 +1,60 @@
+services:
+  rsync:
+    image: ubuntu
+    command:
+      - bash
+      - -c
+      - |
+        set -ue
+        apt update 
+        apt install -y rsync
+        #if [ ! -d /src/cache/app ]; then mkdir -p /src/cache/app; fi
+        #if [ ! -d /src/cache/.gradle ]; then mkdir -p /src/cache/.gradle; fi
+        rsync -avz --delete /src/ /src/cache/app \
+          --exclude=.git --exclude=cache --exclude=kotlin-js-store
+    volumes:
+      - type: bind
+        source: .
+        target: /src
+
+  all-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile_test
+    command: ./gradlew allTests
+    depends_on:
+      rsync:
+        condition: service_completed_successfully
+    volumes:
+      - type: bind
+        source: ./cache/app
+        target: /app
+      - type: bind
+        source: ./cache/.gradle
+        target: /root/.gradle
+    working_dir: /app
+    environment:
+       - GRADLE_OPTS=-Dorg.gradle.daemon=false
+       - CHROME_BIN=/opt/google/chrome/chrome
+       - FIREFOX_BIN=/usr/bin/firefox
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile_test
+    command: ./gradlew test
+    depends_on:
+      all-tests:
+        condition: service_completed_successfully
+    volumes:
+      - type: bind
+        source: ./cache/app
+        target: /app
+      - type: bind
+        source: ./cache/.gradle
+        target: /root/.gradle
+    working_dir: /app
+    environment:
+       - GRADLE_OPTS=-Dorg.gradle.daemon=false
+       - CHROME_BIN=/opt/google/chrome/chrome
+       - FIREFOX_BIN=/usr/bin/firefox
+

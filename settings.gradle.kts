@@ -7,12 +7,18 @@
 
 plugins {
     // Apply the foojay-resolver plugin to allow automatic download of JDKs
-    id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
+    id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
 }
 
 rootProject.name = "kinfra"
-include("app-cli")
+include("iac:model")
+include("iac:cli")
+include("kinfra-cli")
 include("app-web")
-include("model")
+include("kinfra-api")
+include("kinfra-infra")
+include("kodel:api")
+include("kodel:core")
+include("kodel:coroutine")
+
 include("action")
-include("infrastructure")

@@ -8,8 +8,7 @@ import kotlin.io.path.exists
 
 class ConfigAction(
     private val loginRepo: LoginRepo,
-): Action {
-
+) : Action {
     override fun execute(args: List<String>): Int {
         val isParentConfig = args.contains("--parent") || args.contains("-p")
 
@@ -21,7 +20,7 @@ class ConfigAction(
     }
 
     private fun showProjectConfig(): Int {
-        val configPath = loginRepo.kinfraBaseConfigPath()
+        val configPath = loginRepo.kinfraConfigPath()
 
         val configFile = configPath.toFile()
 
@@ -30,7 +29,7 @@ class ConfigAction(
             println("${AnsiColors.CYAN}Expected location:${AnsiColors.RESET} ${configFile.absolutePath}")
             println()
             println(
-                "${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Run 'kinfra config edit' to create a configuration file"
+                "${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Run 'kinfra config edit' to create a configuration file",
             )
             return 1
         }
@@ -43,7 +42,7 @@ class ConfigAction(
         if (config == null) {
             println("${AnsiColors.RED}Error:${AnsiColors.RESET} Parent configuration not found")
             println(
-                "${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Run 'kinfra config edit --parent' to create a parent configuration file"
+                "${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Run 'kinfra config edit --parent' to create a parent configuration file",
             )
             return 1
         }
@@ -52,7 +51,7 @@ class ConfigAction(
             println("${AnsiColors.CYAN}Expected location:${AnsiColors.RESET} ${config.filePath}")
             println()
             println(
-                "${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Run 'kinfra config edit --parent' to create a parent configuration file"
+                "${AnsiColors.BLUE}Hint:${AnsiColors.RESET} Run 'kinfra config edit --parent' to create a parent configuration file",
             )
             return 1
         }

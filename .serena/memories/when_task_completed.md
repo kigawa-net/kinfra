@@ -1,12 +1,18 @@
-# When a Task is Completed
+# When Task is Completed
 
-After completing any code changes, run the following commands to ensure quality:
+After implementing or modifying code:
 
-1. **Format code**: `./gradlew ktlintFormat`
-2. **Check style**: `./gradlew ktlintCheck`
-3. **Run tests**: `./gradlew test`
-4. **Build project**: `./gradlew build`
+1. **Build**: Run `./gradlew build` to ensure compilation
+2. **Test**: Run `./gradlew test` to verify functionality
+3. **Lint**: ktlint is temporarily disabled, but check manually
+4. **Documentation**: Update relevant docs if needed
+5. **Commit**: Use conventional commit messages
 
-If any step fails, fix the issues and re-run.
+For new features:
+- Add tests
+- Update README if user-facing
+- Update AGENTS.md for tool changes
 
-For commits, ensure changes are staged and committed appropriately.
+For bug fixes:
+- Add regression tests
+- Update changelog if applicable

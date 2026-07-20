@@ -1,20 +1,23 @@
 package net.kigawa.kinfra.action.actions
 
-import net.kigawa.kinfra.model.service.TerraformService
-import net.kigawa.kinfra.action.bitwarden.BitwardenSecretManagerRepository
-import net.kigawa.kinfra.action.config.ConfigRepository
-import net.kigawa.kinfra.action.config.EnvFileLoader
-import net.kigawa.kinfra.action.execution.SubProjectExecutor
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.LoginRepo
-import net.kigawa.kinfra.model.conf.R2BackendConfig
+import net.kigawa.kinfra.model.bitwarden.BitwardenSecretManagerRepository
+import net.kigawa.kinfra.model.conf.BackendConfigResolver
+import net.kigawa.kinfra.model.config.ConfigRepository
+import net.kigawa.kinfra.model.execution.SubProjectChangeFilter
+import net.kigawa.kinfra.model.execution.SubProjectChangeFilterFactory
+import net.kigawa.kinfra.model.execution.SubProjectExecutor
+import net.kigawa.kinfra.model.service.TerraformService
 import net.kigawa.kinfra.model.util.AnsiColors
 import net.kigawa.kinfra.model.util.exitCode
 import net.kigawa.kinfra.model.util.isFailure
-import net.kigawa.kinfra.model.util.isSuccess
 import net.kigawa.kinfra.model.util.message
-import net.kigawa.kinfra.action.logging.Logger
-import net.kigawa.kinfra.model.BitwardenSecret
+import net.kigawa.kodel.api.log.Kogger
+import net.kigawa.kodel.api.log.traceignore.debug
+import net.kigawa.kodel.api.log.traceignore.error
+import net.kigawa.kodel.api.log.traceignore.warn
+import kotlinx.coroutines.runBlocking
 import java.io.File
 
 /**
@@ -22,17 +25,16 @@ import java.io.File
  */
 class DeployActionWithSDK(
     private val terraformService: TerraformService,
-    private val secretManagerRepository: BitwardenSecretManagerRepository,
-    private val configRepository: ConfigRepository,
-    private val loginRepo: LoginRepo,
-    private val logger: Logger,
-    private val envFileLoader: EnvFileLoader
+    configRepository: ConfigRepository,
+    loginRepo: LoginRepo,
+    private val kogger: Kogger,
+    private val bitwardenSecretManagerRepository: BitwardenSecretManagerRepository? = null,
+    private val changeFilterFactory: SubProjectChangeFilterFactory? = null,
 ): Action {
-
     private val subProjectExecutor = SubProjectExecutor(configRepository, loginRepo)
 
     override fun execute(args: List<String>): Int {
-        logger.info("DeployActionWithSDK started with args: ${args.joinToString(" ")}")
+        kogger.info("DeployActionWithSDK started with args: ${args.joinToString(" ")}")
 
         val additionalArgs = args.filter { it != "--auto-selected" }
 
@@ -47,72 +49,95 @@ class DeployActionWithSDK(
         println()
 
         // Step 1: Initialize
-        logger.info("Step 1: Initializing Terraform")
+        kogger.info("Step 1: Initializing Terraform")
         println("${AnsiColors.BLUE}Step 1/3: Initializing Terraform${AnsiColors.RESET}")
         val initResult = terraformService.init(emptyList())
         if (initResult.isFailure()) {
-            logger.error("Terraform init failed with exit code: ${initResult.exitCode()}")
-            println("${AnsiColors.RED}Terraform init failed: ${initResult.message()} (exit code: ${initResult.exitCode()})${AnsiColors.RESET}")
+            kogger.error("Terraform init failed with exit code: ${initResult.exitCode()}")
+            println(
+                "${AnsiColors.RED}Terraform init failed: ${initResult.message()} (exit code: ${initResult.exitCode()})${AnsiColors.RESET}",
+            )
             println("${AnsiColors.RED}Parent project deployment failed${AnsiColors.RESET}")
             return initResult.exitCode()
         }
-        logger.info("Terraform init completed successfully")
+        kogger.info("Terraform init completed successfully")
 
         println()
 
         // Step 2: Plan
-        logger.info("Step 2: Creating execution plan")
+        kogger.info("Step 2: Creating execution plan")
         println("${AnsiColors.BLUE}Step 2/3: Creating execution plan${AnsiColors.RESET}")
         val planResult = terraformService.plan(additionalArgs, planFile = "tfplan")
         if (planResult.isFailure()) {
-            logger.error("Terraform plan failed with exit code: ${planResult.exitCode()}")
-            println("${AnsiColors.RED}Terraform plan failed: ${planResult.message()} (exit code: ${planResult.exitCode()})${AnsiColors.RESET}")
+            kogger.error("Terraform plan failed with exit code: ${planResult.exitCode()}")
+            println(
+                "${AnsiColors.RED}Terraform plan failed: ${planResult.message()} (exit code: ${planResult.exitCode()})${AnsiColors.RESET}",
+            )
             println("${AnsiColors.RED}Parent project deployment failed${AnsiColors.RESET}")
             return planResult.exitCode()
         }
-        logger.info("Terraform plan completed successfully")
+        kogger.info("Terraform plan completed successfully")
 
         println()
 
         // Step 3: Apply
-        logger.info("Step 3: Applying changes")
+        kogger.info("Step 3: Applying changes")
         println("${AnsiColors.BLUE}Step 3/3: Applying changes${AnsiColors.RESET}")
-        val applyArgsWithAutoApprove = if (additionalArgs.contains("-auto-approve")) {
-            additionalArgs
-        } else {
-            additionalArgs + "-auto-approve"
-        }
+        val applyArgsWithAutoApprove =
+            if (additionalArgs.contains("-auto-approve")) {
+                additionalArgs
+            } else {
+                additionalArgs + "-auto-approve"
+            }
         val applyResult = terraformService.apply(planFile = "tfplan", additionalArgs = applyArgsWithAutoApprove)
 
         if (applyResult.isFailure()) {
-            logger.error("Terraform apply failed with exit code: ${applyResult.exitCode()}")
-            println("${AnsiColors.RED}Terraform apply failed: ${applyResult.message()} (exit code: ${applyResult.exitCode()})${AnsiColors.RESET}")
+            kogger.error("Terraform apply failed with exit code: ${applyResult.exitCode()}")
+            println(
+                "${AnsiColors.RED}Terraform apply failed: ${applyResult.message()} " +
+                    "(exit code: ${applyResult.exitCode()})${AnsiColors.RESET}",
+            )
             println("${AnsiColors.RED}Parent project deployment failed${AnsiColors.RESET}")
             return applyResult.exitCode()
         }
 
-        logger.info("Parent project deployment completed successfully")
+        kogger.info("Parent project deployment completed successfully")
         println()
         println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Parent project completed successfully")
 
-        // Execute sub-projects
-        val subProjects = subProjectExecutor.getSubProjects()
-        if (subProjects.isNotEmpty()) {
+        // Execute sub-projects (前回apply成功時から変更のあったものだけ)
+        val allSubProjects = subProjectExecutor.getSubProjects()
+        if (allSubProjects.isNotEmpty()) {
+            val changeFilter = createChangeFilter()
+            val subProjectsWithDirs = allSubProjects.map { it to subProjectExecutor.resolveSubProjectDir(it) }
+            val changedSubProjects = runBlocking { changeFilter.filterChanged(subProjectsWithDirs) }
+            val skippedCount = allSubProjects.size - changedSubProjects.size
+
             println()
-            println("${AnsiColors.BLUE}Found ${subProjects.size} sub-project(s)${AnsiColors.RESET}")
+            println(
+                "${AnsiColors.BLUE}Found ${allSubProjects.size} sub-project(s), " +
+                    "${changedSubProjects.size} changed (${skippedCount} skipped, no changes detected)${AnsiColors.RESET}",
+            )
 
-            val subResult = subProjectExecutor.executeInSubProjects(subProjects) { subProject, subProjectDir ->
-                executeSubProjectDeployment(additionalArgs, subProjectDir)
-            }
+            if (changedSubProjects.isNotEmpty()) {
+                val subResult =
+                    subProjectExecutor.executeInSubProjects(changedSubProjects.map { it.first }) { subProject, subProjectDir ->
+                        val stepResult = executeSubProjectDeployment(additionalArgs, subProjectDir)
+                        if (stepResult == 0) {
+                            runBlocking { changeFilter.recordSuccess(subProject, subProjectDir) }
+                        }
+                        stepResult
+                    }
 
-            if (subResult != 0) {
-                println("${AnsiColors.RED}Sub-project deployment failed${AnsiColors.RESET}")
-                return subResult
+                if (subResult != 0) {
+                    println("${AnsiColors.RED}Sub-project deployment failed${AnsiColors.RESET}")
+                    return subResult
+                }
             }
         }
 
         // Handle post-deployment actions
-        logger.info("All deployments completed successfully")
+        kogger.info("All deployments completed successfully")
         println()
         println("${AnsiColors.GREEN}✅ Deployment completed successfully!${AnsiColors.RESET}")
 
@@ -121,106 +146,127 @@ class DeployActionWithSDK(
         println("${AnsiColors.BLUE}Pushing to remote repository...${AnsiColors.RESET}")
         val pushResult = gitPush()
         if (pushResult) {
-            logger.info("Successfully pushed to remote repository")
+            kogger.info("Successfully pushed to remote repository")
             println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Successfully pushed to remote repository")
         } else {
-            logger.warn("Failed to push to remote repository")
+            kogger.warn("Failed to push to remote repository")
             println("${AnsiColors.YELLOW}⚠${AnsiColors.RESET} Failed to push to remote repository (non-fatal)")
         }
 
         return 0
     }
 
-    private fun executeSubProjectDeployment(additionalArgs: List<String>, subProjectDir: File): Int {
-        logger.info("Deploying sub-project in directory: ${subProjectDir.absolutePath}")
+    private fun executeSubProjectDeployment(
+        additionalArgs: List<String>,
+        subProjectDir: File,
+    ): Int {
+        kogger.info("Deploying sub-project in directory: ${subProjectDir.absolutePath}")
 
         // Step 1: Initialize
-        logger.info("Step 1: Initializing Terraform for sub-project")
+        kogger.info("Step 1: Initializing Terraform for sub-project")
         println("${AnsiColors.BLUE}Step 1/3: Initializing Terraform${AnsiColors.RESET}")
         val initResult = terraformService.init(emptyList())
         if (initResult.isFailure()) {
             // Terraform設定がない場合はスキップとして成功扱い
             if (initResult.message()?.contains("Terraform configuration not found") == true) {
-                logger.info("Terraform configuration not found for sub-project, skipping")
+                kogger.info("Terraform configuration not found for sub-project, skipping")
                 println("${AnsiColors.YELLOW}⚠ Terraform configuration not found, skipping${AnsiColors.RESET}")
                 return 0
             }
-            logger.error("Terraform init failed for sub-project with exit code: ${initResult.exitCode()}")
+            kogger.error("Terraform init failed for sub-project with exit code: ${initResult.exitCode()}")
             return initResult.exitCode()
         }
-        logger.info("Terraform init completed successfully for sub-project")
+        kogger.info("Terraform init completed successfully for sub-project")
 
         println()
 
         // Step 2: Plan
-        logger.info("Step 2: Creating execution plan for sub-project")
+        kogger.info("Step 2: Creating execution plan for sub-project")
         println("${AnsiColors.BLUE}Step 2/3: Creating execution plan${AnsiColors.RESET}")
         val planResult = terraformService.plan(additionalArgs)
         if (planResult.isFailure()) {
             // Terraform設定がない場合はスキップとして成功扱い
             if (planResult.message()?.contains("Terraform configuration not found") == true) {
-                logger.info("Terraform configuration not found for sub-project, skipping")
+                kogger.info("Terraform configuration not found for sub-project, skipping")
                 println("${AnsiColors.YELLOW}⚠ Terraform configuration not found, skipping${AnsiColors.RESET}")
                 return 0
             }
-            logger.error("Terraform plan failed for sub-project with exit code: ${planResult.exitCode()}")
+            kogger.error("Terraform plan failed for sub-project with exit code: ${planResult.exitCode()}")
             return planResult.exitCode()
         }
-        logger.info("Terraform plan completed successfully for sub-project")
+        kogger.info("Terraform plan completed successfully for sub-project")
 
         println()
 
         // Step 3: Apply
-        logger.info("Step 3: Applying changes for sub-project")
+        kogger.info("Step 3: Applying changes for sub-project")
         println("${AnsiColors.BLUE}Step 3/3: Applying changes${AnsiColors.RESET}")
-        val applyArgsWithAutoApprove = if (additionalArgs.contains("-auto-approve")) {
-            additionalArgs
-        } else {
-            additionalArgs + "-auto-approve"
-        }
+        val applyArgsWithAutoApprove =
+            if (additionalArgs.contains("-auto-approve")) {
+                additionalArgs
+            } else {
+                additionalArgs + "-auto-approve"
+            }
         val applyResult = terraformService.apply(additionalArgs = applyArgsWithAutoApprove)
 
         if (applyResult.isFailure()) {
             // Terraform設定がない場合はスキップとして成功扱い
             if (applyResult.message()?.contains("Terraform configuration not found") == true) {
-                logger.info("Terraform configuration not found for sub-project, skipping")
+                kogger.info("Terraform configuration not found for sub-project, skipping")
                 println("${AnsiColors.YELLOW}⚠ Terraform configuration not found, skipping${AnsiColors.RESET}")
                 return 0
             }
-            logger.error("Terraform apply failed for sub-project with exit code: ${applyResult.exitCode()}")
+            kogger.error("Terraform apply failed for sub-project with exit code: ${applyResult.exitCode()}")
             return applyResult.exitCode()
         }
 
-        logger.info("Sub-project deployment completed successfully")
+        kogger.info("Sub-project deployment completed successfully")
         return 0
+    }
+
+    /**
+     * 変更検出フィルタを、親プロジェクトのbackendConfig（bws()解決済み）から組み立てる。
+     * R2の認証情報が揃っていない場合はfail-open（全サブプロジェクトを対象にする）。
+     */
+    private fun createChangeFilter(): SubProjectChangeFilter {
+        val factory = changeFilterFactory ?: return SubProjectChangeFilter.NOOP
+        val resolvedBackendConfig =
+            BackendConfigResolver.flattenAndResolve(
+                subProjectExecutor.getBackendConfig(),
+                bitwardenSecretManagerRepository,
+            )
+        val (r2Bucket, r2Endpoint) = subProjectExecutor.getR2Config()
+        val resolvedR2Bucket = BackendConfigResolver.resolveValue(r2Bucket, bitwardenSecretManagerRepository)
+        val resolvedR2Endpoint = BackendConfigResolver.resolveValue(r2Endpoint, bitwardenSecretManagerRepository)
+        val parentProjectName = subProjectExecutor.getParentProjectName() ?: return SubProjectChangeFilter.NOOP
+        return factory.create(resolvedBackendConfig, resolvedR2Bucket, resolvedR2Endpoint, parentProjectName)
     }
 
     override fun getDescription(): String {
         return "Full deployment pipeline using Secret Manager SDK (init → plan → apply)"
     }
 
-
-
     private fun gitPush(): Boolean {
         return try {
-            logger.debug("Executing git push")
-            val process = ProcessBuilder("git", "push")
-                .redirectOutput(ProcessBuilder.Redirect.PIPE)
-                .redirectError(ProcessBuilder.Redirect.PIPE)
-                .start()
+            kogger.debug("Executing git push")
+            val process =
+                ProcessBuilder("git", "push")
+                    .redirectOutput(ProcessBuilder.Redirect.PIPE)
+                    .redirectError(ProcessBuilder.Redirect.PIPE)
+                    .start()
 
             val exitCode = process.waitFor()
             if (exitCode != 0) {
                 val error = process.errorStream.bufferedReader().readText()
-                logger.warn("Git push failed with exit code $exitCode: $error")
+                kogger.warn("Git push failed with exit code $exitCode: $error")
                 println("${AnsiColors.YELLOW}Git push failed: $error${AnsiColors.RESET}")
                 false
             } else {
-                logger.debug("Git push completed successfully")
+                kogger.debug("Git push completed successfully")
                 true
             }
         } catch (e: Exception) {
-            logger.error("Git push error", e)
+            kogger.error("Git push error", e)
             println("${AnsiColors.YELLOW}Git push error: ${e.message}${AnsiColors.RESET}")
             false
         }

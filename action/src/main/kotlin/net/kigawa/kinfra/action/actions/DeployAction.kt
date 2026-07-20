@@ -1,75 +1,93 @@
 package net.kigawa.kinfra.action.actions
 
-import net.kigawa.kinfra.model.service.TerraformService
-import net.kigawa.kinfra.action.bitwarden.BitwardenRepository
-import net.kigawa.kinfra.action.config.ConfigRepository
-import net.kigawa.kinfra.action.execution.ActionExecutor
-import net.kigawa.kinfra.action.execution.DeploymentPipeline
-import net.kigawa.kinfra.action.execution.ExecutionStep
-import net.kigawa.kinfra.action.execution.SubProjectExecutor
-import net.kigawa.kinfra.action.logging.Logger
 import net.kigawa.kinfra.model.Action
 import net.kigawa.kinfra.model.LoginRepo
-import net.kigawa.kinfra.model.conf.R2BackendConfig
-import net.kigawa.kinfra.model.util.AnsiColors
-import net.kigawa.kinfra.model.util.isSuccess
-import java.io.File
+import net.kigawa.kinfra.model.bitwarden.BitwardenSecretManagerRepository
+import net.kigawa.kinfra.model.conf.BackendConfigResolver
+import net.kigawa.kinfra.model.config.ConfigRepository
+import net.kigawa.kinfra.model.execution.ActionExecutor
+import net.kigawa.kinfra.model.execution.DeploymentPipeline
+import net.kigawa.kinfra.model.execution.ExecutionStep
+import net.kigawa.kinfra.model.execution.SubProjectChangeFilter
+import net.kigawa.kinfra.model.execution.SubProjectChangeFilterFactory
+import net.kigawa.kinfra.model.execution.SubProjectExecutor
+import net.kigawa.kodel.api.log.Kogger
+import net.kigawa.kinfra.model.service.TerraformService
+import net.kigawa.kodel.api.log.traceignore.error
+import net.kigawa.kodel.api.log.traceignore.warn
+import kotlinx.coroutines.runBlocking
 
 class DeployAction(
     private val terraformService: TerraformService,
-    private val bitwardenRepository: BitwardenRepository,
-    private val configRepository: ConfigRepository,
-    private val loginRepo: LoginRepo,
-    private val logger: Logger
+    configRepository: ConfigRepository,
+    loginRepo: LoginRepo,
+    private val kogger: Kogger,
+    private val bitwardenSecretManagerRepository: BitwardenSecretManagerRepository? = null,
+    private val changeFilterFactory: SubProjectChangeFilterFactory? = null,
 ) : Action {
-
-    private val executor = ActionExecutor(logger)
-    private val pipeline = DeploymentPipeline(terraformService, bitwardenRepository)
+    private val executor = ActionExecutor(kogger)
+    private val pipeline = DeploymentPipeline(terraformService)
     private val subProjectExecutor = SubProjectExecutor(configRepository, loginRepo)
 
     override fun execute(args: List<String>): Int {
         val additionalArgs = args.filter { it != "--auto-selected" }
 
-        println("${AnsiColors.BLUE}Starting full deployment pipeline${AnsiColors.RESET}")
-        println("${AnsiColors.BLUE}Current working directory: ${System.getProperty("user.dir")}${AnsiColors.RESET}")
-        println()
+        kogger.info("Starting full deployment pipeline")
+        kogger.info("Current working directory: ${System.getProperty("user.dir")}")
 
         // Execute parent project first
-        println("${AnsiColors.CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${AnsiColors.RESET}")
-        println("${AnsiColors.CYAN}Executing parent project${AnsiColors.RESET}")
-        println("${AnsiColors.CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${AnsiColors.RESET}")
-        println()
+        kogger.info("Executing parent project")
 
-        val steps = listOf(
-            ExecutionStep("Initialize Terraform") { executor.executeWithErrorHandling("Initialize Terraform", { pipeline.initializeTerraform(additionalArgs) }) },
-            ExecutionStep("Create execution plan") { executor.executeWithErrorHandling("Create execution plan", { pipeline.createExecutionPlan(additionalArgs) }) },
-            ExecutionStep("Apply changes") { executor.executeWithErrorHandling("Apply changes", { pipeline.applyChanges(additionalArgs) }) }
-        )
+        val steps =
+            listOf(
+                ExecutionStep("Initialize Terraform") {
+                    executor.executeWithErrorHandling("Initialize Terraform", { pipeline.initializeTerraform(additionalArgs) })
+                },
+                ExecutionStep("Create execution plan") {
+                    executor.executeWithErrorHandling("Create execution plan", { pipeline.createExecutionPlan(additionalArgs) })
+                },
+                ExecutionStep(
+                    "Apply changes",
+                ) { executor.executeWithErrorHandling("Apply changes", { pipeline.applyChanges(additionalArgs) }) },
+            )
 
         val result = executor.executeSteps(steps)
 
         if (result != 0) {
-            println("${AnsiColors.RED}Parent project deployment failed with exit code: $result${AnsiColors.RESET}")
-            println("${AnsiColors.YELLOW}Check the logs above for detailed error information${AnsiColors.RESET}")
+            kogger.error("Parent project deployment failed with exit code: $result")
+            kogger.warn("Check the logs above for detailed error information")
             return result
         }
 
-        println()
-        println("${AnsiColors.GREEN}✓${AnsiColors.RESET} Parent project completed successfully")
+        kogger.info("Parent project completed successfully")
 
-        // Execute sub-projects
-        val subProjects = subProjectExecutor.getSubProjects()
-        if (subProjects.isNotEmpty()) {
-            println()
-            println("${AnsiColors.BLUE}Found ${subProjects.size} sub-project(s)${AnsiColors.RESET}")
+        // Execute sub-projects (前回apply成功時から変更のあったものだけ)
+        val allSubProjects = subProjectExecutor.getSubProjects()
+        if (allSubProjects.isNotEmpty()) {
+            val changeFilter = createChangeFilter()
+            val subProjectsWithDirs = allSubProjects.map { it to subProjectExecutor.resolveSubProjectDir(it) }
+            val changedSubProjects = runBlocking { changeFilter.filterChanged(subProjectsWithDirs) }
+            val skippedCount = allSubProjects.size - changedSubProjects.size
 
-            val subResult = subProjectExecutor.executeInSubProjects(subProjects) { subProject, subProjectDir ->
-                executeSubProjectDeployment(additionalArgs, subProjectDir)
-            }
+            kogger.info(
+                "Found ${allSubProjects.size} sub-project(s), " +
+                    "${changedSubProjects.size} changed ($skippedCount skipped, no changes detected)",
+            )
 
-            if (subResult != 0) {
-                println("${AnsiColors.RED}Sub-project deployment failed${AnsiColors.RESET}")
-                return subResult
+            if (changedSubProjects.isNotEmpty()) {
+                val subResult =
+                    subProjectExecutor.executeInSubProjects(changedSubProjects.map { it.first }) { subProject, subProjectDir ->
+                        val stepResult = executeSubProjectDeployment(additionalArgs)
+                        if (stepResult == 0) {
+                            runBlocking { changeFilter.recordSuccess(subProject, subProjectDir) }
+                        }
+                        stepResult
+                    }
+
+                if (subResult != 0) {
+                    kogger.error("Sub-project deployment failed")
+                    return subResult
+                }
             }
         }
 
@@ -79,58 +97,45 @@ class DeployAction(
         return 0
     }
 
-    private fun executeSubProjectDeployment(additionalArgs: List<String>, subProjectDir: File): Int {
+    private fun executeSubProjectDeployment(additionalArgs: List<String>): Int {
         // Create new instances for sub-project execution
         // Note: TerraformService will use the current working directory
-        val subPipeline = DeploymentPipeline(terraformService, bitwardenRepository)
-        val subExecutor = ActionExecutor(logger)
+        val subPipeline = DeploymentPipeline(terraformService)
+        val subExecutor = ActionExecutor(kogger)
 
-        val steps = listOf(
-            ExecutionStep("Initialize Terraform") { subPipeline.initializeTerraform(additionalArgs) },
-            ExecutionStep("Create execution plan") { subPipeline.createExecutionPlan(additionalArgs) },
-            ExecutionStep("Apply changes") { subPipeline.applyChanges(additionalArgs) }
-        )
+        val steps =
+            listOf(
+                ExecutionStep("Initialize Terraform") { subPipeline.initializeTerraform(additionalArgs) },
+                ExecutionStep("Create execution plan") { subPipeline.createExecutionPlan(additionalArgs) },
+                ExecutionStep("Apply changes") { subPipeline.applyChanges(additionalArgs) },
+            )
 
         return subExecutor.executeSteps(steps)
     }
-    
+
     private fun handleSuccessfulDeployment() {
-        println()
-        println("${AnsiColors.GREEN}✅ Deployment completed successfully!${AnsiColors.RESET}")
-
-        // Auto git push after successful deployment
-        println()
-        println("${AnsiColors.BLUE}Pushing to remote repository...${AnsiColors.RESET}")
-        val pushResult = pipeline.pushToGit()
-        if (pushResult != 0) {
-            println("${AnsiColors.YELLOW}⚠${AnsiColors.RESET} Failed to push to remote repository (non-fatal)")
-        }
+        kogger.info("Deployment completed successfully!")
     }
 
-override fun getDescription(): String {
+    /**
+     * 変更検出フィルタを、親プロジェクトのbackendConfig（bws()解決済み）から組み立てる。
+     * R2の認証情報が揃っていない場合はfail-open（全サブプロジェクトを対象にする）。
+     */
+    private fun createChangeFilter(): SubProjectChangeFilter {
+        val factory = changeFilterFactory ?: return SubProjectChangeFilter.NOOP
+        val resolvedBackendConfig =
+            BackendConfigResolver.flattenAndResolve(
+                subProjectExecutor.getBackendConfig(),
+                bitwardenSecretManagerRepository,
+            )
+        val (r2Bucket, r2Endpoint) = subProjectExecutor.getR2Config()
+        val resolvedR2Bucket = BackendConfigResolver.resolveValue(r2Bucket, bitwardenSecretManagerRepository)
+        val resolvedR2Endpoint = BackendConfigResolver.resolveValue(r2Endpoint, bitwardenSecretManagerRepository)
+        val parentProjectName = subProjectExecutor.getParentProjectName() ?: return SubProjectChangeFilter.NOOP
+        return factory.create(resolvedBackendConfig, resolvedR2Bucket, resolvedR2Endpoint, parentProjectName)
+    }
+
+    override fun getDescription(): String {
         return "Full deployment pipeline (init → plan → apply)"
-    }
-
-
-
-    private fun gitPush(): Boolean {
-        return try {
-            val process = ProcessBuilder("git", "push")
-                .redirectOutput(ProcessBuilder.Redirect.PIPE)
-                .redirectError(ProcessBuilder.Redirect.PIPE)
-                .start()
-
-            val exitCode = process.waitFor()
-            if (exitCode != 0) {
-                val error = process.errorStream.bufferedReader().readText()
-                println("${AnsiColors.YELLOW}Git push failed: $error${AnsiColors.RESET}")
-                false
-            } else {
-                true
-            }
-        } catch (e: Exception) {
-            println("${AnsiColors.YELLOW}Git push error: ${e.message}${AnsiColors.RESET}")
-            false
-        }
     }
 }

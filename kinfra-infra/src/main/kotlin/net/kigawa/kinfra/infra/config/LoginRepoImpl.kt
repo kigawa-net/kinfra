@@ -1,0 +1,83 @@
+package net.kigawa.kinfra.infra.config
+
+import net.kigawa.kinfra.infra.config.script.KinfraConfigKtsWriter
+import net.kigawa.kinfra.infra.config.script.KinfraConfigScript
+import net.kigawa.kinfra.infra.config.script.KinfraParentConfigKtsWriter
+import net.kigawa.kinfra.infra.config.script.ScriptConfigCache
+import net.kigawa.kinfra.infra.config.script.ScriptHost
+import net.kigawa.kinfra.model.LoginRepo
+import net.kigawa.kinfra.model.conf.FilePaths
+import net.kigawa.kinfra.model.conf.KinfraConfig
+import net.kigawa.kinfra.model.conf.KinfraParentConfig
+import net.kigawa.kinfra.model.conf.KinfraParentConfigData
+import net.kigawa.kinfra.model.conf.global.GlobalConfig
+import net.kigawa.kinfra.model.conf.global.LoginConfig
+import java.io.File
+import java.nio.file.Path
+
+class LoginRepoImpl(
+    private val filePaths: FilePaths,
+    private val globalConfig: GlobalConfig,
+) : LoginRepo {
+    override val loginConfig: LoginConfig
+        get() =
+            globalConfig.login
+                ?: throw IllegalStateException(
+                    "Login config not available. Please run 'kinfra login <repository>' first.",
+                )
+
+    override val repoPath: Path by lazy {
+        if (loginConfig.repoPath.toString().isNotEmpty()) {
+            loginConfig.repoPath
+        } else {
+            File(
+                "${filePaths.baseConfigDir}/${filePaths.reposDir}/${loginConfig.repo.value}",
+            ).toPath()
+        }
+    }
+
+    override fun kinfraConfigPath(): Path {
+        return repoPath.resolve(filePaths.kinfraConfigFileName)
+    }
+
+    override fun kinfraBaseConfigPath(): Path {
+        return repoPath.resolve(filePaths.kinfraParentConfigFileName)
+    }
+
+    val kinfraParentConfigFile: File by lazy { kinfraBaseConfigPath().toFile() }
+
+    override fun loadKinfraBaseConfig(): KinfraParentConfigImpl? {
+        if (!kinfraParentConfigFile.exists()) {
+            return null
+        }
+        return KinfraParentConfigImpl.fromFile(kinfraParentConfigFile)
+    }
+
+    override fun createKinfraParentConfig(kinfraParentConfigData: KinfraParentConfigData): KinfraParentConfig {
+        kinfraParentConfigFile.parentFile.mkdirs()
+        val scheme = KinfraParentConfigScheme.from(kinfraParentConfigData)
+        kinfraParentConfigFile.writeText(KinfraParentConfigKtsWriter.render(scheme))
+        return KinfraParentConfigImpl(scheme, kinfraParentConfigFile)
+    }
+
+    override fun loadKinfraConfig(): KinfraConfig? {
+        val file = kinfraConfigPath().toFile()
+        if (!file.exists()) {
+            return null
+        }
+
+        return ScriptConfigCache.loadOrEval(file, KinfraConfigScheme.serializer()) {
+            ScriptHost.eval<KinfraConfigScript>(file).toScheme()
+        }
+    }
+
+    override fun saveKinfraConfig(config: KinfraConfig) {
+        val file = kinfraConfigPath().toFile()
+        file.parentFile?.mkdirs()
+        file.writeText(KinfraConfigKtsWriter.render(KinfraConfigScheme.from(config)))
+    }
+
+    override fun kinfraConfigExists(): Boolean {
+        return kinfraConfigPath().toFile().exists()
+    }
+}

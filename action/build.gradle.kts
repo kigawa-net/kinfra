@@ -1,5 +1,5 @@
 plugins {
+    id("impl-action")
 }
 dependencies {
-    implementation(project(":model"))
 }
