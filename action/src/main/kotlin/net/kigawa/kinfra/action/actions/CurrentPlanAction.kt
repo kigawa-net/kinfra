@@ -108,21 +108,9 @@ class CurrentPlanAction(
             return initExitCode
         }
 
+        // -backend-configはterraform init専用のフラグでplanでは受け付けられない
+        // (backendは直前のinitで既に設定済み)
         val planArgs = mutableListOf("terraform", "plan", "-input=false")
-
-        // backendConfigから-backend-configオプションを追加
-        backendConfig?.let { config ->
-            val flattenedConfig = flattenBackendConfig(config)
-            flattenedConfig.forEach { (key, value) ->
-                planArgs.add("-backend-config=$key=$value")
-            }
-        }
-
-        // backend.tfvarsが存在する場合も追加
-        if (backendTfvarsFile.exists()) {
-            planArgs.add("-backend-config=backend.tfvars")
-        }
-
         planArgs.addAll(args)
 
         val process =
