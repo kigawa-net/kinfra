@@ -9,7 +9,7 @@ inputs:
   ci-token:
     description: >-
       Shared secret for admin-panel's CI token endpoint. Pass via
-      ${{ secrets.ADMIN_PANEL_CI_TOKEN }}.
+      secrets.ADMIN_PANEL_CI_TOKEN from the calling workflow.
     required: true
   owner:
     description: 'GitHub org/user to scope the token to.'
