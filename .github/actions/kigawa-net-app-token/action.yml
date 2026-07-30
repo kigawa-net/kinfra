@@ -39,6 +39,17 @@ runs:
   steps:
     - id: request-token
       shell: bash
+      env:
+        # Routed through env: rather than interpolated directly into the script text below,
+        # since a raw ${{ inputs.x }} substitution breaks (or is injectable) whenever the value
+        # itself contains shell-meaningful characters — e.g. `permissions` is a JSON object full
+        # of double quotes, which corrupted the double-quoted `perms_json="${{ inputs.permissions }}"`
+        # form this used to take.
+        INPUT_OWNER: ${{ inputs.owner }}
+        INPUT_REPOSITORIES: ${{ inputs.repositories }}
+        INPUT_PERMISSIONS: ${{ inputs.permissions }}
+        INPUT_ADMIN_PANEL_URL: ${{ inputs.admin-panel-url }}
+        INPUT_OIDC_AUDIENCE: ${{ inputs.oidc-audience }}
       run: |
         set -euo pipefail
 
@@ -49,7 +60,7 @@ runs:
 
         oidc_token=$(curl -sS -f -G \
           -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-          --data-urlencode "audience=${{ inputs.oidc-audience }}" \
+          --data-urlencode "audience=$INPUT_OIDC_AUDIENCE" \
           "$ACTIONS_ID_TOKEN_REQUEST_URL" | jq -r '.value')
 
         if [ -z "$oidc_token" ] || [ "$oidc_token" = "null" ]; then
@@ -59,22 +70,22 @@ runs:
         echo "::add-mask::$oidc_token"
 
         repos_json="null"
-        if [ -n "${{ inputs.repositories }}" ]; then
-          repos_json=$(printf '%s' "${{ inputs.repositories }}" | tr ',\n' '\n' | sed '/^[[:space:]]*$/d' | jq -R . | jq -s .)
+        if [ -n "$INPUT_REPOSITORIES" ]; then
+          repos_json=$(printf '%s' "$INPUT_REPOSITORIES" | tr ',\n' '\n' | sed '/^[[:space:]]*$/d' | jq -R . | jq -s .)
         fi
 
-        perms_json="${{ inputs.permissions }}"
+        perms_json="$INPUT_PERMISSIONS"
         if [ -z "$perms_json" ]; then
           perms_json="null"
         fi
 
         body=$(jq -n \
-          --arg owner "${{ inputs.owner }}" \
+          --arg owner "$INPUT_OWNER" \
           --argjson repositories "$repos_json" \
           --argjson permissions "$perms_json" \
           '{owner: $owner, repositories: $repositories, permissions: $permissions}')
 
-        response=$(curl -sS -f -X POST "${{ inputs.admin-panel-url }}/github-app/ci-token" \
+        response=$(curl -sS -f -X POST "$INPUT_ADMIN_PANEL_URL/github-app/ci-token" \
           -H "Authorization: Bearer $oidc_token" \
           -H "Content-Type: application/json" \
           -d "$body")
