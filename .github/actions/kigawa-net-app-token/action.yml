@@ -2,15 +2,10 @@ name: 'kigawa-net App Token'
 description: >-
   Mints a short-lived installation access token for the "kigawa-net" GitHub App
   (app_id 4316503, contents:write) by calling admin-panel's GitHub App broker
-  endpoint. The App's private key lives only on admin-panel; this action (and
-  the CI workflows using it) only ever handles a shared CI token, never the
-  key itself. Flow: custom action -> admin-panel -> GitHub App.
+  endpoint. The App's private key lives only on admin-panel; this action proves
+  its identity with its own GitHub Actions OIDC token instead of a shared
+  secret. Flow: custom action -> admin-panel (verifies OIDC) -> GitHub App.
 inputs:
-  ci-token:
-    description: >-
-      Shared secret for admin-panel's CI token endpoint. Pass via
-      ${{ secrets.ADMIN_PANEL_CI_TOKEN }}.
-    required: true
   owner:
     description: 'GitHub org/user to scope the token to.'
     required: false
@@ -29,6 +24,12 @@ inputs:
     description: 'Base URL of the admin-panel API.'
     required: false
     default: 'https://admin.kigawa.net/api'
+  oidc-audience:
+    description: >-
+      Audience to request for this action's own OIDC token. Must match
+      admin-panel's configured ADMIN_PANEL_ACTIONS_AUDIENCE.
+    required: false
+    default: 'https://admin.kigawa.net'
 outputs:
   token:
     description: 'Short-lived installation access token'
@@ -40,6 +41,22 @@ runs:
       shell: bash
       run: |
         set -euo pipefail
+
+        if [ -z "${ACTIONS_ID_TOKEN_REQUEST_TOKEN:-}" ] || [ -z "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ]; then
+          echo "::error::No OIDC request token/URL available. Add 'permissions: id-token: write' to the calling job."
+          exit 1
+        fi
+
+        oidc_token=$(curl -sS -f -G \
+          -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+          --data-urlencode "audience=${{ inputs.oidc-audience }}" \
+          "$ACTIONS_ID_TOKEN_REQUEST_URL" | jq -r '.value')
+
+        if [ -z "$oidc_token" ] || [ "$oidc_token" = "null" ]; then
+          echo "::error::failed to mint an OIDC token"
+          exit 1
+        fi
+        echo "::add-mask::$oidc_token"
 
         repos_json="null"
         if [ -n "${{ inputs.repositories }}" ]; then
@@ -58,7 +75,7 @@ runs:
           '{owner: $owner, repositories: $repositories, permissions: $permissions}')
 
         response=$(curl -sS -f -X POST "${{ inputs.admin-panel-url }}/github-app/ci-token" \
-          -H "X-CI-Token: ${{ inputs.ci-token }}" \
+          -H "Authorization: Bearer $oidc_token" \
           -H "Content-Type: application/json" \
           -d "$body")
 
