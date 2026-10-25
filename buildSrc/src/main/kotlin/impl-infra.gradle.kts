@@ -14,7 +14,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-scripting-jvm:2.2.21")
     implementation("org.jetbrains.kotlin:kotlin-scripting-common:2.2.21")
     implementation("org.jetbrains.kotlin:kotlin-script-runtime:2.2.21")
-    implementation("com.google.code.gson:gson:2.14.0")
+    implementation("com.google.code.gson:gson:2.15.0")
     // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
     // https://mvnrepository.com/artifact/software.amazon.awssdk/s3
