@@ -6,7 +6,7 @@ plugins{
 dependencies {
     implementation(project(":action"))
     implementation(project(":kodel:core"))
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.12.0")
     implementation("com.charleskorn.kaml:kaml:0.104.0")
     // Kotlinスクリプト(.kts)として設定ファイルを実行時に評価するための基盤
     // (kotlin-scripting-jvm-hostのtransitive依存はruntimeスコープのためcompileClasspathに乗らず、個別に明示する)
